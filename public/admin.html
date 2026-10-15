@@ -1,0 +1,2543 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SV Partykeller – Admin</title>
+<script>document.documentElement.classList.add('js-motion');
+// Seitenwechsel (D-085/D-087): Morph-Schlüssel vor dem ersten Bild setzen
+// (die Seite benennt daraufhin ihr Gegenstück), nach dem Übergang lösen.
+try {
+  var h = document.documentElement, ss = sessionStorage;
+  var m = ss.getItem('pk-morph');
+  ss.removeItem('pk-morph'); ss.removeItem('pk-curtain');   // pk-curtain: Rest des alten Vorhangs (D-084)
+  var vt = 'CSSViewTransitionRule' in window, flip = null;
+  try { flip = JSON.parse(ss.getItem('pk-flip')); } catch (e) {}
+  // Firefox (keine seitenübergreifenden View Transitions): Morph per Skript
+  // (D-087) — unsichtbar starten, lando.js legt die Elemente an ihre alte Stelle
+  var flipOn = !vt && !!flip && Date.now() - flip.t < 10000 && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!flipOn) ss.removeItem('pk-flip');
+  if (flipOn) { h.dataset.flip = '1'; setTimeout(function () { delete h.dataset.flip; }, 1500); }
+  ss.setItem('pk-booted', '1');   // Kaltstart-Bild (D-093) nur auf den Gästeseiten
+  if (m && (vt || flipOn)) {
+    h.dataset.morph = m;
+    h.pkMorphDone = new Promise(function (res) {
+      var done = function () { delete h.dataset.morph; res(); };
+      h.pkMorphEnd = done;
+      setTimeout(done, 2000);
+      if (vt) addEventListener('pagereveal', function (e) {
+        if (e.viewTransition) { e.viewTransition.ready.catch(function () {}); e.viewTransition.finished.then(done, done); } else done();
+      }, { once: true });
+    });
+  }
+} catch (e) {}</script>
+<link rel="icon" href="assets/cones-flat.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f131c">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="css/theme.css">
+<style>
+  /* ==========================================================================
+     Admin im Lando-Stil (D-078). Werkzeug zuerst: Aufbau und Bedienung wie
+     bisher (D-061, D-073), die Designsprache kommt über Versal-Titel mit
+     Serif-Akzentwort, Eyebrows, Lime-Knöpfe, Haarlinien-Listen, Kerben-Karten
+     und sparsame Einblendungen (nur Titel und Seitenleisten-Karten).
+     Breakpoints 1180 / 760 px stehen auch im Skript (protoVisible, isSheet).
+     ========================================================================== */
+
+  /* Ziffern wie .num in theme.css proportional: die Tabellenziffern von Mona
+     Sans haben eine durchgestrichene Null (D-078). */
+
+  /* --- Kleine Symbole als Masken (nehmen die Schriftfarbe an) --- */
+  .i-plus { position: relative; display: inline-block; width: 12px; height: 12px; flex: none; transition: transform 0.45s var(--ease); }
+  .i-plus::before, .i-plus::after { content: ''; position: absolute; background: currentColor; border-radius: 1px; }
+  .i-plus::before { left: 0; right: 0; top: 50%; height: 1.8px; transform: translateY(-50%); }
+  .i-plus::after { top: 0; bottom: 0; left: 50%; width: 1.8px; transform: translateX(-50%); }
+  :is(.btn, button):hover > .i-plus { transform: rotate(90deg); }
+  .i-arrow.i-right { transform: rotate(45deg); }
+  .i-arrow.i-down { transform: rotate(135deg); }
+  .i-arrow.i-up { transform: rotate(-45deg); }
+  .mi, .i-search {
+    display: inline-block; flex: none; width: 15px; height: 15px; background: currentColor;
+    -webkit-mask: var(--mi) center / contain no-repeat; mask: var(--mi) center / contain no-repeat;
+  }
+  .mi--pen { --mi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16v4z'/%3E%3Cpath d='M13.5 6.5l4 4'/%3E%3C/svg%3E"); }
+  .mi--key { --mi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='16' r='4'/%3E%3Cpath d='M11 13l9-9M17 7l3 3M15 9l2 2'/%3E%3C/svg%3E"); }
+  .mi--list { --mi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6h11M9 12h11M9 18h11M4 6h.5M4 12h.5M4 18h.5'/%3E%3C/svg%3E"); }
+  .mi--eye { --mi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E"); }
+  .mi--eye-off { --mi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M3 3l18 18'/%3E%3C/svg%3E"); }
+  .mi--trash { --mi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h16M6 7l1 13h10l1-13M9 7V4h6v3'/%3E%3C/svg%3E"); }
+  .i-search { --mi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E"); }
+
+  /* --- Felder: .field aus theme.css, dazu eine kompakte Variante --- */
+  .field--sm { font-size: 14.5px; padding: 9px 12px; min-height: 42px; }
+  select.field { cursor: pointer; }
+  textarea.field { resize: none; line-height: 1.4; }
+  .lbl { font-weight: 600; font-size: 10.5px; line-height: 1.1; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .hint { font-size: 13px; line-height: 1.45; color: var(--ink-muted); }
+  .hint:empty { display: none; }
+  .error-banner {
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--danger) 55%, transparent);
+    color: var(--ink); border-radius: var(--radius); padding: 11px 14px; font-size: 13.5px; font-weight: 600;
+  }
+  /* Kleiner Zurück-Link (Versalien, Pfeil nach links) */
+  .back {
+    display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-muted); text-decoration: none; transition: color 0.3s var(--ease);
+  }
+  .back::before {
+    content: ''; width: 9px; height: 9px; background: currentColor; transform: rotate(-135deg);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 9.5 9.5 2.5M4 2.5h5.5V8' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='square'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 9.5 9.5 2.5M4 2.5h5.5V8' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='square'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .back:hover { color: var(--accent-text); }
+
+  /* ==========================================================================
+     Ansicht 1: Login — riesige Headline links, Kerben-Karte mit dem Feld rechts
+     ========================================================================== */
+  .login-inner {
+    max-width: 1280px;
+    padding: max(16px, env(safe-area-inset-top)) clamp(16px, 3vw, 40px) max(20px, env(safe-area-inset-bottom));
+    gap: clamp(28px, 6vh, 64px);
+  }
+  .login-main { flex: 1; display: grid; gap: 30px; align-content: center; }
+  .login-hero { display: flex; flex-direction: column; gap: 16px; }
+  .login-title { font-size: clamp(64px, 17vw, 176px); line-height: 0.86; }
+  /* Morphs (D-085): Der Admin-Chip gleitet von der Anmeldung in die
+     Zentrale; „Admin" aus dem Menü bzw. aus „Zugang" gleitet ins Titelwort,
+     das dafür sofort steht statt aus der Maske zu steigen */
+  .adm-chip { view-transition-name: admin-chip; }
+  .morph-admin { display: inline-block; }
+  html[data-morph="admin"] .morph-admin { view-transition-name: morph-admin; }
+  html[data-morph="admin"] .morph-admin .rw-i { transform: none; transition: none; }
+  .login-title .t-serif { font-size: 1.06em; }
+  .login-title .scribbled > .scribble--underline { --scribble-width: 5; --draw-dur: 1.1s; bottom: 0.02em; height: 0.2em; }
+  .login-card {
+    position: relative; display: flex; flex-direction: column; gap: 12px;
+    padding: 22px 20px 60px; --notch-fill: var(--surface); border-radius: var(--radius-lg);
+  }
+  .login-card .t-h3 { margin-bottom: 6px; }
+  .login-card .notch-tag { font-size: 10.5px; }
+  .login-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+  .login-foot .emblem { align-items: flex-start; text-align: left; }
+  .login-foot .emblem .laurel { width: 34px; height: 34px; }
+  @media (min-width: 900px) {
+    .login-main { grid-template-columns: minmax(0, 1.5fr) minmax(320px, 400px); align-items: end; gap: 64px; }
+  }
+
+  /* ==========================================================================
+     Ansicht 2: Dashboard
+     ========================================================================== */
+  /* overflow-x: clip statt hidden — sonst klebt die Seitenleiste nicht */
+  .dash { position: relative; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; overflow-x: clip; }
+  .adm {
+    position: relative; z-index: 1; flex: 1; width: 100%; max-width: 1440px; margin: 0 auto;
+    padding: max(16px, env(safe-area-inset-top)) clamp(16px, 3vw, 40px) 64px;
+  }
+
+  /* Kopfleiste: Wortmarke + Chip „Admin“, rechts Seiten und Abmelden */
+  .adm-top { margin-bottom: clamp(22px, 4vh, 40px); }
+  .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .brand .chip { align-self: center; }
+
+  /* Kopf: Titel mit Kringel, Kennzahlen des Abends, „Neues Konto“ */
+  .adm-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px 40px; flex-wrap: wrap; margin-bottom: clamp(24px, 4vh, 40px); }
+  .hero-text { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .sub-row { display: flex; align-items: baseline; gap: 6px 16px; flex-wrap: wrap; }
+  .sub-row .sub { font-variant-numeric: proportional-nums; }
+  .adm-title { font-size: clamp(40px, 6.4vw, 92px); line-height: 0.88; }
+  .adm-title .scribbled > .scribble--underline { --scribble-width: 4; bottom: -0.02em; height: 0.2em; }
+  .hero-side { display: flex; align-items: flex-end; gap: 28px; }
+  .hero-stats { display: flex; gap: 26px; }
+  .hs { display: flex; flex-direction: column; gap: 8px; min-width: 64px; }
+  .hs .num { font-size: clamp(40px, 4.4vw, 60px); line-height: 0.82; color: var(--ink); }
+  .hs + .hs { padding-left: 26px; border-left: 1px solid var(--line); }
+  .hs:first-child .num { color: var(--accent-text); }
+
+  /* Umschalter (theme.css .tabs; --tabs je Leiste) */
+  .m-tabs { display: none; --tabs: 4; margin-bottom: 22px; }
+  .v-tabs { --tabs: 2; width: 320px; max-width: 100%; }
+  .k-filter { --tabs: 3; width: 360px; flex: none; }
+  .p-filter { --tabs: 4; width: 380px; flex: none; }
+  #tv-mode { --tabs: 3; }
+  .k-filter .tab-btn, .p-filter .tab-btn, #tv-mode .tab-btn { font-size: 11.5px; padding: 8px 4px; white-space: nowrap; }
+
+  /* Zwei Spalten: Hauptspalte + mitlaufende Seitenleiste */
+  .adm-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 48px; align-items: start; }
+  .adm-grid main, .adm-grid aside { display: flex; flex-direction: column; min-width: 0; }
+  .adm-grid main { gap: 22px; }
+  .adm-grid aside { gap: 30px; position: sticky; top: 20px; }
+  .grp { display: contents; }
+  .view { display: flex; flex-direction: column; gap: 16px; }
+  .adm:not([data-v="protokoll"]) .v-proto, .adm[data-v="protokoll"] .v-konten { display: none; }
+  .adm:not([data-v="protokoll"]) .grp-proto { display: none; }
+
+  /* Abschnittstitel: Versalien mit Serif-Akzentwort */
+  .view-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+  .view-title { font-size: clamp(32px, 3.8vw, 54px); }
+  .view-count:empty { display: none; }
+  .side-block { display: flex; flex-direction: column; gap: 12px; }
+  .side-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .side-title { font-size: 21px; }
+  .side-title .t-serif { font-size: 1.12em; }
+  .count-chip:empty { display: none; }
+  .side { display: flex; flex-direction: column; gap: 14px; padding: 18px; }
+  .side.is-notched { padding-bottom: 54px; }
+  .only-sm { display: none !important; }
+
+  /* --- Konten --------------------------------------------------------- */
+  .k-tools { display: flex; gap: 10px; align-items: center; }
+  .search-wrap { position: relative; flex: 1; min-width: 0; display: block; }
+  .search-wrap .i-search { position: absolute; left: 14px; top: 50%; margin-top: -7.5px; color: var(--ink-faint); pointer-events: none; }
+  .search-wrap .field { padding-left: 40px; }
+  .add-round { display: none; }
+  .k-head, .p-head { display: flex; align-items: center; gap: 14px; padding: 0 8px 8px 4px; }
+  .k-head .h-name { flex: 1; padding-left: 52px; }
+  .k-head .h-st { width: 124px; text-align: center; }
+  .k-head .h-total { width: 64px; text-align: right; }
+  .k-head .h-more { width: 34px; }
+  #rows { display: flex; flex-direction: column; border-top: 1px solid var(--line-strong); }
+  .k-empty, .p-empty { padding: 28px 12px; text-align: center; color: var(--ink-muted); font-size: 14px; border-bottom: 1px solid var(--line); }
+  .k-row {
+    position: relative; display: flex; align-items: center; gap: 14px;
+    padding: 10px 8px 10px 4px; border-bottom: 1px solid var(--line);
+    transition: background-color 0.3s ease;
+  }
+  .k-row.menu-open { z-index: 5; }
+  @media (hover: hover) and (pointer: fine) { .k-row:hover { background: var(--bg-hi); } }
+  /* Ausgeblendete Konten: nur Inhalt dimmen, nicht Menü und Chips (D-063) */
+  .k-row .avatar, .k-name .n, .k-row .st, .k-row .k-total { transition: opacity 0.3s ease; }
+  .k-row.is-hidden .avatar, .k-row.is-hidden .k-name .n, .k-row.is-hidden .st, .k-row.is-hidden .k-total { opacity: 0.45; }
+  .k-row .avatar { width: 38px; height: 38px; font-size: 19px; }
+  .k-name { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .k-name .n { font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: -0.005em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .k-name form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .k-name form .field { width: 190px; }
+  /* Beim Umbenennen weichen die Zähler, damit Feld und Knöpfe in eine Zeile passen */
+  .k-row:has(.k-name form) .st-group { display: none; }
+  .k-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+  .k-meta:empty { display: none; }
+  .k-meta .chip, .p-name .chip { padding: 3px 7px; font-size: 9.5px; border-radius: 5px; }
+  .chip-muted { background: transparent; color: var(--ink-muted); border: 1px solid var(--line-strong); }
+  .chip-brick { background: transparent; color: var(--accent-2); border: 1px solid color-mix(in srgb, var(--accent-2) 60%, transparent); }
+
+  /* Zähler: − | Zahl (direkt editierbar) | + in der Getränkefarbe */
+  .st-group { display: contents; }
+  .st { width: 124px; display: flex; align-items: center; justify-content: center; gap: 4px; flex: none; }
+  .st.beer { --c: var(--beer); --on: var(--beer-ink); }
+  .st.shot { --c: var(--shot); --on: var(--shot-ink); }
+  .st.mix { --c: var(--mixc); --on: var(--mixc-ink); }
+  .st button {
+    width: 30px; height: 30px; flex: none; padding: 0; border-radius: var(--radius-sm);
+    border: 1px solid var(--line-strong); background: transparent; color: var(--ink-muted);
+    font-size: 16px; font-weight: 600; line-height: 1; transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  }
+  .st button:hover { color: var(--ink); border-color: var(--ink-muted); }
+  .st .plus { border-color: var(--c); background: var(--c); color: var(--on); font-weight: 800; }
+  .st .plus:hover { color: var(--on); border-color: var(--c); filter: brightness(1.08); }
+  .st input {
+    width: 48px; height: 32px; text-align: center; padding: 0;
+    background: var(--surface-alt); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    color: var(--ink); font-family: var(--font-sans); font-weight: 800; font-size: 16px;
+    font-variant-numeric: proportional-nums; letter-spacing: -0.02em;
+    -moz-appearance: textfield; appearance: textfield; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .st input:hover { border-color: var(--line-strong); }
+  .st input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+  .st input::-webkit-outer-spin-button, .st input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .k-total { width: 64px; flex: none; text-align: right; font-size: 24px; color: var(--accent-text); }
+
+  /* ⋯-Menü als Popover (Konten und eigene Fun-Facts) */
+  .more-wrap { position: relative; width: 34px; flex: none; }
+  .more {
+    width: 34px; height: 34px; padding: 0; border-radius: var(--radius-sm);
+    border: 1px solid transparent; background: transparent; color: var(--ink-muted);
+    font-size: 18px; line-height: 1; transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  }
+  .more:hover, .more.open { border-color: var(--line-strong); background: var(--surface-2); color: var(--ink); }
+  .menu {
+    position: absolute; right: 0; top: 40px; z-index: 30; width: 244px; padding: 6px;
+    display: flex; flex-direction: column;
+    background: var(--bg-deep); border: 1px solid var(--line-strong); border-radius: var(--radius);
+    box-shadow: 0 18px 44px color-mix(in srgb, var(--lando-black) 55%, transparent);
+    transform-origin: top right;
+  }
+  .menu.pop-in { animation: menu-in 0.35s var(--ease-out); }
+  @keyframes menu-in { from { opacity: 0; transform: translateY(-6px) scale(0.97); } }
+  .menu button {
+    display: flex; align-items: center; gap: 11px; text-align: left;
+    background: none; border: none; color: var(--ink); padding: 10px 11px; border-radius: var(--radius-sm);
+    font-size: 13.5px; font-weight: 600; transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .menu button .mi { color: var(--ink-muted); transition: color 0.2s ease; }
+  .menu button:hover, .menu button:focus-visible { background: var(--surface-2); outline: none; }
+  .menu button:hover .mi { color: var(--accent-text); }
+  .menu .danger, .menu .danger .mi, .menu .danger:hover .mi { color: var(--danger); }
+  .menu .sep { height: 1px; background: var(--line); margin: 5px 6px; }
+  /* Menü der Fun-Fact-Liste hängt am <body>, sonst schnitte der Scrollbereich es ab */
+  .menu.floating { position: fixed; right: auto; z-index: 40; }
+
+  /* --- Getränke-Protokoll (D-073) -------------------------------------- */
+  .p-tools { display: flex; align-items: center; gap: 10px; }
+  .p-nav { flex: none; }
+  .p-day { width: auto; min-width: 250px; font-weight: 600; }
+  .p-add { margin-left: auto; }
+  .p-person { width: 210px; flex: none; }
+  .p-head .h-time { width: 78px; }
+  .p-head .h-name { flex: 1; padding-left: 46px; }
+  .p-head .h-drink { width: 96px; text-align: center; }
+  .p-head .h-act { width: 76px; }
+  #p-rows { display: flex; flex-direction: column; }
+  /* Stunden-Trenner: Eyebrow und Anzahl über einer kräftigen Haarlinie */
+  .p-hour { display: flex; align-items: center; gap: 10px; padding: 20px 4px 8px; font-size: 11px; color: var(--ink-muted); font-variant-numeric: proportional-nums; }
+  .p-hour b { font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-text); }
+  .p-hour + .p-row, .p-hour + .p-edit { border-top: 1px solid var(--line-strong); }
+  #p-rows > .p-hour:first-child { padding-top: 4px; }
+  .p-row {
+    position: relative; display: flex; align-items: center; gap: 14px; min-height: 52px;
+    padding: 8px 6px 8px 4px; border-bottom: 1px solid var(--line);
+    transition: background-color 0.3s ease;
+  }
+  @media (hover: hover) and (pointer: fine) { .p-row:not(.gone):hover { background: var(--bg-hi); } }
+  .p-time { width: 78px; flex: none; font-size: 17px; color: var(--ink); }
+  .p-time .ss { font-size: 11.5px; font-weight: 600; color: var(--ink-faint); }
+  .p-row .avatar { width: 32px; height: 32px; font-size: 16px; }
+  .p-name { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+  .p-name .n { font-weight: 700; font-size: 15px; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Doppeltipp-Hinweis: kleiner Zweitakzent-Stempel */
+  .p-flag {
+    font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
+    color: var(--accent-2-ink); background: var(--accent-2); padding: 3px 6px; border-radius: 4px;
+  }
+  /* Getränk als Pille in der Getränkefarbe, Schrift im Kontrast */
+  .p-pill {
+    width: 96px; flex: none; text-align: center; padding: 5px 0; border-radius: var(--radius-sm);
+    font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    background: var(--c); color: var(--on);
+  }
+  .p-pill.beer { --c: var(--beer); --on: var(--beer-ink); }
+  .p-pill.shot { --c: var(--shot); --on: var(--shot-ink); }
+  .p-pill.mix { --c: var(--mixc); --on: var(--mixc-ink); }
+  .p-act { width: 76px; flex: none; display: flex; gap: 6px; justify-content: flex-end; }
+  .p-ico {
+    width: 34px; height: 34px; padding: 0; border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: 1px solid var(--line-strong); color: var(--ink);
+    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  }
+  .p-ico:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .p-ico.del { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, transparent); }
+  .p-ico.del:hover { background: var(--danger); border-color: var(--danger); color: var(--lando-black); }
+  .p-ico svg { width: 15px; height: 15px; }
+  .p-ico .i-go { display: none; }
+  /* Gelöschter Eintrag = Rückgängig-Leiste an seiner Stelle */
+  .p-row.gone {
+    margin: 4px 0; border: 1px dashed color-mix(in srgb, var(--danger) 55%, transparent); border-radius: var(--radius);
+    background: color-mix(in srgb, var(--danger) 6%, transparent); padding-left: 10px;
+  }
+  .p-row.gone.is-new { animation: gone-in 0.5s var(--ease); }
+  .p-undo { flex: none; }
+  @keyframes gone-in { from { opacity: 0; transform: translateX(-10px); } }
+  .p-row.gone .p-time { color: var(--ink-muted); text-decoration: line-through; }
+  .p-gone-text { flex: 1; min-width: 0; font-size: 13.5px; color: var(--ink-muted); }
+  .p-gone-text s { color: var(--ink-2); font-weight: 600; text-transform: uppercase; font-size: 12.5px; }
+  /* Bearbeiten: am Rechner klappt die Zeile auf, am Handy kommt ein Blatt von unten */
+  .p-edit {
+    display: flex; flex-direction: column; gap: 12px; margin: 6px 0; padding: 16px;
+    background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-lg);
+  }
+  .p-edit-fields { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+  .p-field { display: flex; flex-direction: column; gap: 7px; }
+  .p-field input[type="time"] { width: 124px; color-scheme: dark; }
+  .p-field select { width: 180px; }
+  .p-seg { display: flex; gap: 6px; }
+  .p-seg button {
+    min-height: 42px; padding: 0 14px; border-radius: var(--radius-sm);
+    font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em;
+    background: transparent; color: var(--ink-2); border: 1px solid var(--line-strong);
+    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  }
+  .p-seg button.on { background: var(--c); color: var(--on); border-color: var(--c); }
+  .p-seg .beer { --c: var(--beer); --on: var(--beer-ink); }
+  .p-seg .shot { --c: var(--shot); --on: var(--shot-ink); }
+  .p-seg .mix { --c: var(--mixc); --on: var(--mixc-ink); }
+  .p-edit-btns { margin-left: auto; display: flex; gap: 8px; }
+  .p-edit-btns .btn { min-height: 42px; }
+  .p-edit .p-del-btn { display: none; }
+  .p-sheet-head { display: none; }
+
+  /* Seitenleiste im Protokoll: Zahlen des Abends und mögliche Doppeltipps */
+  .p-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .p-totals > div { display: flex; flex-direction: column; gap: 8px; padding: 2px 0 2px 14px; border-left: 1px solid var(--line); }
+  .p-totals > div:first-child { padding-left: 0; border-left: none; }
+  .p-totals .num { font-size: 38px; line-height: 0.85; display: block; }
+  .p-totals .lbl2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
+  .p-hist-wrap { border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .p-hist { display: flex; align-items: flex-end; gap: 5px; height: 84px; }
+  .p-hist > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; min-width: 0; }
+  .p-hist .v { font-size: 10.5px; font-weight: 700; color: var(--ink-2); font-variant-numeric: proportional-nums; }
+  .p-hist .bar { width: 100%; border-radius: 3px 3px 1px 1px; background: var(--accent); transform-origin: bottom; }
+  /* Wachsen nur beim ersten Bild eines Abends (.grow setzt das Skript) */
+  .p-hist.grow .bar { animation: bar-up 0.8s var(--ease) both; animation-delay: calc(var(--i, 0) * 40ms); }
+  .p-hist.grow > div:nth-child(2) .bar { --i: 1; } .p-hist.grow > div:nth-child(3) .bar { --i: 2; }
+  .p-hist.grow > div:nth-child(4) .bar { --i: 3; } .p-hist.grow > div:nth-child(n+5) .bar { --i: 4; }
+  @keyframes bar-up { from { transform: scaleY(0); } }
+  .p-hist-labels { display: flex; gap: 5px; }
+  .p-hist-labels span { flex: 1; min-width: 0; text-align: center; font-size: 10.5px; font-weight: 600; color: var(--ink-faint); font-variant-numeric: proportional-nums; }
+  .p-dup { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); }
+  .p-dup:first-child { border-top: none; padding-top: 0; }
+  .p-dup:last-child { padding-bottom: 0; }
+  .p-dup .who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .p-dup .who b { font-weight: 700; font-size: 14px; text-transform: uppercase; }
+  .p-dup .who span { font-size: 12.5px; color: var(--ink-muted); font-variant-numeric: proportional-nums; }
+  .p-dup-none { font-size: 14px; color: var(--ink-2); }
+
+  /* --- TV-Anzeige ------------------------------------------------------ */
+  .sl { display: grid; grid-template-columns: 96px minmax(0, 1fr) 64px; align-items: center; gap: 12px; font-size: 13px; color: var(--ink-2); }
+  .sl b { color: var(--ink); font-size: 14px; text-align: right; }
+  .sl input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 26px; background: transparent; cursor: pointer; margin: 0; }
+  .sl input[type="range"]::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: var(--line-strong); }
+  .sl input[type="range"]::-moz-range-track { height: 3px; border-radius: 2px; background: var(--line-strong); }
+  .sl input[type="range"]::-moz-range-progress { height: 3px; border-radius: 2px; background: var(--accent); }
+  .sl input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6.5px; border-radius: 4px;
+    background: var(--accent); border: none; transition: transform 0.25s var(--ease-out);
+  }
+  .sl input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 4px; background: var(--accent); border: none; }
+  .sl input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.2); }
+  .sl input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .now { border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .now-row { display: flex; gap: 10px; align-items: flex-start; }
+  .now-row .t { font-family: var(--font-serif); font-size: 21px; line-height: 1.12; color: var(--ink); }
+  .now-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  /* Restzeit bis zum Wechsel; läuft per CSS-Transition, nicht per Timer */
+  .fact-bar { height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .fact-bar > div { height: 100%; width: 0; background: var(--accent); }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: live-pulse 1.8s ease-in-out infinite; }
+  @keyframes live-pulse { 50% { opacity: 0.25; } }
+  .fact-chip {
+    flex: none; font-weight: 700; font-size: 9.5px; line-height: 1.2;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    border: 1px solid currentColor; border-radius: 5px; padding: 3px 7px; margin-top: 2px;
+  }
+  /* Rekord gefüllt, Heute nur als Umriss: beide Akzenttöne liegen sonst zu nah beieinander */
+  .k-rekord { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  .k-eigene { color: var(--accent-2); }
+  .k-heute { color: var(--accent-text); }
+  .k-statistik { color: var(--mix-text); }
+  .k-moment { color: var(--rank-2); }
+  .k-bilanz, .k-leer { color: var(--ink-muted); }
+
+  /* Eigene Fun-Facts: kompakte Einzeiler; ab etwa sechs Einträgen scrollt
+     die Liste in sich (D-062) */
+  #fact-form { display: flex; flex-direction: column; gap: 8px; }
+  .own-list {
+    max-height: 236px; overflow-y: auto; overscroll-behavior: contain;
+    border-top: 1px solid var(--line); margin-right: -8px; padding-right: 8px;
+    scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
+  }
+  .own-list:empty { display: none; }
+  .own { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
+  .own:last-child { border-bottom: none; }
+  .own .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .own .fact-chip { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 0; }
+  .own .more { height: 30px; }
+  .own form { display: flex; flex-direction: column; gap: 8px; flex: 1; padding: 6px 0; }
+  .own-btns { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* --- Einrichtung ------------------------------------------------------ */
+  .set-row { display: flex; flex-direction: column; gap: 9px; }
+  .set-row + .set-row { border-top: 1px solid var(--line); padding-top: 14px; }
+  .join-line { display: flex; gap: 8px; }
+  .join-line .field { flex: 1; min-width: 0; }
+  .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 13px; line-height: 1.4; color: var(--ink-2); cursor: pointer; }
+  .switch {
+    appearance: none; -webkit-appearance: none; margin: 0; flex: none; cursor: pointer;
+    width: 46px; height: 26px; border-radius: 999px; position: relative;
+    background: var(--surface-2); border: 1px solid var(--line-strong);
+    transition: background-color 0.35s var(--ease), border-color 0.35s var(--ease);
+  }
+  .switch::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--ink-muted); transition: transform 0.45s var(--ease), background-color 0.35s ease;
+  }
+  .switch:checked { background: var(--accent); border-color: var(--accent); }
+  .switch:checked::after { transform: translateX(20px); background: var(--accent-ink); }
+  .switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .quick-links { display: flex; flex-direction: row; gap: 8px; }
+  .quick-links .btn { flex: 1; }
+
+  /* Danger Zone: Kerben-Karte mit roter Kontur und feiner Schraffur */
+  .danger-title { color: var(--danger); }
+  .danger-box {
+    position: relative; display: flex; flex-direction: column; gap: 10px; padding: 18px 18px 50px; border-radius: var(--radius-lg);
+    border: 1px solid color-mix(in srgb, var(--danger) 55%, transparent);
+    --notch-fill: transparent; --notch-line: color-mix(in srgb, var(--danger) 60%, transparent); --notch-tag-ink: var(--danger);
+  }
+  .danger-box > .notch-bg { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--danger) 7%, transparent) 0 7px, transparent 7px 15px); }
+  .danger-box p { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+  .danger-box .notch-tag { font-weight: 800; }
+
+  /* --- Dialoge und Blatt ------------------------------------------------ */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 60; padding: 16px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--scrim); animation: scrim-in 0.3s ease;
+  }
+  @keyframes scrim-in { from { opacity: 0; } }
+  .dialog {
+    position: relative; width: 420px; max-width: 100%; max-height: calc(100dvh - 32px); overflow: auto;
+    display: flex; flex-direction: column; gap: 14px; padding: 24px;
+    background: var(--bg-deep); border: 1px solid var(--line-strong); border-radius: var(--radius-lg);
+    box-shadow: 0 30px 80px color-mix(in srgb, var(--lando-black) 60%, transparent);
+    animation: dialog-in 0.55s var(--ease);
+  }
+  @keyframes dialog-in { from { opacity: 0; transform: translateY(18px) scale(0.98); } }
+  .dialog-title { font-size: 28px; }
+  .dialog-title .t-serif { font-size: 1.1em; }
+  .dialog p.t-small { margin: 0; line-height: 1.5; }
+  /* Zerstörerische Dialoge: Akzentwort in der Warnfarbe */
+  #reset-form .t-accent, #import-form .t-accent { color: var(--danger); }
+  .dialog p strong { color: var(--ink); }
+  .fld { display: flex; flex-direction: column; gap: 7px; }
+  .dialog-btns { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 4px; }
+  .btn--danger-fill { --btn-bg: var(--danger); --btn-ink: var(--lando-black); --btn-line: var(--danger); }
+  .btn--danger-fill:hover { --btn-bg: var(--danger); filter: brightness(1.08); }
+  .file-line { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .file-line span { font-size: 13px; color: var(--ink-muted); }
+
+  /* Blatt von unten (Handy-Protokoll) */
+  .modal-backdrop.p-sheet { align-items: flex-end; padding: 0; }
+  .modal-backdrop.p-sheet .p-edit {
+    width: 100%; max-width: 560px; max-height: 92dvh; overflow: auto; margin: 0; gap: 16px;
+    border: none; border-top: 1px solid var(--line-strong); border-radius: 22px 22px 0 0;
+    padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
+    background: var(--bg-deep); animation: sheet-up 0.55s var(--ease);
+  }
+  @keyframes sheet-up { from { transform: translateY(100%); } }
+  .p-sheet .p-sheet-head { display: flex; flex-direction: column; gap: 12px; }
+  .p-sheet .grip { align-self: center; width: 42px; height: 4px; border-radius: 4px; background: var(--line-strong); }
+  .p-sheet .p-sheet-title { display: flex; align-items: flex-start; gap: 12px; }
+  .p-sheet .p-sheet-title h2 { margin: 0; font-weight: 750; font-size: 24px; line-height: 0.95; letter-spacing: -0.02em; text-transform: uppercase; }
+  .p-sheet .p-sheet-title .sub { font-size: 13px; color: var(--ink-muted); font-variant-numeric: proportional-nums; margin-top: 6px; }
+  .p-sheet .p-sheet-title .quiet { margin-left: auto; }
+  .p-sheet .p-edit-fields { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px; }
+  .p-sheet .p-field select, .p-sheet .p-field input[type="time"] { width: 100%; min-height: 48px; font-size: 16px; }
+  .p-sheet .p-field-drink { grid-column: 1 / -1; }
+  .p-sheet .p-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .p-sheet .p-seg button { min-height: 48px; font-size: 13px; }
+  .p-sheet .p-edit-btns { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .p-sheet .p-edit-btns .btn { min-height: 50px; }
+  .p-sheet .p-edit-btns .p-cancel { display: none; }
+  .p-sheet .p-del-btn { display: inline-flex; }
+
+  /* Übersicht der rotierenden Fun-Facts (D-043) */
+  .dialog--wide { width: 740px; gap: 16px; }
+  .dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .dialog-head > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  #facts-sub { font-size: 13px; color: var(--ink-muted); font-variant-numeric: proportional-nums; }
+  .fact-now { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 18px 18px 50px; --notch-fill: var(--surface); border-radius: var(--radius-lg); }
+  .fact-now-row { display: flex; align-items: flex-start; gap: 10px; }
+  .fact-now .now-text { font-family: var(--font-serif); font-size: clamp(22px, 3vw, 30px); line-height: 1.08; color: var(--ink); }
+  .facts-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  #facts-pos { font-size: 14px; color: var(--ink-muted); }
+  .facts-list { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .fact-rows { display: flex; flex-direction: column; max-height: 320px; overflow-y: auto; border-top: 1px solid var(--line); scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+  .fact-row {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    background: transparent; border: none; border-bottom: 1px solid var(--line);
+    padding: 10px 10px 10px 12px; color: var(--ink-muted); font-size: 13px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .fact-row:hover { color: var(--ink); background: var(--surface); }
+  .fact-row.active { color: var(--ink); background: var(--surface); box-shadow: inset 3px 0 0 var(--accent); }
+  .fact-row .n { width: 22px; flex: none; font-weight: 800; font-variant-numeric: proportional-nums; color: var(--ink-faint); }
+  .fact-row.active .n { color: var(--accent-text); }
+  /* feste Chip-Spalte, damit der Text in einer Flucht beginnt */
+  .fact-row .fact-chip { margin-top: 0; width: 86px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fact-row .txt { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* --- Meldungen als Toasts unten in der Mitte --- */
+  .toasts {
+    position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    z-index: 70; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    width: max-content; max-width: calc(100vw - 32px); pointer-events: none;
+  }
+  .toast {
+    display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+    background: var(--bg-deep); color: var(--ink); border: 1px solid var(--line-strong); border-radius: var(--radius);
+    font-size: 13.5px; font-weight: 600; box-shadow: 0 16px 40px color-mix(in srgb, var(--lando-black) 55%, transparent);
+    animation: toast-in 0.55s var(--ease);
+  }
+  .toast:empty { display: none; }
+  .toast::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 2px; background: var(--danger); }
+  .toast--ok::before { background: var(--accent); }
+  @keyframes toast-in { from { opacity: 0; transform: translateY(16px); } }
+
+  /* Abgänge (lando.js leave): Dialoge sinken, das Blatt fährt nach unten
+     weg, Meldungen tauchen ab */
+  @media (prefers-reduced-motion: no-preference) {
+    .modal-backdrop.is-leaving { animation: leave-fade 0.4s ease 0.08s both; }
+    .modal-backdrop.is-leaving .dialog { animation: leave-drop 0.42s var(--ease) both; }
+    .modal-backdrop.p-sheet.is-leaving .p-edit { animation: leave-down 0.5s var(--ease) both; }
+    .toast.is-leaving { animation: leave-sink 0.4s var(--ease) both; }
+  }
+
+  /* ==========================================================================
+     Schmaler als zwei Spalten: Umschalter statt Seitenleiste
+     ========================================================================== */
+  @media (max-width: 1180px) {
+    /* Der Umschalter klebt oben; ein Streifen im Seitengrund deckt den Spalt
+       darüber ab, damit keine Überschrift dahinter hervorlugt */
+    .m-tabs { display: flex; position: sticky; top: 8px; z-index: 20; box-shadow: 0 -9px 0 1px var(--bg), 0 10px 24px -12px color-mix(in srgb, var(--lando-black) 70%, transparent); }
+    .v-tabs { display: none; }
+    .adm-grid { display: block; }
+    .adm-grid aside { position: static; max-width: 640px; }
+    .adm[data-m="konten"] aside, .adm[data-m="tv"] main, .adm[data-m="mehr"] main { display: none; }
+    .adm[data-m="tv"] .grp-more, .adm[data-m="mehr"] .grp-tv { display: none; }
+    .adm[data-m="tv"] .grp-proto, .adm[data-m="mehr"] .grp-proto,
+    .adm[data-m="protokoll"] .grp-tv, .adm[data-m="protokoll"] .grp-more { display: none; }
+    /* Im Protokoll stehen Zahlen und Doppeltipps über der Liste */
+    .adm[data-m="protokoll"] .adm-grid { display: flex; flex-direction: column; align-items: stretch; gap: 28px; }
+    .adm[data-m="protokoll"] aside { order: -1; max-width: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; align-items: start; }
+  }
+
+  /* ==========================================================================
+     Handy
+     ========================================================================== */
+  @media (max-width: 760px) {
+    .adm { padding-bottom: 96px; }
+    .adm-top { margin-bottom: 18px; }
+    .hide-sm { display: none !important; }
+    .only-sm { display: flex !important; }
+    .adm-hero { margin-bottom: 20px; gap: 12px; }
+    .adm-title { font-size: 40px; }
+    .hero-side { display: none; }
+    .sub-row .sub-area { display: none; }
+    .m-tabs .tab-btn { font-size: 11px; letter-spacing: 0.01em; padding: 8px 2px; }
+    .view-title { font-size: 34px; }
+    .field--sm { font-size: 16px; }
+    .k-tools { flex-wrap: wrap; }
+    .add-round { display: inline-flex; flex: none; }
+    .k-filter { width: 100%; }
+    .k-head { display: none; }
+    .k-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto 34px; column-gap: 12px; row-gap: 12px; padding: 14px 2px; }
+    .k-row .avatar { grid-column: 1; grid-row: 1; }
+    .k-name { grid-column: 2; grid-row: 1; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .k-name form .field { width: 100%; }
+    .k-total { grid-column: 3; grid-row: 1; width: auto; }
+    .more-wrap { grid-column: 4; grid-row: 1; }
+    .st-group { display: grid; grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .st { width: auto; display: grid; grid-template-columns: 30px 40px 30px; justify-content: center; align-items: center; row-gap: 6px; column-gap: 3px; }
+    .st::before { grid-column: 1 / -1; text-align: center; font-weight: 700; font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c); }
+    .st.beer::before { content: 'Bier'; }
+    .st.shot::before { content: 'Shots'; }
+    .st.mix::before { content: 'Mischen'; }
+    .st button { width: 30px; height: 34px; }
+    .st input { width: 40px; height: 34px; font-size: 16px; }
+    .sl { grid-template-columns: 88px minmax(0, 1fr) 60px; }
+    /* Protokoll am Handy: kompakte Zeilen, ein Tipp öffnet das Blatt */
+    .p-tools { flex-wrap: wrap; }
+    .p-day { flex: 1; min-width: 0; }
+    .p-add { margin-left: 0; width: 44px; padding: 0; }
+    .p-add .p-add-t { display: none; }
+    .p-person { flex: 1; width: auto; min-width: 0; }
+    .p-filter { width: 100%; }
+    .p-head { display: none; }
+    .p-row { gap: 12px; padding: 10px 2px; cursor: pointer; }
+    .p-time { width: 50px; font-size: 16px; }
+    .p-time .ss, .p-row .avatar { display: none; }
+    .p-pill { width: 70px; font-size: 10.5px; padding: 4px 0; }
+    .p-act { width: auto; }
+    .p-ico.del { display: none; }
+    .p-ico.edit { width: 22px; border: none; background: transparent; color: var(--ink-muted); }
+    .p-ico.edit .i-pen { display: none; }
+    .p-ico.edit .i-go { display: block; }
+    .p-row.gone { padding-left: 10px; padding-right: 8px; }
+    .p-stats-part { display: none; }
+    .adm:not([data-dups]) .p-dup-part { display: none; }
+    .dialog { padding: 20px; }
+    .dialog-btns .btn { flex: 1; }
+  }
+  @media (hover: none) { .p-ico:hover { background: transparent; color: var(--ink); border-color: var(--line-strong); } }
+</style>
+</head>
+<body>
+<div class="topo" aria-hidden="true"></div>
+<div class="topo-spot" aria-hidden="true"></div>
+
+<!-- Ansicht 1: Admin-Login -->
+<div id="login-view" class="screen">
+  <div class="screen-inner login-inner">
+    <header class="topbar">
+      <a class="wordmark" href="./" aria-label="Zur Anmeldung">
+        <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
+      </a>
+      <span class="chip chip--line adm-chip">Admin</span>
+    </header>
+
+    <div class="login-main">
+      <section class="login-hero">
+        <h1 class="t-impact login-title" data-reveal="words"><span class="morph-admin">Admin</span><br><span class="scribbled"><span class="t-serif t-accent">Zugang</span><svg class="scribble scribble--underline" data-draw="650" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1"/></svg></span></h1>
+      </section>
+
+      <form id="login-form" class="login-card" data-notch="tabW:150;tabH:34;r:14;slant:20" data-reveal="up" data-delay="200">
+        <h2 class="t-h3">Anmelden</h2>
+        <label class="lbl" for="login-pw">Passwort</label>
+        <input id="login-pw" class="field" type="password" placeholder="Admin-Passwort" autocomplete="current-password" required>
+        <div id="login-error" class="error-banner" hidden></div>
+        <button class="btn btn--lg btn--block">Anmelden <span class="i-arrow"></span></button>
+        <a class="back" href="./">Zurück zur Nutzeranmeldung</a>
+        <span class="notch-tag">Zugang <span class="hl">Admin</span></span>
+      </form>
+    </div>
+
+    <footer class="login-foot" data-reveal="fade" data-delay="450">
+      <div class="emblem"><span class="laurel"></span><span class="eyebrow">SV Partykeller<br>Admin-Bereich</span></div>
+    </footer>
+  </div>
+</div>
+
+<!-- Ansicht 2: Admin-Dashboard (Aufbau D-061/D-073, Lando-Stil D-078) -->
+<div id="dash-view" class="dash" hidden>
+  <div id="adm" class="adm" data-m="konten" data-v="konten">
+    <header class="topbar adm-top">
+      <div class="brand">
+        <a class="wordmark" href="./" aria-label="Zur Anmeldung">
+          <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
+        </a>
+        <span class="chip chip--accent adm-chip">Admin</span>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn btn--ghost btn--sm hide-sm" href="abende">Archiv <span class="i-arrow"></span></a>
+        <a class="btn btn--ghost btn--sm hide-sm" href="tv" target="_blank" rel="noopener">TV <span class="i-arrow"></span></a>
+        <button id="logout" type="button" class="btn btn--ghost btn--sm">Abmelden</button>
+      </div>
+    </header>
+
+    <section class="adm-hero">
+      <div class="hero-text">
+        <div class="sub-row">
+          <a id="back" class="back" href="./">Zur Anmeldung</a>
+          <div id="adm-sub" class="sub eyebrow"></div>
+        </div>
+        <h1 class="t-title adm-title" data-reveal="words"><span class="morph-admin">Admin</span> <span class="scribbled"><span class="t-serif t-accent">Zentrale</span><svg class="scribble scribble--underline" data-draw="600" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1"/></svg></span></h1>
+      </div>
+      <div class="hero-side" data-reveal="up" data-delay="250">
+        <div class="hero-stats">
+          <div class="hs"><span id="hero-today" class="num">0</span><span class="eyebrow">Getränke heute</span></div>
+          <div class="hs"><span id="hero-people" class="num">0</span><span class="eyebrow">Heute dabei</span></div>
+        </div>
+        <button id="open-add" type="button" class="btn btn--lg">Neues Konto <span class="i-plus"></span></button>
+      </div>
+    </section>
+
+    <div id="m-tabs" class="tabs m-tabs" role="tablist" data-pos="0">
+      <div class="tab-indicator"></div>
+      <button type="button" class="tab-btn active" data-m="konten">Konten</button>
+      <button type="button" class="tab-btn" data-m="protokoll">Protokoll</button>
+      <button type="button" class="tab-btn" data-m="tv">TV</button>
+      <button type="button" class="tab-btn" data-m="mehr">Mehr</button>
+    </div>
+
+    <div class="adm-grid">
+      <main>
+        <div id="v-tabs" class="tabs v-tabs" role="tablist" data-pos="0">
+          <div class="tab-indicator"></div>
+          <button type="button" class="tab-btn active" data-v="konten">Konten</button>
+          <button type="button" class="tab-btn" data-v="protokoll">Protokoll</button>
+        </div>
+
+        <div class="view v-konten">
+          <div class="view-head">
+            <h2 class="t-title view-title" data-reveal="words">Alle <span class="t-serif t-accent">Konten</span></h2>
+            <span id="k-count" class="eyebrow view-count"></span>
+          </div>
+          <div class="k-tools">
+            <label class="search-wrap"><span class="i-search" aria-hidden="true"></span><input id="k-search" class="field field--sm search" type="search" placeholder="Name suchen" autocomplete="off" aria-label="Name suchen"></label>
+            <button id="open-add-round" type="button" class="btn btn--icon add-round" title="Neues Konto" aria-label="Neues Konto"><span class="i-plus"></span></button>
+            <div id="k-filter" class="tabs k-filter" role="tablist" data-pos="0">
+              <div class="tab-indicator"></div>
+              <button type="button" class="tab-btn active" data-filter="all">Alle</button>
+              <button type="button" class="tab-btn" data-filter="today">Heute dabei</button>
+              <button type="button" class="tab-btn" data-filter="hidden">Ausgeblendet</button>
+            </div>
+          </div>
+          <div class="k-head eyebrow" aria-hidden="true">
+            <div class="h-name">Name</div><div class="h-st">Bier</div><div class="h-st">Shots</div><div class="h-st">Mischen</div><div class="h-total">Gesamt</div><div class="h-more"></div>
+          </div>
+          <div id="rows"></div>
+        </div>
+
+        <!-- Getränke-Protokoll (D-073): jedes gezählte Getränk eines Abends -->
+        <div class="view v-proto">
+          <div class="view-head">
+            <h2 class="t-title view-title" data-reveal="words">Getränke-<span class="t-serif t-accent">Protokoll</span></h2>
+            <span id="p-count" class="eyebrow view-count"></span>
+          </div>
+          <div class="p-tools">
+            <button id="p-prev" type="button" class="btn btn--ghost btn--icon p-nav" aria-label="Vorheriger Abend"><span class="i-arrow i-arrow--back"></span></button>
+            <select id="p-day" class="field field--sm p-day" aria-label="Abend"></select>
+            <button id="p-next" type="button" class="btn btn--ghost btn--icon p-nav" aria-label="Nächster Abend"><span class="i-arrow i-right"></span></button>
+            <button id="p-add" type="button" class="btn p-add" aria-label="Getränk nachtragen"><span class="i-plus"></span><span class="p-add-t">Getränk nachtragen</span></button>
+          </div>
+          <div class="p-tools">
+            <select id="p-person" class="field field--sm p-person" aria-label="Konto filtern"><option value="">Alle Konten</option></select>
+            <div id="p-filter" class="tabs p-filter" role="tablist" data-pos="0">
+              <div class="tab-indicator"></div>
+              <button type="button" class="tab-btn active" data-drink="">Alle</button>
+              <button type="button" class="tab-btn" data-drink="beer">Bier</button>
+              <button type="button" class="tab-btn" data-drink="shot">Shots</button>
+              <button type="button" class="tab-btn" data-drink="mix">Mischen</button>
+            </div>
+          </div>
+          <div class="p-head eyebrow" aria-hidden="true">
+            <div class="h-time">Zeit</div><div class="h-name">Konto</div><div class="h-drink">Getränk</div><div class="h-act"></div>
+          </div>
+          <div id="p-rows"></div>
+        </div>
+      </main>
+
+      <aside id="adm-side">
+        <div class="grp grp-proto">
+          <section class="side-block p-stats-part">
+            <h3 class="t-h3 side-title" data-reveal="up">Dieser <span class="t-serif t-accent">Abend</span></h3>
+            <div class="card side">
+              <div id="p-totals" class="p-totals"></div>
+              <div class="p-hist-wrap">
+                <div id="p-hist" class="p-hist"></div>
+                <div id="p-hist-labels" class="p-hist-labels"></div>
+                <div id="p-span" class="hint"></div>
+              </div>
+            </div>
+          </section>
+          <section class="side-block p-dup-part">
+            <div class="side-head"><h3 class="t-h3 side-title" data-reveal="up">Doppelt <span class="t-serif t-accent">getippt?</span></h3><span id="p-dup-count" class="chip chip--accent count-chip num"></span></div>
+            <div class="card side">
+              <div id="p-dups"></div>
+            </div>
+          </section>
+        </div>
+
+        <div class="grp grp-tv">
+          <section class="side-block">
+            <h3 class="t-h3 side-title" data-reveal="up">TV-<span class="t-serif t-accent">Anzeige</span></h3>
+            <div class="card side" data-notch="tabW:118;tabH:32;r:14;slant:18" style="--notch-fill: var(--surface)" data-reveal="up" data-delay="80">
+              <div id="tv-mode" class="tabs" role="tablist" data-pos="0">
+                <div class="tab-indicator"></div>
+                <button id="mode-alltime" class="tab-btn mode-btn" type="button" data-mode="alltime">All-Time</button>
+                <button id="mode-today" class="tab-btn mode-btn" type="button" data-mode="today">Heute</button>
+                <button id="mode-archive" class="tab-btn mode-btn" type="button" data-mode="archive">Archiv</button>
+              </div>
+              <select id="archive-day" class="field field--sm" hidden aria-label="Abend im Archiv"></select>
+              <label class="sl" title="Sekunden je Zeile der TV-Rangliste"><span>Rotation</span><input id="speed-slider" type="range" min="1.5" max="10" step="0.5" value="3"><b id="speed-value" class="num">3,0 s</b></label>
+              <label class="sl" title="Wie oft die Meldung im TV-Band wechselt"><span>Fun-Fact-Takt</span><input id="funfact-slider" type="range" min="30" max="300" step="15" value="30"><b id="funfact-value" class="num">30 s</b></label>
+              <div class="now">
+                <div class="eyebrow">Gerade auf dem TV</div>
+                <div class="now-row"><span id="now-chip" class="fact-chip k-leer">–</span><span id="now-text" class="t">Noch keine Meldungen.</span></div>
+                <div class="fact-bar"><div id="now-bar"></div></div>
+                <div class="now-nav">
+                  <button type="button" id="now-prev" class="btn btn--ghost btn--icon btn--sm" aria-label="Vorige Meldung"><span class="i-arrow i-arrow--back"></span></button>
+                  <button type="button" id="open-facts" class="btn btn--quiet btn--sm">Alle Fun-Facts <span class="i-arrow"></span></button>
+                  <button type="button" id="now-next" class="btn btn--ghost btn--icon btn--sm" aria-label="Nächste Meldung"><span class="i-arrow i-right"></span></button>
+                </div>
+              </div>
+              <span class="notch-tag"><span class="live-dot"></span>Live <span class="hl">TV</span></span>
+            </div>
+          </section>
+
+          <section class="side-block">
+            <div class="side-head"><h3 class="t-h3 side-title" data-reveal="up">Eigene <span class="t-serif t-accent">Fun-Facts</span></h3><span id="own-count" class="chip count-chip num"></span></div>
+            <div class="card side" data-reveal="up" data-delay="80">
+              <form id="fact-form">
+                <input id="fact-title" class="field field--sm" type="text" maxlength="30" placeholder="Titel (z. B. Ansage)" autocomplete="off" required>
+                <textarea id="fact-text" class="field field--sm" rows="2" maxlength="160" placeholder="Text der Meldung" autocomplete="off" required></textarea>
+                <button class="btn btn--block">Hinzufügen <span class="i-plus"></span></button>
+              </form>
+              <div id="fact-list" class="own-list"></div>
+            </div>
+          </section>
+        </div>
+
+        <div class="grp grp-more">
+          <section class="side-block quick-links only-sm">
+            <a class="btn btn--ghost" href="abende">Archiv <span class="i-arrow"></span></a>
+            <a class="btn btn--ghost" href="tv" target="_blank" rel="noopener">TV <span class="i-arrow"></span></a>
+          </section>
+          <section class="side-block">
+            <h3 class="t-h3 side-title" data-reveal="up">Technik &amp; <span class="t-serif t-accent">Einrichtung</span></h3>
+            <div class="card side" data-reveal="up" data-delay="80">
+              <div class="set-row">
+                <div class="lbl">QR-Adresse für den TV</div>
+                <div class="join-line">
+                  <input id="join-url" class="field field--sm" type="text" placeholder="z. B. http://192.168.1.50:3000/" autocomplete="off">
+                  <button id="join-save" type="button" class="btn">Speichern</button>
+                </div>
+                <div id="join-hint" class="hint"></div>
+              </div>
+              <div class="set-row">
+                <label class="switch-row" for="seasonal-toggle">
+                  <span class="lbl">Saison-Akzente</span>
+                  <input id="seasonal-toggle" class="switch" type="checkbox" checked>
+                </label>
+                <div id="seasonal-hint" class="hint"></div>
+              </div>
+              <div class="set-row">
+                <label class="switch-row" for="pace-toggle">
+                  <span class="lbl">Schnitt-Vergleich</span>
+                  <input id="pace-toggle" class="switch" type="checkbox" checked>
+                </label>
+              </div>
+              <div class="set-row">
+                <div class="lbl">Sicherung</div>
+                <button id="backup-save" type="button" class="btn btn--quiet btn--block">Backup herunterladen <span class="i-arrow i-down"></span></button>
+                <div id="backup-hint" class="hint"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="side-block">
+            <h3 class="t-h3 side-title danger-title" data-reveal="up">Danger <span class="t-serif">Zone</span></h3>
+            <div class="danger-box" data-notch="tabW:110;tabH:30;r:14;slant:16;stroke" data-reveal="up" data-delay="80">
+              <p>Beides braucht das Lösch-Passwort und lässt sich nicht rückgängig machen.</p>
+              <button id="backup-load" type="button" class="btn btn--danger btn--block">Backup einspielen <span class="i-arrow i-up"></span></button>
+              <button id="reset-btn" type="button" class="btn btn--danger btn--block">Alles zurücksetzen</button>
+              <span class="notch-tag">Vorsicht</span>
+            </div>
+          </section>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Schon angemeldet: die Zentrale steht im ersten Bild (nicht kurz die
+  // Anmeldung) — sonst landet ein hereinkommender Übergang im falschen Titel
+  if (sessionStorage.getItem('pk_admin_token')) {
+    document.getElementById('login-view').hidden = true;
+    document.getElementById('dash-view').hidden = false;
+  }
+</script>
+
+<!-- Meldungen (Fehler, Erfolg) als Toasts -->
+<div class="toasts" aria-live="polite">
+  <div id="reset-done" class="toast toast--ok" hidden>Zurückgesetzt!</div>
+  <div id="dash-error" class="toast" role="alert"></div>
+</div>
+
+<!-- Dialog: Neues Konto -->
+<div id="add-modal" class="modal-backdrop" hidden>
+  <form id="add-form" class="dialog">
+    <p class="eyebrow">Konten</p>
+    <h2 class="t-h3 dialog-title">Neues <span class="t-serif t-accent">Konto</span></h2>
+    <label class="fld"><span class="lbl">Name</span><input id="add-name" class="field" type="text" maxlength="24" placeholder="Name" autocomplete="off" required></label>
+    <label class="fld"><span class="lbl">PIN (optional)</span><input id="add-pin" class="field" type="password" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="4 Ziffern" autocomplete="off"></label>
+    <div class="dialog-btns">
+      <button type="button" id="close-add" class="btn btn--ghost">Abbrechen</button>
+      <button class="btn">Anlegen <span class="i-arrow"></span></button>
+    </div>
+  </form>
+</div>
+
+<!-- Protokoll am Handy: Eintrag bearbeiten als Blatt von unten (D-073) -->
+<div id="p-sheet" class="modal-backdrop p-sheet" hidden></div>
+
+<!-- Dialog: Alles zurücksetzen – Lösch-Passwort nötig -->
+<div id="reset-modal" class="modal-backdrop" hidden>
+  <form id="reset-form" class="dialog">
+    <p class="eyebrow danger-title">Danger Zone</p>
+    <h2 class="t-h3 dialog-title">Alles <span class="t-serif t-accent">zurücksetzen</span></h2>
+    <p class="t-small">Setzt alle Zähler auf 0 und löscht das Getränke-Log. Konten und PINs bleiben erhalten. Zum Bestätigen bitte das <strong>Lösch-Passwort</strong> eingeben (eigenes Passwort, nicht das Admin-Login).</p>
+    <div id="reset-error" class="error-banner" hidden></div>
+    <input id="reset-pw" class="field" type="password" placeholder="Lösch-Passwort" autocomplete="off" required>
+    <div class="dialog-btns">
+      <button type="button" id="close-reset" class="btn btn--ghost">Abbrechen</button>
+      <button class="btn btn--danger-fill">Endgültig zurücksetzen</button>
+    </div>
+  </form>
+</div>
+
+<!-- Dialog: PIN setzen (D-002) -->
+<div id="pin-modal" class="modal-backdrop" hidden>
+  <form id="pin-form" class="dialog">
+    <p class="eyebrow">PIN setzen</p>
+    <h2 class="t-h3 dialog-title"><span id="pin-name" class="t-serif t-accent"></span></h2>
+    <input id="pin-value" class="field" type="password" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="Neue PIN (leer = keine PIN)" autocomplete="off">
+    <div class="dialog-btns">
+      <button type="button" id="close-pin" class="btn btn--ghost">Abbrechen</button>
+      <button class="btn">Speichern <span class="i-arrow"></span></button>
+    </div>
+  </form>
+</div>
+
+<!-- Dialog: Backup einspielen – destruktiv, deshalb Lösch-Passwort wie beim Reset (D-034) -->
+<div id="import-modal" class="modal-backdrop" hidden>
+  <form id="import-form" class="dialog">
+    <p class="eyebrow danger-title">Danger Zone</p>
+    <h2 class="t-h3 dialog-title">Backup <span class="t-serif t-accent">einspielen</span></h2>
+    <p class="t-small">Ersetzt Nutzer, Zähler, Getränke-Log, Einstellungen und Fun-Facts dieses Bereichs durch den Inhalt der Datei. Der aktuelle Stand ist danach weg. Zum Bestätigen bitte das <strong>Lösch-Passwort</strong> eingeben.</p>
+    <div id="import-error" class="error-banner" hidden></div>
+    <!-- Eigener Knopf statt des nativen Datei-Felds: dessen Beschriftung kommt
+         sonst in der Browser-Sprache (Englisch), die App ist aber deutsch. -->
+    <input id="import-file" type="file" accept="application/json,.json" hidden>
+    <div class="file-line">
+      <button type="button" id="import-pick" class="btn btn--quiet btn--sm">Datei wählen</button>
+      <span id="import-filename">Keine Datei gewählt</span>
+    </div>
+    <input id="import-pw" class="field" type="password" placeholder="Lösch-Passwort" autocomplete="off" required>
+    <div class="dialog-btns">
+      <button type="button" id="close-import" class="btn btn--ghost">Abbrechen</button>
+      <button id="import-submit" class="btn btn--danger-fill">Einspielen</button>
+    </div>
+  </form>
+</div>
+
+<!-- Alle rotierenden Meldungen auf einen Blick (D-043): welche gerade läuft,
+     vor/zurück und Sprung per Klick. -->
+<div id="facts-modal" class="modal-backdrop" hidden>
+  <div class="dialog dialog--wide">
+    <div class="dialog-head">
+      <div>
+        <p class="eyebrow">TV-Band</p>
+        <h2 class="t-h3 dialog-title">Fun-Facts im <span class="t-serif t-accent">Wechsel</span></h2>
+        <div id="facts-sub"></div>
+      </div>
+      <button type="button" id="close-facts" class="btn btn--ghost btn--sm">Schließen</button>
+    </div>
+
+    <div class="fact-now" data-notch="tabW:170;tabH:32;r:14;slant:18">
+      <div class="fact-now-row">
+        <span id="facts-chip" class="fact-chip"></span>
+        <div id="facts-text" class="now-text"></div>
+      </div>
+      <div class="fact-bar"><div id="facts-bar"></div></div>
+      <span class="notch-tag"><span class="live-dot"></span>Gerade auf dem TV</span>
+    </div>
+
+    <div class="facts-nav">
+      <button type="button" id="facts-prev" class="btn btn--ghost btn--sm"><span class="i-arrow i-arrow--back"></span> Zurück</button>
+      <div id="facts-pos" class="num"></div>
+      <button type="button" id="facts-next" class="btn btn--ghost btn--sm">Weiter <span class="i-arrow i-right"></span></button>
+    </div>
+
+    <div class="facts-list">
+      <div class="eyebrow">Alle Meldungen</div>
+      <div id="facts-rows" class="fact-rows"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { AREA } from './js/area.js';
+import { post, getSession } from './js/api.js';
+import { connectState } from './js/ws-client.js';
+import { factList, FACT_KIND_LABEL } from './js/facts.js';
+import { seasonAt } from './js/season.js';
+import { initLando, countUp, leave, enter, swapView, go } from './js/lando.js';
+
+const $ = (id) => document.getElementById(id);
+// Getrennte Admin-Sessions pro Bereich (pk_/ys_-Präfix, D-019)
+const ADMIN_TOKEN_KEY = `${AREA.keyPrefix}_admin_token`;
+let token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+let ws = null;
+let players = [];
+let editingId = null;
+
+// --- Login ---
+$('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const res = await post('/api/admin/login', { password: $('login-pw').value });
+    token = res.token;
+    sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
+    // Anmeldung → Zentrale: Titelwort „Admin", Chip und Wortmarke gleiten an
+    // ihren neuen Platz, der Rest blendet über (D-085)
+    const html = document.documentElement;
+    html.dataset.morph = 'admin';
+    swapView(enterDashboard, { dir: 'morph' }).finally(() => { delete html.dataset.morph; });
+  } catch (err) {
+    const el = $('login-error');
+    el.textContent = err.message === 'Falsches Passwort' ? 'Falsches Passwort.' : err.message;
+    el.hidden = false;
+  }
+});
+
+$('logout').addEventListener('click', () => {
+  sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  // „Admin" gleitet aus „Zentrale" zurück in „Zugang" (D-085)
+  document.documentElement.dataset.morph = 'admin';
+  go(location.href, { replace: true, morph: 'admin' });
+});
+
+// Raus aus dem Admin, ohne sich abzumelden (D-065): Wer als Gast angemeldet
+// ist, will zurück ins Dashboard, sonst zur Anmeldung — wie im Abend-Archiv.
+// Das Admin-Token liegt in der sessionStorage und bleibt dabei erhalten.
+if (getSession().token) {
+  $('back').href = 'dashboard';
+  $('back').textContent = 'Zurück';   // Pfeil kommt per CSS (.back::before)
+}
+
+// --- Dashboard ---
+let errTimer;
+let pendingReset = false;
+function showError(message) {
+  // Fehler beim Zurücksetzen (z. B. falsches Passwort) im Reset-Modal zeigen
+  if (pendingReset) {
+    pendingReset = false;
+    const el = $('reset-error');
+    el.textContent = message;
+    el.hidden = false;
+    return;
+  }
+  $('dash-error').textContent = message;
+  enter($('dash-error'));
+  clearTimeout(errTimer);
+  errTimer = setTimeout(() => leave($('dash-error'), () => { $('dash-error').textContent = ''; }), 4000);
+}
+
+function send(msg) {
+  ws.send({ ...msg, token });
+}
+
+function enterDashboard() {
+  $('login-view').hidden = true;
+  $('dash-view').hidden = false;
+  loadArchiveDays();
+  // Aus dem Abend-Archiv: admin?protokoll=<tag> öffnet gleich das Protokoll
+  // dieses Abends (D-076)
+  const wanted = new URLSearchParams(location.search).get('protokoll');
+  if (wanted && /^\d{4}-\d{2}-\d{2}$/.test(wanted)) {
+    proto.day = wanted;
+    setSection('protokoll');
+  }
+  ws = connectState({
+    onState(state) {
+      players = state.players;
+      lastState = state;
+      renderHeader();
+      renderFactSheet();
+      renderNow();
+      renderRows();
+      renderPersonFilter();
+      scheduleProtoLoad();
+      updateJoinField(state.joinUrl ?? '');
+      updateSeasonal(state.seasonal !== false);
+      $('pace-toggle').checked = state.paceCompare !== false;
+      updateBoardMode(state.boardMode ?? 'alltime', state.boardDay);
+      updateSpeed(state.scrollSeconds ?? 3.2);
+      updateFunfact(state.funfactSeconds ?? 30);
+      renderFacts(state.customFacts ?? []);
+      // Ein State-Broadcast nach dem Reset = Erfolg (Passwort war korrekt)
+      if (pendingReset) {
+        pendingReset = false;
+        leave($('reset-modal'));
+        enter($('reset-done'));
+        setTimeout(() => leave($('reset-done')), 2000);
+      }
+    },
+    onFact(msg) {
+      factPos = msg;
+      renderFactSheet();
+      renderNow();
+    },
+    onError: showError,
+  });
+}
+
+// --- Kopf: Bereich, Anzahl Konten, Getränke gesamt ---
+const AREA_LABEL = 'Partykeller';
+function renderHeader() {
+  const n = players.length;
+  const sum = players.reduce((acc, p) => acc + p.total, 0);
+  const sub = $('adm-sub');
+  sub.textContent = '';
+  const area = document.createElement('span');
+  area.className = 'sub-area';
+  area.textContent = `${AREA_LABEL} · `;
+  sub.append(area, `${n} ${n === 1 ? 'Konto' : 'Konten'} · ${sum} ${sum === 1 ? 'Getränk' : 'Getränke'} gesamt`);
+  renderHeroStats();
+}
+
+// Kennzahlen im Kopf (nur Anzeige, D-078): Getränke heute und wer heute
+// dabei ist — beim ersten Stand zählen sie einmal hoch, danach springen sie.
+let heroShown = false;
+function renderHeroStats() {
+  const today = players.reduce((acc, p) => acc + p.beersToday + p.shotsToday + p.mixesToday, 0);
+  const people = players.filter((p) => p.beersToday + p.shotsToday + p.mixesToday > 0).length;
+  if (!heroShown) {
+    heroShown = true;
+    countUp($('hero-today'), today, { dur: 1000 });
+    countUp($('hero-people'), people, { dur: 1000 });
+    setTimeout(renderHeroStats, 1100);   // falls inzwischen ein neuer Stand kam
+    return;
+  }
+  $('hero-today').textContent = today.toLocaleString('de-DE');
+  $('hero-people').textContent = people.toLocaleString('de-DE');
+}
+
+// --- Fun-Facts im Wechsel (D-043) ----------------------------------------
+// Die Liste rechnet js/facts.js aus demselben Zustand, aus dem sie auch der
+// Fernseher baut; welcher Eintrag läuft, sagt der Server. Vor/Zurück und
+// Sprünge gehen als Admin-Nachricht zurück.
+let lastState = null;
+let factPos = null;   // { index, since, seconds } vom Server
+
+function currentFacts() {
+  if (!lastState) return [];
+  return factList(
+    lastState.players.filter((p) => !p.hidden),
+    lastState.records, lastState.customFacts, lastState.funStats
+  );
+}
+
+// Der Balken läuft ohne eigenen Timer: Startbreite setzen, dann per
+// Transition über die Restzeit auf 100 % ziehen.
+function runBar(bar) {
+  const passed = Math.min(factPos.seconds * 1000, Math.max(0, Date.now() - factPos.since));
+  bar.style.transition = 'none';
+  bar.style.width = `${(passed / (factPos.seconds * 1000)) * 100}%`;
+  void bar.offsetWidth;
+  bar.style.transition = `width ${factPos.seconds * 1000 - passed}ms linear`;
+  bar.style.width = '100%';
+}
+
+// Kurzfassung in der TV-Karte: welche Meldung läuft, mit Restzeit und ‹ ›
+function renderNow() {
+  const list = currentFacts();
+  const empty = !list.length || !factPos;
+  $('now-prev').disabled = $('now-next').disabled = empty;
+  if (empty) {
+    $('now-chip').className = 'fact-chip k-leer';
+    $('now-chip').textContent = '–';
+    $('now-text').textContent = 'Noch keine Meldungen.';
+    $('now-bar').style.transition = 'none';
+    $('now-bar').style.width = '0';
+    return;
+  }
+  const f = list[factPos.index % list.length];
+  $('now-chip').className = `fact-chip k-${f.kind}`;
+  $('now-chip').textContent = FACT_KIND_LABEL[f.kind] ?? f.kind;
+  $('now-text').textContent = f.text;
+  runBar($('now-bar'));
+}
+
+function renderFactSheet() {
+  if ($('facts-modal').hidden) return;
+  const list = currentFacts();
+  const rows = $('facts-rows');
+  if (!list.length || !factPos) {
+    rows.textContent = '';
+    $('facts-text').textContent = 'Noch keine Meldungen.';
+    $('facts-chip').className = 'fact-chip k-leer';
+    $('facts-chip').textContent = '–';
+    $('facts-pos').textContent = '';
+    $('facts-sub').textContent = 'Kein Fernseher verbunden oder nichts zu zeigen.';
+    $('facts-bar').style.width = '0';
+    $('facts-prev').disabled = $('facts-next').disabled = true;
+    return;
+  }
+  $('facts-prev').disabled = $('facts-next').disabled = false;
+
+  const pos = factPos.index % list.length;
+  const f = list[pos];
+  $('facts-chip').className = `fact-chip k-${f.kind}`;
+  $('facts-chip').textContent = FACT_KIND_LABEL[f.kind] ?? f.kind;
+  $('facts-text').textContent = f.text;
+  $('facts-pos').textContent = `${pos + 1} von ${list.length}`;
+  const round = Math.round(list.length * factPos.seconds);
+  $('facts-sub').textContent =
+    `${list.length} Meldungen · alle ${factPos.seconds} s · ein Durchlauf dauert ${Math.floor(round / 60)}:${String(round % 60).padStart(2, '0')} min`;
+
+  runBar($('facts-bar'));
+
+  rows.textContent = '';
+  list.forEach((entry, i) => {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'fact-row' + (i === pos ? ' active' : '');
+    const n = document.createElement('span');
+    n.className = 'n';
+    n.textContent = i + 1;
+    const chip = document.createElement('span');
+    chip.className = `fact-chip k-${entry.kind}`;
+    chip.textContent = FACT_KIND_LABEL[entry.kind] ?? entry.kind;
+    const txt = document.createElement('span');
+    txt.className = 'txt';
+    txt.textContent = entry.text;
+    row.append(n, chip, txt);
+    row.addEventListener('click', () => jumpTo(i));
+    rows.appendChild(row);
+  });
+  rows.querySelector('.fact-row.active')?.scrollIntoView({ block: 'nearest' });
+}
+
+// Der Server hält nur eine laufende Nummer; wir schicken die Zeilennummer
+// direkt, dann landet sein `index % länge` genau dort.
+function jumpTo(i) {
+  const list = currentFacts();
+  if (!list.length) return;
+  send({ type: 'setFactIndex', index: (i + list.length) % list.length });
+}
+
+function stepFact(delta) {
+  const list = currentFacts();
+  if (!list.length || !factPos) return;
+  jumpTo((factPos.index % list.length) + delta + list.length);
+}
+
+$('open-facts').addEventListener('click', () => {
+  enter($('facts-modal'));
+  renderFactSheet();
+});
+const closeFacts = () => { leave($('facts-modal')); };
+$('close-facts').addEventListener('click', closeFacts);
+$('facts-modal').addEventListener('click', (e) => { if (e.target === $('facts-modal')) closeFacts(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeFacts(); });
+$('facts-prev').addEventListener('click', () => stepFact(-1));
+$('facts-next').addEventListener('click', () => stepFact(1));
+$('now-prev').addEventListener('click', () => stepFact(-1));
+$('now-next').addEventListener('click', () => stepFact(1));
+
+// --- TV-Anzeige umschalten (All-Time / Heute / Archiv-Abend) ---
+function updateBoardMode(mode, day) {
+  const buttons = [...document.querySelectorAll('.mode-btn')];
+  buttons.forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+  const pos = buttons.findIndex((b) => b.dataset.mode === mode);
+  $('tv-mode').dataset.pos = String(Math.max(0, pos));   // Balken gleitet
+  const sel = $('archive-day');
+  sel.hidden = mode !== 'archive';
+  if (mode === 'archive' && day && document.activeElement !== sel) sel.value = day;
+}
+
+// Auswahl der Archiv-Abende füllen (neueste zuerst, wie /abende). Beim Öffnen
+// des Menüs höchstens alle 10 s neu laden — Abende kommen nicht im Sekundentakt.
+let archiveLoadedAt = 0;
+async function loadArchiveDays() {
+  if (Date.now() - archiveLoadedAt < 10_000) return;
+  archiveLoadedAt = Date.now();
+  try {
+    const res = await fetch(`${AREA.base}/api/archive`);
+    if (!res.ok) return;
+    const { days } = await res.json();
+    const sel = $('archive-day');
+    const current = sel.value;
+    sel.textContent = '';
+    for (const night of days) {
+      const opt = document.createElement('option');
+      opt.value = night.day;
+      const [y, m, d] = night.day.split('-');
+      opt.textContent = `${d}.${m}.${y} (${night.total} Getränke)`;
+      sel.appendChild(opt);
+    }
+    if (current && [...sel.options].some((o) => o.value === current)) sel.value = current;
+  } catch { /* nächster Versuch beim Öffnen des Menüs */ }
+}
+
+document.querySelectorAll('.mode-btn').forEach((b) => {
+  b.addEventListener('click', () => {
+    if (b.dataset.mode === 'archive') {
+      const day = $('archive-day').value;
+      if (!day) { showError('Noch kein Abend im Archiv.'); return; }
+      send({ type: 'setBoardMode', mode: 'archive', day });
+    } else {
+      send({ type: 'setBoardMode', mode: b.dataset.mode });
+    }
+  });
+});
+$('archive-day').addEventListener('change', () => {
+  send({ type: 'setBoardMode', mode: 'archive', day: $('archive-day').value });
+  $('archive-day').blur();
+});
+$('archive-day').addEventListener('mousedown', loadArchiveDays);
+
+// --- Rotationsgeschwindigkeit der TV-Rangliste ---
+const fmtSpeed = (s) => `${Number(s).toLocaleString('de-DE', { minimumFractionDigits: 1 })} s`;
+
+function updateSpeed(seconds) {
+  const slider = $('speed-slider');
+  // laufendes Ziehen des Admins nicht überschreiben
+  if (document.activeElement === slider) return;
+  slider.value = seconds;
+  $('speed-value').textContent = fmtSpeed(seconds);
+}
+
+$('speed-slider').addEventListener('input', () => {
+  $('speed-value').textContent = fmtSpeed($('speed-slider').value);
+});
+$('speed-slider').addEventListener('change', () => {
+  send({ type: 'setScrollSpeed', seconds: Number($('speed-slider').value) });
+  $('speed-slider').blur();
+});
+
+// --- Fun-Fact-Wechseltakt (30 s – 5 min) ---
+// unter 60 s in Sekunden, darüber in Minuten (halbe Schritte)
+function fmtFunfact(sec) {
+  const s = Number(sec);
+  if (s < 60) return `${s} s`;
+  const min = s / 60;
+  return `${min.toLocaleString('de-DE', { maximumFractionDigits: 2 })} min`;
+}
+
+function updateFunfact(seconds) {
+  const slider = $('funfact-slider');
+  if (document.activeElement === slider) return;
+  slider.value = seconds;
+  $('funfact-value').textContent = fmtFunfact(seconds);
+}
+
+$('funfact-slider').addEventListener('input', () => {
+  $('funfact-value').textContent = fmtFunfact($('funfact-slider').value);
+});
+$('funfact-slider').addEventListener('change', () => {
+  send({ type: 'setFunfactSpeed', seconds: Number($('funfact-slider').value) });
+  $('funfact-slider').blur();
+});
+
+// --- Eigene Fun-Facts (Titel + Text), rotieren im TV-Band mit;
+//     Bearbeiten öffnet ein Inline-Formular in der Zeile ---
+let factEditId = null;
+let lastFacts = [];
+
+function renderFacts(facts) {
+  lastFacts = facts;
+  document.querySelectorAll('.menu.floating').forEach((m) => m.remove());
+  $('own-count').textContent = facts.length ? String(facts.length) : '';
+  const box = $('fact-list');
+  box.textContent = '';
+  for (const f of facts) {
+    const row = document.createElement('div');
+    row.className = 'own';
+
+    if (factEditId === f.id) {
+      const form = document.createElement('form');
+      const titleIn = document.createElement('input');
+      titleIn.className = 'field field--sm';
+      titleIn.maxLength = 30;
+      titleIn.required = true;
+      titleIn.value = f.title;
+      titleIn.setAttribute('aria-label', 'Titel');
+      const textIn = document.createElement('input');
+      textIn.className = 'field field--sm';
+      textIn.maxLength = 160;
+      textIn.required = true;
+      textIn.value = f.text;
+      textIn.setAttribute('aria-label', 'Text');
+      const btns = document.createElement('div');
+      btns.className = 'own-btns';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'btn btn--ghost btn--sm';
+      cancel.textContent = 'Abbrechen';
+      cancel.addEventListener('click', () => { factEditId = null; renderFacts(lastFacts); });
+      const save = document.createElement('button');
+      save.className = 'btn btn--sm';
+      save.textContent = 'Speichern';
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        send({ type: 'updateFact', id: f.id, title: titleIn.value, text: textIn.value });
+        factEditId = null;
+      });
+      btns.append(cancel, save);
+      form.append(titleIn, textIn, btns);
+      row.appendChild(form);
+      queueMicrotask(() => titleIn.focus());
+    } else {
+      const chip = document.createElement('span');
+      chip.className = 'fact-chip k-eigene';
+      chip.textContent = f.title;
+      chip.title = f.title;
+      const text = document.createElement('span');
+      text.className = 't';
+      text.textContent = f.text;
+      text.title = f.text;
+      row.append(chip, text, moreMenu(`f${f.id}`, [
+        { label: 'Bearbeiten', icon: 'pen', run: () => { factEditId = f.id; renderFacts(lastFacts); } },
+        { sep: true },
+        { label: 'Löschen', icon: 'trash', danger: true, run: () => send({ type: 'deleteFact', id: f.id }) },
+      ], { floating: true }));
+    }
+    box.appendChild(row);
+  }
+}
+
+// Der Text ist ein zweizeiliges Feld, soll aber wie ein Einzeiler senden:
+// Enter schickt ab, einen Zeilenumbruch braucht das TV-Band nicht.
+$('fact-text').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    $('fact-form').requestSubmit();
+  }
+});
+
+$('fact-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  send({ type: 'addFact', title: $('fact-title').value, text: $('fact-text').value });
+  $('fact-form').reset();
+  $('fact-title').focus();
+});
+
+// --- QR-Adresse (Beitritt) ---
+function updateJoinField(joinUrl) {
+  const input = $('join-url');
+  // laufende Eingabe des Admins nicht überschreiben
+  if (document.activeElement !== input) input.value = joinUrl;
+  $('join-hint').textContent = joinUrl ? 'Aktiv' : '';
+}
+
+// Saison-Akzente (D-071): Schalter plus Hinweis, welcher Anlass gerade gilt
+const SEASON_NAME = { oktoberfest: 'Oktoberfest', halloween: 'Halloween', winter: 'Winter', silvester: 'Silvester', fasching: 'Fasching' };
+function updateSeasonal(on) {
+  $('seasonal-toggle').checked = on;
+  const s = seasonAt();
+  $('seasonal-hint').textContent = !on ? 'Aus'
+    : s ? `Gerade aktiv: ${SEASON_NAME[s]}` : 'Gerade ist kein Anlass.';
+}
+$('seasonal-toggle').addEventListener('change', (e) => send({ type: 'setSeasonal', on: e.target.checked }));
+// Schnitt-Vergleich im Dashboard (D-075)
+$('pace-toggle').addEventListener('change', (e) => send({ type: 'setPaceCompare', on: e.target.checked }));
+
+$('join-save').addEventListener('click', () => {
+  send({ type: 'setJoinUrl', url: $('join-url').value });
+  $('join-url').blur();
+  $('join-hint').textContent = '✓ Gespeichert';
+});
+
+// Tippt der Admin gerade in ein Feld der Liste (Name, Zählerwert), darf ein
+// Broadcast — irgendwer trinkt — die Liste nicht neu bauen, sonst ist das Feld
+// samt Eingabe weg (D-046). Dann wird der Neuaufbau nachgeholt, sobald das Feld
+// den Fokus verliert.
+let renderPending = false;
+$('rows').addEventListener('focusout', () => {
+  setTimeout(() => {
+    if (renderPending && !$('rows').contains(document.activeElement)) renderRows();
+  }, 0);
+});
+
+// --- ⋯-Menü (Konten und eigene Fun-Facts) ---
+// Welches Menü offen ist, steht in openMenu, damit es einen Neuaufbau der
+// Liste übersteht (jedes Getränk irgendwo schickt einen neuen Zustand).
+let openMenu = null;
+// Nur ein frisch geöffnetes Menü blendet ein — beim Neuaufbau durch einen
+// Broadcast steht es still (sonst würde es bei jedem Getränk flackern).
+let menuFresh = false;
+function redrawMenus() {
+  renderRows();
+  renderFacts(lastFacts);
+}
+function moreMenu(key, items, { floating = false } = {}) {
+  const wrap = document.createElement('div');
+  wrap.className = 'more-wrap';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'more' + (openMenu === key ? ' open' : '');
+  btn.textContent = '⋯';
+  btn.setAttribute('aria-label', 'Weitere Aktionen');
+  btn.setAttribute('aria-expanded', String(openMenu === key));
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openMenu = openMenu === key ? null : key;
+    menuFresh = true;
+    redrawMenus();
+    menuFresh = false;
+  });
+  wrap.appendChild(btn);
+  if (openMenu === key) {
+    const menu = document.createElement('div');
+    menu.className = 'menu' + (menuFresh ? ' pop-in' : '');
+    menu.setAttribute('role', 'menu');
+    for (const item of items) {
+      if (item.sep) {
+        const sep = document.createElement('div');
+        sep.className = 'sep';
+        menu.appendChild(sep);
+        continue;
+      }
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('role', 'menuitem');
+      if (item.danger) b.className = 'danger';
+      if (item.icon) {
+        const ico = document.createElement('span');
+        ico.className = `mi mi--${item.icon}`;
+        ico.setAttribute('aria-hidden', 'true');
+        b.append(ico);
+      }
+      b.append(item.label);
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openMenu = null;
+        redrawMenus();
+        item.run();
+      });
+      menu.appendChild(b);
+    }
+    if (floating) {
+      // Am <body> und fest positioniert: unter dem Knopf, oder darüber,
+      // wenn unten kein Platz mehr ist.
+      menu.classList.add('floating');
+      document.body.appendChild(menu);
+      requestAnimationFrame(() => {
+        const r = btn.getBoundingClientRect();
+        const h = menu.offsetHeight;
+        menu.style.left = `${Math.max(8, r.right - menu.offsetWidth)}px`;
+        menu.style.top = `${r.bottom + 6 + h > window.innerHeight - 8 ? r.top - h - 6 : r.bottom + 6}px`;
+      });
+    } else {
+      wrap.appendChild(menu);
+    }
+  }
+  return wrap;
+}
+// Ein am <body> hängendes Menü würde beim Scrollen am Platz bleiben, während
+// sein Knopf wegwandert — also schließen.
+document.addEventListener('scroll', () => {
+  if (document.querySelector('.menu.floating')) { openMenu = null; redrawMenus(); }
+}, { capture: true, passive: true });
+document.addEventListener('click', (e) => {
+  if (openMenu && !e.target.closest('.menu')) { openMenu = null; redrawMenus(); }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && openMenu) { openMenu = null; redrawMenus(); }
+});
+
+// --- Suche und Filter über der Kontenliste ---
+let filterText = '';
+let filterMode = 'all';   // all | today | hidden
+$('k-search').addEventListener('input', () => {
+  filterText = $('k-search').value.trim().toLocaleLowerCase('de');
+  renderRows();
+});
+const filterBtns = [...$('k-filter').querySelectorAll('.tab-btn')];
+filterBtns.forEach((b, i) => b.addEventListener('click', () => {
+  filterMode = b.dataset.filter;
+  filterBtns.forEach((x) => x.classList.toggle('active', x === b));
+  $('k-filter').dataset.pos = String(i);
+  renderRows();
+}));
+
+// --- Umschalter ---
+// Schmal: Konten | Protokoll | TV | Mehr (data-m). Breit steht die
+// Seitenleiste immer daneben, und über der Hauptspalte schaltet ein eigener
+// Umschalter Konten | Protokoll (data-v). Beide bleiben im Gleichschritt.
+const mBtns = [...$('m-tabs').querySelectorAll('.tab-btn')];
+const vBtns = [...$('v-tabs').querySelectorAll('.tab-btn')];
+function setSection(m) {
+  const adm = $('adm');
+  adm.dataset.m = m;
+  if (m === 'konten' || m === 'protokoll') adm.dataset.v = m;
+  mBtns.forEach((x, i) => { x.classList.toggle('active', x.dataset.m === m); if (x.dataset.m === m) $('m-tabs').dataset.pos = String(i); });
+  const v = adm.dataset.v ?? 'konten';
+  vBtns.forEach((x, i) => { x.classList.toggle('active', x.dataset.v === v); if (x.dataset.v === v) $('v-tabs').dataset.pos = String(i); });
+  if (v === 'protokoll') openProtocol();
+  fitSide();
+}
+// Beim Umschalten gleitet die Ansicht in Richtung des Balkens hinaus und die
+// neue von der anderen Seite herein. Schmal wechselt der ganze Inhalt unter
+// dem Umschalter, breit nur die Hauptspalte (die Seitenleiste blendet über).
+const narrow = () => matchMedia('(max-width: 1180px)').matches;
+const sectionViews = () => (narrow()
+  ? [$('adm').querySelector('.adm-grid')]
+  : [[...$('adm').querySelectorAll('.view')].find((v) => v.getClientRects().length), $('adm-side')]);
+function goSection(m) {
+  const order = narrow() ? mBtns.map((b) => b.dataset.m) : vBtns.map((b) => b.dataset.v);
+  const from = order.indexOf(narrow() ? $('adm').dataset.m : $('adm').dataset.v);
+  const to = order.indexOf(m);
+  if (from === to) { setSection(m); return; }
+  swapView(() => setSection(m), { dir: to > from ? 'next' : 'prev', from: sectionViews, to: sectionViews });
+}
+mBtns.forEach((b) => b.addEventListener('click', () => goSection(b.dataset.m)));
+vBtns.forEach((b) => b.addEventListener('click', () => goSection(b.dataset.v)));
+
+// --- Getränke-Protokoll (D-073) ------------------------------------------
+// Jedes gezählte Getränk eines Abends einzeln: umhängen (Konto, Sorte,
+// Uhrzeit), löschen mit Rückgängig, nachtragen. Der Server zieht die Zähler
+// mit. Die Liste lädt per REST (nur mit Admin-Token) und neu, sobald ein
+// neuer Stand kommt — also auch, wenn gerade jemand trinkt.
+const DRINK = {
+  beer: { label: 'Bier', many: 'Bier' },
+  shot: { label: 'Shot', many: 'Shots' },
+  mix: { label: 'Mische', many: 'Mischen' },
+};
+const DUP_SECONDS = 5;
+const pad2 = (n) => String(n).padStart(2, '0');
+const hhmm = (ts) => { const d = new Date(ts); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+const WEEKDAY = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+const ICON_PEN = '<svg class="i-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>'
+  + '<svg class="i-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+const ICON_BIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/><path d="M10 11v6M14 11v6"/></svg>';
+
+// Party-Tag wie auf dem Server: bis 6 Uhr früh gehört alles zum Vortag
+function partyDay(ts = Date.now()) {
+  const d = new Date(ts);
+  if (d.getHours() < 6) d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+// Uhrzeit „HH:MM“ an einem Party-Tag -> Zeitstempel (vor 6 Uhr: Folgetag)
+function tsAt(day, time) {
+  const [y, m, d] = day.split('-').map(Number);
+  const [h, mi] = time.split(':').map(Number);
+  return new Date(y, m - 1, d + (h < 6 ? 1 : 0), h, mi, 0, 0).getTime();
+}
+
+const proto = {
+  day: partyDay(),
+  days: [],            // [{ day, name }] neueste zuerst
+  entries: [],         // vom Server, neueste zuerst
+  gone: new Map(),     // id -> Eintrag, hier gelöscht (für Rückgängig)
+  edited: new Set(),   // ids, die in dieser Sitzung bearbeitet wurden
+  added: new Set(),    // „playerId|drink|ts“ der nachgetragenen Einträge
+  person: '',
+  drink: '',
+  edit: null,          // { id | null (neu), playerId, drink, time, orig }
+  pending: false,
+};
+let protoTimer = null;
+let histDay = null;
+let protoDaysAt = 0;
+
+function protoVisible() {
+  const adm = $('adm');
+  if (adm.dataset.v !== 'protokoll') return false;
+  return !matchMedia('(max-width: 1180px)').matches || adm.dataset.m === 'protokoll';
+}
+
+function openProtocol() {
+  histDay = null;   // Balken wachsen beim Öffnen einmal hoch
+  loadProtoDays();
+  loadProto();
+}
+
+async function loadProtoDays(force = false) {
+  if (!force && Date.now() - protoDaysAt < 30_000) return;
+  protoDaysAt = Date.now();
+  try {
+    const res = await fetch(`${AREA.base}/api/archive`);
+    if (!res.ok) return;
+    const { days } = await res.json();
+    const today = partyDay();
+    proto.days = days.map((d) => ({ day: d.day, name: d.name }));
+    if (!proto.days.some((d) => d.day === today)) proto.days.unshift({ day: today, name: '' });
+    if (!proto.days.some((d) => d.day === proto.day)) proto.days.unshift({ day: proto.day, name: '' });
+    proto.days.sort((a, b) => b.day.localeCompare(a.day));
+    renderProtoDays();
+  } catch { /* nächster Versuch beim nächsten Öffnen */ }
+}
+
+function dayLabel({ day, name }) {
+  const [y, m, d] = day.split('-').map(Number);
+  const wd = WEEKDAY[new Date(y, m - 1, d).getDay()];
+  const base = `${wd} ${pad2(d)}.${pad2(m)}.`;
+  const label = day === partyDay() ? `Heute · ${base}` : `${base}${y !== new Date().getFullYear() ? y : ''}`;
+  return name ? `${label} · „${name}“` : label;
+}
+
+function renderProtoDays() {
+  const sel = $('p-day');
+  sel.textContent = '';
+  for (const d of proto.days) {
+    const opt = document.createElement('option');
+    opt.value = d.day;
+    opt.textContent = dayLabel(d);
+    sel.appendChild(opt);
+  }
+  sel.value = proto.day;
+  const i = proto.days.findIndex((d) => d.day === proto.day);
+  $('p-next').disabled = i <= 0;
+  $('p-prev').disabled = i < 0 || i >= proto.days.length - 1;
+}
+
+function setProtoDay(day) {
+  if (day === proto.day) return;
+  proto.day = day;
+  proto.gone.clear();
+  proto.edit = null;
+  proto.entries = [];
+  renderProtoDays();
+  renderProto();
+  loadProto();
+}
+$('p-day').addEventListener('change', () => setProtoDay($('p-day').value));
+// Die Liste ist neueste zuerst: ‹ geht zurück in die Vergangenheit
+$('p-prev').addEventListener('click', () => {
+  const i = proto.days.findIndex((d) => d.day === proto.day);
+  if (i >= 0 && i < proto.days.length - 1) setProtoDay(proto.days[i + 1].day);
+});
+$('p-next').addEventListener('click', () => {
+  const i = proto.days.findIndex((d) => d.day === proto.day);
+  if (i > 0) setProtoDay(proto.days[i - 1].day);
+});
+
+async function loadProto() {
+  const day = proto.day;
+  try {
+    const res = await fetch(`${AREA.base}/api/log/${day}`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) {
+      if (res.status === 403) showError('Admin-Anmeldung abgelaufen – bitte neu anmelden.');
+      return;
+    }
+    const data = await res.json();
+    if (day !== proto.day) return;   // inzwischen anderer Abend gewählt
+    proto.entries = data.entries;
+    renderProto();
+  } catch { /* Offline-Moment: der nächste Stand lädt erneut */ }
+}
+
+function scheduleProtoLoad() {
+  if (!protoVisible()) return;
+  clearTimeout(protoTimer);
+  protoTimer = setTimeout(loadProto, 300);
+}
+
+// Personen-Filter aus dem Stand (alle Konten, alphabetisch)
+function renderPersonFilter() {
+  const sel = $('p-person');
+  if (document.activeElement === sel) return;
+  const sorted = [...players].sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  sel.textContent = '';
+  sel.appendChild(new Option('Alle Konten', ''));
+  for (const p of sorted) sel.appendChild(new Option(p.name, p.id));
+  sel.value = sorted.some((p) => p.id === proto.person) ? proto.person : '';
+}
+$('p-person').addEventListener('change', () => { proto.person = $('p-person').value; renderProto(); });
+
+const pFilterBtns = [...$('p-filter').querySelectorAll('.tab-btn')];
+pFilterBtns.forEach((b, i) => b.addEventListener('click', () => {
+  proto.drink = b.dataset.drink;
+  pFilterBtns.forEach((x) => x.classList.toggle('active', x === b));
+  $('p-filter').dataset.pos = String(i);
+  renderProto();
+}));
+
+// Gleiches Konto, gleiches Getränk, höchstens DUP_SECONDS auseinander
+function findDups(entries) {
+  const last = new Map();
+  const ids = new Set();
+  const pairs = [];
+  for (const e of [...entries].sort((a, b) => a.ts - b.ts || a.id - b.id)) {
+    const key = `${e.playerId}|${e.drink}`;
+    const prev = last.get(key);
+    if (prev && e.ts - prev.ts <= DUP_SECONDS * 1000) {
+      ids.add(e.id); ids.add(prev.id);
+      pairs.push({ first: prev, second: e });
+    }
+    last.set(key, e);
+  }
+  return { ids, pairs };
+}
+
+function renderProto() {
+  const box = $('p-rows');
+  // Offenes Bearbeiten in der Zeile nicht wegwerfen, weil irgendwo jemand trinkt
+  if (proto.edit && !isSheet() && box.querySelector('.p-edit')?.contains(document.activeElement)) {
+    proto.pending = true;
+    renderProtoSide();
+    return;
+  }
+  proto.pending = false;
+  box.textContent = '';
+
+  const live = proto.entries;
+  const { ids: dupIds } = findDups(live);
+  const people = new Set(live.map((e) => e.playerId)).size;
+  $('p-count').textContent = live.length
+    ? `${live.length} ${live.length === 1 ? 'Getränk' : 'Getränke'} · ${people} ${people === 1 ? 'Konto' : 'Konten'}`
+    : '';
+
+  // Gelöschte Einträge bleiben an ihrer Stelle stehen, bis Rückgängig oder Abendwechsel
+  const all = live.map((e) => ({ ...e, isGone: false }))
+    .concat([...proto.gone.values()].map((e) => ({ ...e, isGone: true })));
+  if (proto.edit && proto.edit.id === null) all.push({ id: null, playerId: proto.edit.playerId, drink: proto.edit.drink, ts: tsAt(proto.day, proto.edit.time), isNew: true });
+  const shown = all
+    .filter((e) => e.isNew || ((!proto.person || e.playerId === proto.person) && (!proto.drink || e.drink === proto.drink)))
+    .sort((a, b) => b.ts - a.ts || (b.id ?? Infinity) - (a.id ?? Infinity));
+
+  if (!shown.length) {
+    const empty = document.createElement('div');
+    empty.className = 'p-empty';
+    empty.textContent = live.length ? 'Keine Einträge für diesen Filter.'
+      : proto.day === partyDay() ? 'Heute wurde noch nichts gezählt.' : 'An diesem Abend wurde nichts gezählt.';
+    box.appendChild(empty);
+  }
+
+  let hourKey = null;
+  let hourHead = null;
+  let hourCount = 0;
+  const flushHour = () => { if (hourHead) hourHead.querySelector('span').textContent = hourCount === 1 ? '1 Getränk' : `${hourCount} Getränke`; };
+  for (const e of shown) {
+    const d = new Date(e.ts);
+    const key = `${partyDay(e.ts)} ${d.getHours()}`;
+    if (key !== hourKey) {
+      flushHour();
+      hourKey = key;
+      hourCount = 0;
+      hourHead = document.createElement('div');
+      hourHead.className = 'p-hour';
+      const h = d.getHours();
+      hourHead.innerHTML = `<b>${pad2(h)}–${pad2((h + 1) % 24)} Uhr</b><span></span>`;
+      box.appendChild(hourHead);
+    }
+    if (!e.isGone && !e.isNew) hourCount += 1;
+
+    const editingThis = proto.edit && (e.isNew ? proto.edit.id === null : proto.edit.id === e.id);
+    if (editingThis && !isSheet()) { box.appendChild(buildEditor()); continue; }
+    if (e.isNew) continue;
+    box.appendChild(e.isGone ? goneRow(e) : protoRow(e, dupIds.has(e.id)));
+  }
+  flushHour();
+  renderProtoSide();
+}
+
+function nameOf(playerId, fallback = '—') {
+  return players.find((p) => p.id === playerId)?.name ?? fallback;
+}
+
+function protoRow(e, dup) {
+  const row = document.createElement('div');
+  row.className = 'p-row';
+  const time = document.createElement('div');
+  time.className = 'p-time num';
+  const d = new Date(e.ts);
+  time.append(hhmm(e.ts));
+  const ss = document.createElement('span');
+  ss.className = 'ss';
+  ss.textContent = `:${pad2(d.getSeconds())}`;
+  time.appendChild(ss);
+
+  const name = nameOf(e.playerId, e.name);
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.setAttribute('aria-hidden', 'true');
+  avatar.textContent = [...name][0]?.toUpperCase() ?? '?';
+
+  const who = document.createElement('div');
+  who.className = 'p-name';
+  const n = document.createElement('span');
+  n.className = 'n';
+  n.textContent = name;
+  who.appendChild(n);
+  const chip = (cls, text, title) => {
+    const c = document.createElement('span');
+    c.className = `chip ${cls}`;
+    c.textContent = text;
+    if (title) c.title = title;
+    who.appendChild(c);
+  };
+  if (dup) {
+    const flag = document.createElement('span');
+    flag.className = 'p-flag';
+    flag.textContent = 'Doppelt?';
+    flag.title = `Gleiches Getränk innerhalb von ${DUP_SECONDS} Sekunden`;
+    who.appendChild(flag);
+  }
+  if (proto.added.has(`${e.playerId}|${e.drink}|${e.ts}`)) chip('chip-muted', 'nachgetragen');
+  else if (proto.edited.has(e.id)) chip('chip-muted', 'bearbeitet');
+
+  const pill = document.createElement('span');
+  pill.className = `p-pill ${e.drink}`;
+  pill.textContent = DRINK[e.drink].label;
+
+  const act = document.createElement('div');
+  act.className = 'p-act';
+  const edit = document.createElement('button');
+  edit.type = 'button';
+  edit.className = 'p-ico edit';
+  edit.title = 'Bearbeiten';
+  edit.setAttribute('aria-label', `Eintrag von ${name} um ${hhmm(e.ts)} bearbeiten`);
+  edit.innerHTML = ICON_PEN;
+  edit.addEventListener('click', () => startEdit(e));
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.className = 'p-ico del';
+  del.title = 'Löschen';
+  del.setAttribute('aria-label', `Eintrag von ${name} um ${hhmm(e.ts)} löschen`);
+  del.innerHTML = ICON_BIN;
+  del.addEventListener('click', () => removeEntry(e));
+  act.append(edit, del);
+
+  row.append(time, avatar, who, pill, act);
+  // Am Handy ist die ganze Zeile der Knopf (der Stift-Knopf bleibt für die Tastatur)
+  row.addEventListener('click', (ev) => { if (isSheet() && !ev.target.closest('button')) startEdit(e); });
+  return row;
+}
+
+function goneRow(e) {
+  const row = document.createElement('div');
+  row.className = 'p-row gone';
+  const time = document.createElement('div');
+  time.className = 'p-time num';
+  time.textContent = hhmm(e.ts);
+  const text = document.createElement('div');
+  text.className = 'p-gone-text';
+  const s = document.createElement('s');
+  s.textContent = `${nameOf(e.playerId, e.name)} · ${DRINK[e.drink].label}`;
+  text.append(s, ' – gelöscht');
+  const undo = document.createElement('button');
+  undo.type = 'button';
+  undo.className = 'btn btn--sm p-undo';
+  undo.innerHTML = '<span class="i-arrow i-arrow--back"></span>Rückgängig';
+  if (e.id === freshGone) row.classList.add('is-new');
+  undo.addEventListener('click', () => {
+    proto.gone.delete(e.id);
+    send({ type: 'addLog', playerId: e.playerId, drink: e.drink, ts: e.ts });
+    renderProto();
+  });
+  row.append(time, text, undo);
+  return row;
+}
+
+// Die Rückgängig-Leiste gleitet nur beim Löschen selbst herein (D-078)
+let freshGone = null;
+function removeEntry(e) {
+  send({ type: 'deleteLog', id: e.id });
+  proto.gone.set(e.id, e);
+  proto.entries = proto.entries.filter((x) => x.id !== e.id);
+  freshGone = e.id;
+  if (proto.edit && proto.edit.id === e.id) closeEditor();
+  renderProto();
+  freshGone = null;
+}
+
+// --- Bearbeiten ---
+const isSheet = () => matchMedia('(max-width: 760px)').matches;
+
+function startEdit(e) {
+  proto.edit = { id: e.id, playerId: e.playerId, drink: e.drink, time: hhmm(e.ts), orig: e };
+  showEditor();
+}
+
+$('p-add').addEventListener('click', () => {
+  // Heute: jetzt; an einem früheren Abend: kurz nach dem letzten Getränk
+  const today = proto.day === partyDay();
+  const last = proto.entries[0];
+  const time = today ? hhmm(Date.now()) : last ? hhmm(last.ts + 60_000) : '22:00';
+  const who = proto.person || last?.playerId || [...players].sort((a, b) => a.name.localeCompare(b.name, 'de'))[0]?.id;
+  if (!who) { showError('Noch keine Konten.'); return; }
+  proto.edit = { id: null, playerId: who, drink: proto.drink || 'beer', time, orig: null };
+  showEditor();
+});
+
+function showEditor() {
+  if (isSheet()) {
+    const sheet = $('p-sheet');
+    sheet.textContent = '';
+    sheet.appendChild(buildEditor());
+    enter(sheet);
+    renderProto();
+  } else {
+    renderProto();
+    $('p-rows').querySelector('.p-edit input')?.focus();
+  }
+}
+
+function closeEditor() {
+  proto.edit = null;
+  const sheet = $('p-sheet');
+  leave(sheet, () => { sheet.hidden = true; sheet.textContent = ''; });
+  renderProto();
+}
+$('p-sheet').addEventListener('click', (e) => { if (e.target === $('p-sheet')) closeEditor(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && proto.edit) closeEditor(); });
+
+function buildEditor() {
+  const ed = proto.edit;
+  const form = document.createElement('form');
+  form.className = 'p-edit';
+
+  // Kopf nur im Blatt am Handy
+  const head = document.createElement('div');
+  head.className = 'p-sheet-head';
+  head.innerHTML = '<div class="grip"></div><div class="p-sheet-title"><div><h2></h2><div class="sub"></div></div><button type="button" class="btn btn--ghost btn--sm quiet">Abbrechen</button></div>';
+  head.querySelector('h2').textContent = ed.orig ? 'Eintrag bearbeiten' : 'Getränk nachtragen';
+  if (ed.orig) {
+    const d = new Date(ed.orig.ts);
+    head.querySelector('.sub').textContent =
+      `${nameOf(ed.orig.playerId, ed.orig.name)} · ${DRINK[ed.orig.drink].label} · ${hhmm(ed.orig.ts)}:${pad2(d.getSeconds())}`;
+  } else {
+    head.querySelector('.sub').textContent = dayLabel(proto.days.find((d) => d.day === proto.day) ?? { day: proto.day, name: '' });
+  }
+  head.querySelector('.quiet').addEventListener('click', closeEditor);
+
+  const fields = document.createElement('div');
+  fields.className = 'p-edit-fields';
+
+  const timeField = document.createElement('label');
+  timeField.className = 'p-field';
+  timeField.innerHTML = '<span class="lbl">Uhrzeit</span>';
+  const time = document.createElement('input');
+  time.type = 'time';
+  time.required = true;
+  time.className = 'field field--sm';
+  time.value = ed.time;
+  timeField.appendChild(time);
+
+  const personField = document.createElement('label');
+  personField.className = 'p-field';
+  personField.innerHTML = '<span class="lbl">Konto</span>';
+  const person = document.createElement('select');
+  person.className = 'field field--sm';
+  for (const p of [...players].sort((a, b) => a.name.localeCompare(b.name, 'de'))) person.appendChild(new Option(p.name, p.id));
+  person.value = ed.playerId;
+  personField.appendChild(person);
+
+  const drinkField = document.createElement('div');
+  drinkField.className = 'p-field p-field-drink';
+  drinkField.innerHTML = '<span class="lbl">Getränk</span>';
+  const seg = document.createElement('div');
+  seg.className = 'p-seg';
+  for (const k of Object.keys(DRINK)) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = k + (ed.drink === k ? ' on' : '');
+    b.textContent = DRINK[k].label;
+    b.setAttribute('aria-pressed', String(ed.drink === k));
+    b.addEventListener('click', () => {
+      ed.drink = k;
+      seg.querySelectorAll('button').forEach((x) => {
+        x.classList.toggle('on', x === b);
+        x.setAttribute('aria-pressed', String(x === b));
+      });
+    });
+    seg.appendChild(b);
+  }
+  drinkField.appendChild(seg);
+
+  const btns = document.createElement('div');
+  btns.className = 'p-edit-btns';
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.className = 'btn btn--ghost p-cancel';
+  cancel.textContent = 'Abbrechen';
+  cancel.addEventListener('click', closeEditor);
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.className = 'btn btn--danger p-del-btn';
+  del.textContent = ed.orig ? 'Löschen' : 'Abbrechen';
+  del.addEventListener('click', () => { if (ed.orig) removeEntry(ed.orig); closeEditor(); });
+  const save = document.createElement('button');
+  save.className = 'btn';
+  save.textContent = 'Speichern';
+  btns.append(cancel, del, save);
+
+  fields.append(timeField, personField, drinkField);
+  if (!isSheet()) fields.appendChild(btns);
+
+  time.addEventListener('input', () => { ed.time = time.value; });
+  person.addEventListener('change', () => { ed.playerId = person.value; });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!ed.time) return;
+    // Unveränderte Uhrzeit: Sekunden des Originals behalten (Reihenfolge, Doppeltipps)
+    const ts = ed.orig && ed.time === hhmm(ed.orig.ts) ? ed.orig.ts : tsAt(proto.day, ed.time);
+    if (ts > Date.now() + 60_000) { showError('Die Uhrzeit liegt in der Zukunft.'); return; }
+    if (ed.orig) {
+      send({ type: 'editLog', id: ed.orig.id, playerId: ed.playerId, drink: ed.drink, ts });
+      proto.edited.add(ed.orig.id);
+    } else {
+      send({ type: 'addLog', playerId: ed.playerId, drink: ed.drink, ts });
+      proto.added.add(`${ed.playerId}|${ed.drink}|${ts}`);
+    }
+    closeEditor();
+  });
+
+  form.append(head, fields);
+  if (isSheet()) form.appendChild(btns);
+  return form;
+}
+
+// Seitenleiste: Zahlen des Abends, Verlauf je Stunde, mögliche Doppeltipps
+function renderProtoSide() {
+  const live = proto.entries;
+  const totals = $('p-totals');
+  totals.textContent = '';
+  for (const [k, color] of [['beer', 'var(--beer)'], ['shot', 'var(--shot)'], ['mix', 'var(--mixc)']]) {
+    const cell = document.createElement('div');
+    const num = document.createElement('span');
+    num.className = 'num';
+    num.style.color = color;
+    num.textContent = live.filter((e) => e.drink === k).length;
+    const lbl = document.createElement('span');
+    lbl.className = 'lbl2';
+    lbl.textContent = DRINK[k].many;
+    cell.append(num, lbl);
+    totals.appendChild(cell);
+  }
+
+  const hist = $('p-hist');
+  const labels = $('p-hist-labels');
+  // Balken wachsen nur beim ersten Bild eines Abends, nicht bei jedem Broadcast
+  const grow = live.length > 0 && histDay !== proto.day;
+  if (grow) histDay = proto.day;
+  hist.classList.toggle('grow', grow);
+  hist.textContent = '';
+  labels.textContent = '';
+  const byHour = new Map();   // Stunden ab 18 Uhr gezählt, nach Mitternacht weiter
+  for (const e of live) {
+    const h = new Date(e.ts).getHours();
+    const k = h < 6 ? h + 24 : h;
+    byHour.set(k, (byHour.get(k) ?? 0) + 1);
+  }
+  const keys = [...byHour.keys()];
+  if (keys.length) {
+    const from = Math.min(...keys), to = Math.max(...keys);
+    const max = Math.max(...byHour.values());
+    for (let k = from; k <= to; k++) {
+      const n = byHour.get(k) ?? 0;
+      const col = document.createElement('div');
+      col.innerHTML = `<span class="v">${n || ''}</span><div class="bar" style="height:${n ? Math.round(4 + (54 * n) / max) : 2}px"></div>`;
+      hist.appendChild(col);
+      const lab = document.createElement('span');
+      lab.textContent = pad2(k % 24);
+      labels.appendChild(lab);
+    }
+  }
+  const sorted = [...live].sort((a, b) => a.ts - b.ts);
+  $('p-span').textContent = sorted.length
+    ? `Erstes Getränk ${hhmm(sorted[0].ts)} · letztes ${hhmm(sorted[sorted.length - 1].ts)}`
+    : 'Noch nichts gezählt.';
+
+  const { pairs } = findDups(live);
+  $('p-dup-count').textContent = pairs.length ? String(pairs.length) : '';
+  if (pairs.length) $('adm').dataset.dups = ''; else delete $('adm').dataset.dups;
+  const box = $('p-dups');
+  box.textContent = '';
+  if (!pairs.length) {
+    const none = document.createElement('div');
+    none.className = 'p-dup-none';
+    none.textContent = 'Nichts Auffälliges an diesem Abend.';
+    box.appendChild(none);
+  }
+  for (const { first, second } of pairs) {
+    const row = document.createElement('div');
+    row.className = 'p-dup';
+    const who = document.createElement('div');
+    who.className = 'who';
+    const b = document.createElement('b');
+    b.textContent = nameOf(second.playerId, second.name);
+    const s = document.createElement('span');
+    s.textContent = `2× ${DRINK[second.drink].label} in ${Math.round((second.ts - first.ts) / 1000)} s · ${hhmm(second.ts)}`;
+    who.append(b, s);
+    const fix = document.createElement('button');
+    fix.type = 'button';
+    fix.className = 'btn btn--danger btn--sm';
+    fix.textContent = 'Einen löschen';
+    fix.addEventListener('click', () => removeEntry(second));
+    row.append(who, fix);
+    box.appendChild(row);
+  }
+  fitSide();
+}
+
+// Bearbeiten in der Zeile verlassen: aufgeschobenen Neuaufbau nachholen
+$('p-rows').addEventListener('focusout', () => {
+  setTimeout(() => {
+    if (proto.pending && !$('p-rows').querySelector('.p-edit')?.contains(document.activeElement)) renderProto();
+  }, 0);
+});
+
+// Aus der Kontenliste direkt ins Protokoll dieser Person (heute)
+function showInProtocol(p) {
+  proto.person = p.id;
+  setProtoDay(partyDay());
+  renderPersonFilter();
+  setSection('protokoll');
+}
+
+// Die Seitenleiste läuft mit (sticky). Ist sie höher als das Fenster, klebt
+// sie erst, wenn ihr unteres Ende sichtbar ist — sonst wäre die Danger Zone
+// bis zum Seitenende nicht erreichbar.
+function fitSide() {
+  const side = $('adm-side');
+  side.style.top = `${Math.min(20, window.innerHeight - side.offsetHeight - 20)}px`;
+}
+window.addEventListener('resize', fitSide);
+
+function renderRows() {
+  const box = $('rows');
+  const active = document.activeElement;
+  if (active && active.tagName === 'INPUT' && box.contains(active)) {
+    renderPending = true;
+    return;
+  }
+  renderPending = false;
+  box.textContent = '';
+
+  // Admin-Liste alphabetisch nach Name (nicht nach Punktestand)
+  const all = [...players].sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  const list = all.filter((p) => {
+    if (filterText && !p.name.toLocaleLowerCase('de').includes(filterText)) return false;
+    if (filterMode === 'today') return p.beersToday + p.shotsToday + p.mixesToday > 0;
+    if (filterMode === 'hidden') return p.hidden;
+    return true;
+  });
+  // Nur bei aktiver Suche/Filter ein Hinweis, sonst steht „Konten“ allein (D-064)
+  $('k-count').textContent = list.length === all.length ? '' : `${list.length} von ${all.length}`;
+
+  if (!list.length) {
+    const empty = document.createElement('div');
+    empty.className = 'k-empty';
+    empty.textContent = all.length ? 'Keine Treffer.' : 'Noch keine Konten.';
+    box.appendChild(empty);
+  }
+
+  for (const p of list) {
+    const row = document.createElement('div');
+    row.className = 'k-row' + (p.hidden ? ' is-hidden' : '') + (openMenu === `p${p.id}` ? ' menu-open' : '');
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.setAttribute('aria-hidden', 'true');
+    avatar.textContent = [...p.name][0]?.toUpperCase() ?? '?';
+
+    // Name / Umbenennen
+    const nameCell = document.createElement('div');
+    nameCell.className = 'k-name';
+    if (editingId === p.id) {
+      const form = document.createElement('form');
+      const input = document.createElement('input');
+      input.value = p.name;
+      input.maxLength = 24;
+      input.required = true;
+      input.className = 'field field--sm';
+      input.setAttribute('aria-label', 'Neuer Name');
+      const save = document.createElement('button');
+      save.className = 'btn btn--sm';
+      save.textContent = 'Speichern';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'btn btn--ghost btn--sm';
+      cancel.textContent = 'Abbrechen';
+      cancel.addEventListener('click', () => { editingId = null; renderRows(); });
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        send({ type: 'renamePlayer', id: p.id, name: input.value });
+        editingId = null;
+      });
+      form.append(input, save, cancel);
+      nameCell.appendChild(form);
+      queueMicrotask(() => input.focus());
+    } else {
+      const name = document.createElement('div');
+      name.className = 'n';
+      name.textContent = p.name;
+      const meta = document.createElement('div');
+      meta.className = 'k-meta';
+      if (p.hidden) {
+        const chip = document.createElement('span');
+        chip.className = 'chip chip-muted';
+        chip.textContent = 'ausgeblendet';
+        chip.title = 'Nicht auf dem TV und nicht in der Anmeldeliste';
+        meta.appendChild(chip);
+      }
+      // Hinweis, wenn dieses Konto keine PIN hat (D-018)
+      if (!p.hasPin) {
+        const chip = document.createElement('span');
+        chip.className = 'chip chip-brick';
+        chip.textContent = 'ohne PIN';
+        chip.title = 'Meldet sich ohne PIN an';
+        meta.appendChild(chip);
+      }
+      nameCell.append(name, meta);
+    }
+
+    // Zähler-Stepper; die Zahl ist direkt editierbar
+    const stepper = (drink, value, cls, label) => {
+      const cell = document.createElement('div');
+      cell.className = `st ${cls}`;
+      const dec = document.createElement('button');
+      dec.type = 'button';
+      dec.textContent = '–';
+      dec.setAttribute('aria-label', `${label} −1`);
+      dec.addEventListener('click', () => send({ type: 'increment', playerId: p.id, drink, delta: -1 }));
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = 0;
+      input.inputMode = 'numeric';
+      input.value = value;
+      input.setAttribute('aria-label', `${label} von ${p.name}`);
+      input.addEventListener('change', () => {
+        const v = Math.max(0, Math.round(Number(input.value)) || 0);
+        send({ type: 'setCounter', id: p.id, drink, value: v });
+      });
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+      const inc = document.createElement('button');
+      inc.type = 'button';
+      inc.className = 'plus';
+      inc.textContent = '+';
+      inc.setAttribute('aria-label', `${label} +1`);
+      inc.addEventListener('click', () => send({ type: 'increment', playerId: p.id, drink, delta: 1 }));
+      cell.append(dec, input, inc);
+      return cell;
+    };
+    const steppers = document.createElement('div');
+    steppers.className = 'st-group';
+    steppers.append(
+      stepper('beer', p.beers, 'beer', 'Bier'),
+      stepper('shot', p.shots, 'shot', 'Shots'),
+      stepper('mix', p.mixes, 'mix', 'Mischen'),
+    );
+
+    const total = document.createElement('div');
+    total.className = 'k-total num';
+    total.textContent = p.total;
+
+    const menu = moreMenu(`p${p.id}`, [
+      { label: 'Umbenennen', icon: 'pen', run: () => { editingId = p.id; renderRows(); } },
+      { label: 'PIN ändern', icon: 'key', run: () => openPinModal(p) },
+      { label: 'Im Protokoll ansehen', icon: 'list', run: () => showInProtocol(p) },
+      // Sichtbarkeit im TV-Scoreboard und in der Anmeldeliste
+      p.hidden
+        ? { label: 'Auf dem TV einblenden', icon: 'eye', run: () => send({ type: 'setHidden', id: p.id, hidden: false }) }
+        : { label: 'Auf dem TV ausblenden', icon: 'eye-off', run: () => send({ type: 'setHidden', id: p.id, hidden: true }) },
+      { sep: true },
+      { label: 'Konto löschen', icon: 'trash', danger: true, run: () => {
+        if (confirm(`${p.name} wirklich löschen? Alle Zählstände gehen verloren.`)) {
+          send({ type: 'deletePlayer', id: p.id });
+        }
+      } },
+    ]);
+
+    row.append(avatar, nameCell, steppers, total, menu);
+    box.appendChild(row);
+  }
+  fitSide();
+}
+
+// --- Neues Konto ---
+function openAddModal() {
+  $('add-form').reset();
+  enter($('add-modal'));
+  $('add-name').focus();
+}
+$('open-add').addEventListener('click', openAddModal);
+$('open-add-round').addEventListener('click', openAddModal);
+$('close-add').addEventListener('click', () => { leave($('add-modal')); });
+$('add-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  send({ type: 'addPlayer', name: $('add-name').value, pin: $('add-pin').value });
+  leave($('add-modal'));
+});
+
+// --- PIN-Reset ---
+let pinPlayerId = null;
+function openPinModal(p) {
+  pinPlayerId = p.id;
+  $('pin-name').textContent = p.name;
+  $('pin-form').reset();
+  enter($('pin-modal'));
+  $('pin-value').focus();
+}
+$('close-pin').addEventListener('click', () => { leave($('pin-modal')); });
+$('pin-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  send({ type: 'setPin', id: pinPlayerId, pin: $('pin-value').value });
+  leave($('pin-modal'));
+});
+
+// --- Komplett-Reset: nur mit erneuter Passwort-Eingabe (gleiche .env wie Login) ---
+$('reset-btn').addEventListener('click', () => {
+  $('reset-form').reset();
+  $('reset-error').hidden = true;
+  enter($('reset-modal'));
+  $('reset-pw').focus();
+});
+$('close-reset').addEventListener('click', () => { leave($('reset-modal')); });
+$('reset-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  $('reset-error').hidden = true;
+  pendingReset = true;
+  send({ type: 'reset', confirm: 'RESET', password: $('reset-pw').value });
+});
+
+// --- Vollsicherung: herunterladen und einspielen (D-034) ---
+let hintTimer;
+function showHint(text) {
+  $('backup-hint').textContent = text;
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => { $('backup-hint').textContent = ''; }, 6000);
+}
+
+// Wie die CSV-Exporte: Das Admin-Token muss in den Header, deshalb per fetch
+// holen und den Blob über einen unsichtbaren Link speichern.
+$('backup-save').addEventListener('click', async () => {
+  showHint('Sicherung wird erstellt …');
+  try {
+    const res = await fetch(`${AREA.base}/api/export/backup`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      showHint(res.status === 403 ? 'Nur mit Admin-Login – bitte neu anmelden.' : 'Download fehlgeschlagen.');
+      return;
+    }
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = res.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1]
+      ?? `${AREA.id}-backup.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showHint('Sicherung heruntergeladen.');
+  } catch {
+    showHint('Download fehlgeschlagen.');
+  }
+});
+
+$('backup-load').addEventListener('click', () => {
+  $('import-form').reset();
+  $('import-filename').textContent = 'Keine Datei gewählt';
+  $('import-error').hidden = true;
+  enter($('import-modal'));
+});
+$('import-pick').addEventListener('click', () => $('import-file').click());
+$('import-file').addEventListener('change', () => {
+  $('import-filename').textContent = $('import-file').files[0]?.name ?? 'Keine Datei gewählt';
+});
+$('close-import').addEventListener('click', () => { leave($('import-modal')); });
+
+function showImportError(message) {
+  const el = $('import-error');
+  el.textContent = message;
+  el.hidden = false;
+}
+
+$('import-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('import-error').hidden = true;
+  const file = $('import-file').files[0];
+  if (!file) return showImportError('Bitte eine Sicherungsdatei auswählen.');
+
+  let backup;
+  try {
+    backup = JSON.parse(await file.text());
+  } catch {
+    return showImportError('Datei ist kein gültiges JSON.');
+  }
+
+  const btn = $('import-submit');
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${AREA.base}/api/import/backup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ password: $('import-pw').value, backup }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return showImportError(data.error ?? `Fehler ${res.status}`);
+    leave($('import-modal'));
+    showHint(`Eingespielt: ${data.players} Nutzer, ${data.drinks} Getränke, ${data.facts} Fun-Facts.`);
+  } catch {
+    showImportError('Einspielen fehlgeschlagen – Verbindung prüfen.');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// Bereits angemeldet? (Token überlebt Reload in der Session)
+initLando();
+if (token) enterDashboard();
+</script>
+</body>
+</html>

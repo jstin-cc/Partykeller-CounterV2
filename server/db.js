@@ -1,0 +1,1252 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import Database from 'better-sqlite3';
+import { BACKUP_FORMAT, BACKUP_VERSION } from './backup.js';
+
+// Party-Tag läuft 06:00 -> 05:59 des Folgetags (D-005)
+export function partyDayStartMs(now = Date.now()) {
+  const d = new Date(now);
+  if (d.getHours() < 6) d.setDate(d.getDate() - 1);
+  d.setHours(6, 0, 0, 0);
+  return d.getTime();
+}
+
+// 'YYYY-MM-DD' -> [startMs, endMs) des Party-Tags (06:00 bis 06:00 Folgetag)
+export function partyDayRangeMs(day) {
+  const [y, m, d] = day.split('-').map(Number);
+  const start = new Date(y, m - 1, d, 6, 0, 0, 0).getTime();
+  return [start, start + 24 * 60 * 60 * 1000];
+}
+
+export function validDayString(day) {
+  if (typeof day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
+  // Die Form allein reicht nicht: new Date(2026, 12, 99) rollt stillschweigend
+  // in den März weiter. Deshalb gegenprüfen, dass das Datum wirklich existiert.
+  const [y, m, d] = day.split('-').map(Number);
+  const date = new Date(y, m - 1, d, 6, 0, 0, 0);
+  return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
+}
+
+// Aktueller Party-Tag als 'YYYY-MM-DD' (Datum des 06:00-Starts)
+export function partyDayString(now = Date.now()) {
+  const d = new Date(partyDayStartMs(now));
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+// Eine DB-Instanz pro Bereich (D-019) mit eigener SQLite-Datei; seit D-080
+// gibt es nur noch den Partykeller. Alle Query-Funktionen hängen an der zurückgegebenen Instanz.
+export function createDb(dbPath) {
+  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+
+  const db = new Database(dbPath);
+  db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS players (
+      id         TEXT PRIMARY KEY,
+      name       TEXT NOT NULL UNIQUE COLLATE NOCASE,
+      pin_hash   TEXT NOT NULL,
+      beers      INTEGER NOT NULL DEFAULT 0,
+      shots      INTEGER NOT NULL DEFAULT 0,
+      mixes      INTEGER NOT NULL DEFAULT 0,
+      hidden     INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS drink_log (
+      id        INTEGER PRIMARY KEY AUTOINCREMENT,
+      player_id TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+      drink     TEXT NOT NULL CHECK (drink IN ('beer','shot','mix')),
+      ts        INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_drink_log_player_ts ON drink_log(player_id, ts);
+    CREATE INDEX IF NOT EXISTS idx_drink_log_ts ON drink_log(ts);
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS facts (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      title      TEXT NOT NULL,
+      text       TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Migrationen für bestehende Datenbanken (D-006: Neustart/Update darf keine
+  // Daten verlieren). CREATE TABLE IF NOT EXISTS ändert vorhandene Tabellen nicht,
+  // darum hier idempotent nachziehen.
+
+  // 1) players.mixes / players.hidden ergänzen, falls die DB älter ist.
+  const playerCols = db.prepare('PRAGMA table_info(players)').all().map((c) => c.name);
+  if (!playerCols.includes('mixes')) {
+    db.exec('ALTER TABLE players ADD COLUMN mixes INTEGER NOT NULL DEFAULT 0');
+  }
+  if (!playerCols.includes('hidden')) {
+    db.exec('ALTER TABLE players ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0');
+  }
+
+  // 2) drink_log durfte früher nur beer/shot. SQLite kann eine CHECK-Constraint
+  //    nicht per ALTER ändern, deshalb die Tabelle einmalig neu aufbauen und die
+  //    vorhandenen Log-Einträge übernehmen (Reihenfolge/Heute-Werte bleiben).
+  const logSql =
+    db
+      .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='drink_log'")
+      .get()?.sql ?? '';
+  if (!logSql.includes("'mix'")) {
+    db.exec(`
+      CREATE TABLE drink_log_new (
+        id        INTEGER PRIMARY KEY AUTOINCREMENT,
+        player_id TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+        drink     TEXT NOT NULL CHECK (drink IN ('beer','shot','mix')),
+        ts        INTEGER NOT NULL
+      );
+      INSERT INTO drink_log_new (id, player_id, drink, ts)
+        SELECT id, player_id, drink, ts FROM drink_log;
+      DROP TABLE drink_log;
+      ALTER TABLE drink_log_new RENAME TO drink_log;
+      CREATE INDEX IF NOT EXISTS idx_drink_log_player_ts ON drink_log(player_id, ts);
+      CREATE INDEX IF NOT EXISTS idx_drink_log_ts ON drink_log(ts);
+    `);
+  }
+
+  const stmts = {
+    insertPlayer: db.prepare(
+      'INSERT INTO players (id, name, pin_hash) VALUES (?, ?, ?)'
+    ),
+    getPlayer: db.prepare('SELECT * FROM players WHERE id = ?'),
+    getPlayerByName: db.prepare('SELECT * FROM players WHERE name = ? COLLATE NOCASE'),
+    listPlayers: db.prepare('SELECT * FROM players'),
+    countPlayers: db.prepare('SELECT COUNT(*) AS n FROM players'),
+    increment: db.prepare(
+      'UPDATE players SET beers = MAX(0, beers + ?), shots = MAX(0, shots + ?), mixes = MAX(0, mixes + ?) WHERE id = ?'
+    ),
+    setCounter: db.prepare('UPDATE players SET beers = ?, shots = ?, mixes = ? WHERE id = ?'),
+    rename: db.prepare('UPDATE players SET name = ? WHERE id = ?'),
+    setHidden: db.prepare('UPDATE players SET hidden = ? WHERE id = ?'),
+    setPinHash: db.prepare('UPDATE players SET pin_hash = ? WHERE id = ?'),
+    deletePlayer: db.prepare('DELETE FROM players WHERE id = ?'),
+    insertLog: db.prepare('INSERT INTO drink_log (player_id, drink, ts) VALUES (?, ?, ?)'),
+    // Heute-Abfragen mit GROUP BY player_id: Index auf ts erzwingen (D-066).
+    // Sonst nimmt SQLite wegen des GROUP BY idx_drink_log_player_ts und liest
+    // bei jedem Getränk das komplette Log aller Abende.
+    todayCounts: db.prepare(
+      `SELECT player_id, drink, COUNT(*) AS n
+       FROM drink_log INDEXED BY idx_drink_log_ts WHERE ts >= ?
+       GROUP BY player_id, drink`
+    ),
+    // Tages-Aggregate über VERGANGENE Party-Tage (ts < Tagesstart), D-047:
+    // sie laufen einmal in den Historien-Cache; der laufende Tag kommt aus den
+    // *Today-Abfragen (ts >= Tagesstart, über idx_drink_log_ts) dazu.
+    // Party-Tag beginnt 06:00, daher ts um 6 h (21600 s) zurückschieben, bevor
+    // das Datum gebildet wird (entspricht partyDayStartMs, aber in SQL).
+    // Rekorde: Getränke je Sorte, Spieler und Party-Tag
+    pastDayCounts: db.prepare(
+      `SELECT drink, player_id,
+              date((ts/1000) - 21600, 'unixepoch', 'localtime') AS day,
+              COUNT(*) AS n
+       FROM drink_log WHERE ts < ?
+       GROUP BY drink, player_id, day`
+    ),
+    // Verlauf eines Abends: Getränke je Party-Tag und Uhr-Stunde (alle zusammen)
+    pastArchiveHours: db.prepare(
+      `SELECT date((ts/1000) - 21600, 'unixepoch', 'localtime') AS day,
+              CAST(strftime('%H', ts/1000, 'unixepoch', 'localtime') AS INTEGER) AS hour,
+              COUNT(*) AS n
+       FROM drink_log WHERE ts < ?
+       GROUP BY day, hour`
+    ),
+    todayHours: db.prepare(
+      `SELECT CAST(strftime('%H', ts/1000, 'unixepoch', 'localtime') AS INTEGER) AS hour,
+              COUNT(*) AS n
+       FROM drink_log WHERE ts >= ?
+       GROUP BY hour`
+    ),
+    // Abend-Namen liegen als settings-Zeilen 'night_name:<tag>' (D-028)
+    listNightNames: db.prepare(
+      "SELECT key, value FROM settings WHERE key LIKE 'night_name:%'"
+    ),
+    deleteSetting: db.prepare('DELETE FROM settings WHERE key = ?'),
+    // Persönliche Statistik: Getränke des Spielers je Party-Tag
+    playerDays: db.prepare(
+      `SELECT date((ts/1000) - 21600, 'unixepoch', 'localtime') AS day, COUNT(*) AS n
+       FROM drink_log WHERE player_id = ?
+       GROUP BY day ORDER BY day`
+    ),
+    firstLogToday: db.prepare(
+      'SELECT player_id, ts FROM drink_log WHERE ts >= ? ORDER BY ts, id LIMIT 1'
+    ),
+    // Getränke je Spieler und Sorte in einem Party-Tag (Archiv-Detail/Bearbeitung)
+    dayLogs: db.prepare(
+      `SELECT player_id, drink, COUNT(*) AS n, MAX(ts) AS last_ts
+       FROM drink_log WHERE ts >= ? AND ts < ?
+       GROUP BY player_id, drink`
+    ),
+    // Gesamt je Spieler und Party-Tag inkl. letztem Zeitstempel (Tagessieger-Tiebreak)
+    pastDayPlayerTotals: db.prepare(
+      `SELECT date((ts/1000) - 21600, 'unixepoch', 'localtime') AS day,
+              player_id, COUNT(*) AS n, MAX(ts) AS last_ts
+       FROM drink_log WHERE ts < ?
+       GROUP BY day, player_id`
+    ),
+    todayPlayerTotals: db.prepare(
+      `SELECT player_id, COUNT(*) AS n, MAX(ts) AS last_ts
+       FROM drink_log INDEXED BY idx_drink_log_ts WHERE ts >= ?
+       GROUP BY player_id`
+    ),
+    // Erstes Getränk jedes Party-Tags (SQLite: bare column folgt MIN(ts))
+    pastDayFirstLogs: db.prepare(
+      `SELECT date((ts/1000) - 21600, 'unixepoch', 'localtime') AS day,
+              player_id, MIN(ts) AS ts
+       FROM drink_log WHERE ts < ?
+       GROUP BY day`
+    ),
+    // Alle Logs eines Spielers (Abzeichen-Historie über alle Abende)
+    playerLogsAll: db.prepare(
+      'SELECT drink, ts FROM drink_log WHERE player_id = ? ORDER BY ts'
+    ),
+    // Getränke-Protokoll im Admin (D-073): einzelne Einträge eines Abends
+    dayLogEntries: db.prepare(
+      'SELECT id, player_id, drink, ts FROM drink_log WHERE ts >= ? AND ts < ? ORDER BY ts DESC, id DESC'
+    ),
+    getLogEntry: db.prepare('SELECT id, player_id, drink, ts FROM drink_log WHERE id = ?'),
+    updateLogEntry: db.prepare('UPDATE drink_log SET player_id = ?, drink = ?, ts = ? WHERE id = ?'),
+    deleteLogEntry: db.prepare('DELETE FROM drink_log WHERE id = ?'),
+    // Durstigste Stunde des laufenden Party-Tags
+    topHourToday: db.prepare(
+      `SELECT strftime('%H', ts/1000, 'unixepoch', 'localtime') AS hour, COUNT(*) AS n
+       FROM drink_log WHERE ts >= ?
+       GROUP BY hour ORDER BY n DESC, hour LIMIT 1`
+    ),
+    // Rekordkurs (D-045): erstes Getränk und Anzahl Getränke in einem
+    // Zeitfenster — wie im Archiv zählen hier alle Personen mit.
+    firstLogInRange: db.prepare('SELECT MIN(ts) AS ts FROM drink_log WHERE ts >= ? AND ts < ?'),
+    countLogsRange: db.prepare('SELECT COUNT(*) AS n FROM drink_log WHERE ts >= ? AND ts < ?'),
+    // Getränke je Spieler und Sorte VOR einem Zeitpunkt plus alle Einträge
+    // seither in Reihenfolge: zusammen ergeben sie den Stand nach jedem
+    // Getränk des laufenden Abends (Meilensteine, D-036)
+    countsBefore: db.prepare(
+      'SELECT player_id, drink, COUNT(*) AS n FROM drink_log WHERE ts < ? GROUP BY player_id, drink'
+    ),
+    logsSince: db.prepare(
+      'SELECT player_id, drink, ts FROM drink_log WHERE ts >= ? ORDER BY ts, id'
+    ),
+    // Zeitpunkt des jeweils letzten Getränks: Tiebreak bei Punktegleichstand
+    // (wer zuerst auf den Stand kam, steht in der Rangliste vorne)
+    pastLastLogTs: db.prepare(
+      'SELECT player_id, MAX(ts) AS ts FROM drink_log WHERE ts < ? GROUP BY player_id'
+    ),
+    lastLogTsToday: db.prepare(
+      `SELECT player_id, MAX(ts) AS ts
+       FROM drink_log INDEXED BY idx_drink_log_ts WHERE ts >= ?
+       GROUP BY player_id`
+    ),
+    playerLogsToday: db.prepare(
+      'SELECT drink, ts FROM drink_log WHERE player_id = ? AND ts >= ? ORDER BY ts'
+    ),
+    resetCounters: db.prepare('UPDATE players SET beers = 0, shots = 0, mixes = 0'),
+    clearLog: db.prepare('DELETE FROM drink_log'),
+    listFacts: db.prepare('SELECT id, title, text FROM facts ORDER BY id'),
+    insertFact: db.prepare('INSERT INTO facts (title, text) VALUES (?, ?)'),
+    updateFact: db.prepare('UPDATE facts SET title = ?, text = ? WHERE id = ?'),
+    deleteFact: db.prepare('DELETE FROM facts WHERE id = ?'),
+    countFacts: db.prepare('SELECT COUNT(*) AS n FROM facts'),
+    // Vollsicherung (D-034): alles roh raus bzw. wieder rein — inkl. IDs,
+    // PIN-Hashes und Zeitstempeln, damit eine Wiederherstellung identisch ist.
+    backupPlayers: db.prepare(
+      `SELECT id, name, pin_hash, beers, shots, mixes, hidden, created_at
+       FROM players ORDER BY created_at, name`
+    ),
+    backupLog: db.prepare('SELECT id, player_id, drink, ts FROM drink_log ORDER BY id'),
+    backupSettings: db.prepare('SELECT key, value FROM settings ORDER BY key'),
+    backupFacts: db.prepare('SELECT id, title, text, created_at FROM facts ORDER BY id'),
+    insertPlayerFull: db.prepare(
+      `INSERT INTO players (id, name, pin_hash, beers, shots, mixes, hidden, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ),
+    insertLogFull: db.prepare(
+      'INSERT INTO drink_log (id, player_id, drink, ts) VALUES (?, ?, ?, ?)'
+    ),
+    insertFactFull: db.prepare(
+      'INSERT INTO facts (id, title, text, created_at) VALUES (?, ?, ?, ?)'
+    ),
+    clearPlayers: db.prepare('DELETE FROM players'),
+    clearSettings: db.prepare('DELETE FROM settings'),
+    clearFacts: db.prepare('DELETE FROM facts'),
+    getSetting: db.prepare('SELECT value FROM settings WHERE key = ?'),
+    setSetting: db.prepare(
+      'INSERT INTO settings (key, value) VALUES (?, ?) ' +
+      'ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+    ),
+  };
+
+  function getSetting(key, fallback = null) {
+    const row = stmts.getSetting.get(key);
+    return row ? row.value : fallback;
+  }
+
+  function setSetting(key, value) {
+    stmts.setSetting.run(key, value);
+  }
+
+  // --- Historien-Cache (D-047) -----------------------------------------------
+  // Alle Tages-Aggregate über VERGANGENE Party-Tage hängen nur an Log-Zeilen
+  // vor dem heutigen 06:00-Start. Die ändern sich nur beim Tageswechsel, bei
+  // Archiv-Korrekturen, Import, Reset oder Löschen eines Nutzers — nicht bei
+  // jedem Getränk. Deshalb werden sie einmal gelesen und im Speicher gehalten;
+  // pro Getränk kommen nur noch die (indizierten) Heute-Abfragen dazu. Ohne
+  // den Cache las jeder Broadcast das komplette Log fünfmal, und die App
+  // wurde mit jedem gezählten Getränk langsamer.
+  let history = null;
+
+  function invalidateHistory() {
+    history = null;
+  }
+
+  function getHistory() {
+    const dayStart = partyDayStartMs();
+    if (history && history.dayStart === dayStart) return history;
+    const lastTs = new Map();
+    for (const row of stmts.pastLastLogTs.all(dayStart)) lastTs.set(row.player_id, row.ts);
+    history = {
+      dayStart,
+      dayCounts: stmts.pastDayCounts.all(dayStart),
+      dayPlayerTotals: stmts.pastDayPlayerTotals.all(dayStart),
+      archiveHours: stmts.pastArchiveHours.all(dayStart),
+      dayFirstLogs: stmts.pastDayFirstLogs.all(dayStart),
+      countsBefore: stmts.countsBefore.all(dayStart),
+      lastTs,
+    };
+    return history;
+  }
+
+  // Die folgenden Helfer liefern dieselben Zeilen wie früher die Abfragen über
+  // das ganze Log: Cache (Vergangenheit) plus laufender Party-Tag.
+  function rowsDayCounts() {
+    const h = getHistory();
+    const today = partyDayString();
+    const rows = stmts.todayCounts.all(h.dayStart)
+      .map((r) => ({ drink: r.drink, player_id: r.player_id, day: today, n: r.n }));
+    return h.dayCounts.concat(rows);
+  }
+
+  function rowsDayPlayerTotals() {
+    const h = getHistory();
+    const today = partyDayString();
+    const rows = stmts.todayPlayerTotals.all(h.dayStart)
+      .map((r) => ({ day: today, player_id: r.player_id, n: r.n, last_ts: r.last_ts }));
+    return h.dayPlayerTotals.concat(rows);
+  }
+
+  function rowsArchiveHours() {
+    const h = getHistory();
+    const today = partyDayString();
+    const rows = stmts.todayHours.all(h.dayStart).map((r) => ({ day: today, hour: r.hour, n: r.n }));
+    return h.archiveHours.concat(rows);
+  }
+
+  function rowsDayFirstLogs() {
+    const h = getHistory();
+    const first = stmts.firstLogToday.get(h.dayStart);
+    return first
+      ? h.dayFirstLogs.concat([{ day: partyDayString(), player_id: first.player_id, ts: first.ts }])
+      : h.dayFirstLogs;
+  }
+
+  // playerId -> Zeitpunkt des letzten Getränks (all-time)
+  function lastLogTsMap() {
+    const h = getHistory();
+    const map = new Map(h.lastTs);
+    for (const row of stmts.lastLogTsToday.all(h.dayStart)) map.set(row.player_id, row.ts);
+    return map;
+  }
+
+  function createPlayer(name, pinHash) {
+    const id = crypto.randomUUID();
+    stmts.insertPlayer.run(id, name, pinHash);
+    return getPlayer(id);
+  }
+
+  function getPlayer(id) {
+    return stmts.getPlayer.get(id) ?? null;
+  }
+
+  function getPlayerByName(name) {
+    return stmts.getPlayerByName.get(name) ?? null;
+  }
+
+  function countPlayers() {
+    return stmts.countPlayers.get().n;
+  }
+
+  function incrementDrink(id, drink, delta) {
+    const beers = drink === 'beer' ? delta : 0;
+    const shots = drink === 'shot' ? delta : 0;
+    const mixes = drink === 'mix' ? delta : 0;
+    return stmts.increment.run(beers, shots, mixes, id).changes > 0;
+  }
+
+  function addLogEntry(id, drink, ts = Date.now()) {
+    stmts.insertLog.run(id, drink, ts);
+    // Ein Eintrag in der Vergangenheit (Seed, Archiv-Korrektur) ändert die Historie
+    if (ts < partyDayStartMs()) invalidateHistory();
+  }
+
+  // Echtes Getränk eines Spielers: Zähler +1 und Log-Eintrag in EINER
+  // Transaktion (D-046). false, wenn es den Spieler nicht gibt.
+  const logDrink = db.transaction((id, drink, ts = Date.now()) => {
+    if (!incrementDrink(id, drink, 1)) return false;
+    addLogEntry(id, drink, ts);
+    return true;
+  });
+
+  function setCounter(id, drink, value) {
+    const p = getPlayer(id);
+    if (!p) return false;
+    const beers = drink === 'beer' ? value : p.beers;
+    const shots = drink === 'shot' ? value : p.shots;
+    const mixes = drink === 'mix' ? value : p.mixes;
+    return stmts.setCounter.run(beers, shots, mixes, id).changes > 0;
+  }
+
+  function renamePlayer(id, name) {
+    return stmts.rename.run(name, id).changes > 0;
+  }
+
+  function setHidden(id, hidden) {
+    return stmts.setHidden.run(hidden ? 1 : 0, id).changes > 0;
+  }
+
+  // Rekorde: pro Sorte der (Spieler, Party-Tag) mit den meisten Getränken.
+  // Ausgeblendete Spieler zählen nicht (nicht Teil des Scoreboards).
+  function getRecords() {
+    const hiddenIds = new Set(
+      stmts.listPlayers.all().filter((p) => p.hidden).map((p) => p.id)
+    );
+    const best = { beer: null, shot: null, mix: null };
+    for (const row of rowsDayCounts()) {
+      if (hiddenIds.has(row.player_id)) continue;
+      const cur = best[row.drink];
+      if (!cur || row.n > cur.n) {
+        best[row.drink] = { playerId: row.player_id, n: row.n, day: row.day };
+      }
+    }
+    for (const drink of Object.keys(best)) {
+      const rec = best[drink];
+      if (rec) {
+        const p = getPlayer(rec.playerId);
+        rec.name = p ? p.name : '—';
+        delete rec.playerId;
+      }
+    }
+    return best;
+  }
+
+  // --- Eigene Fun-Facts / Meldungen (Admin) ---
+  function listFacts() {
+    return stmts.listFacts.all();
+  }
+
+  function addFact(title, text) {
+    if (stmts.countFacts.get().n >= 50) throw new Error('Zu viele Meldungen (max. 50)');
+    stmts.insertFact.run(title, text);
+  }
+
+  function updateFact(id, title, text) {
+    return stmts.updateFact.run(title, text, id).changes > 0;
+  }
+
+  function deleteFact(id) {
+    return stmts.deleteFact.run(id).changes > 0;
+  }
+
+  // Sieger je Party-Tag: meiste Getränke, bei Gleichstand wer zuerst auf dem
+  // Stand war (D-020 gilt auch hier). Map day -> { playerId, n }
+  function getDayWinners() {
+    const byDay = new Map();
+    for (const row of rowsDayPlayerTotals()) {
+      const cur = byDay.get(row.day);
+      if (!cur || row.n > cur.n || (row.n === cur.n && row.last_ts < cur.last_ts)) {
+        byDay.set(row.day, { playerId: row.player_id, n: row.n, last_ts: row.last_ts });
+      }
+    }
+    return byDay;
+  }
+
+  // --- Abend-Namen (D-028): frei vergebener Titel je Party-Tag ---------------
+  // Liegen in `settings` unter 'night_name:<tag>' — kein eigenes Schema nötig,
+  // und sie überleben den Neustart wie jede andere Einstellung (D-006).
+  const NIGHT_NAME_PREFIX = 'night_name:';
+
+  function listNightNames() {
+    const map = new Map();
+    for (const row of stmts.listNightNames.all()) {
+      map.set(row.key.slice(NIGHT_NAME_PREFIX.length), row.value);
+    }
+    return map;
+  }
+
+  function getNightName(day) {
+    return getSetting(NIGHT_NAME_PREFIX + day, '');
+  }
+
+  // Leerer Name entfernt die Benennung wieder (statt eine leere Zeile zu halten)
+  function setNightName(day, name) {
+    const key = NIGHT_NAME_PREFIX + day;
+    if (name) setSetting(key, name);
+    else stmts.deleteSetting.run(key);
+  }
+
+  // --- Verlauf je Abend (D-029): Getränke pro Stunde, alle Personen zusammen --
+  // Index 0 ist die Stunde ab 06:00 (Party-Tag-Start, D-005). Leere Stunden am
+  // Anfang und Ende fallen weg, damit der Graph den tatsächlichen Abend zeigt
+  // und nicht 24 Stunden, von denen 16 leer sind.
+  function buildTimelines() {
+    const raw = new Map();   // day -> number[24]
+    for (const row of rowsArchiveHours()) {
+      let slots = raw.get(row.day);
+      if (!slots) { slots = new Array(24).fill(0); raw.set(row.day, slots); }
+      slots[(row.hour - 6 + 24) % 24] += row.n;
+    }
+    const out = new Map();
+    for (const [day, slots] of raw) {
+      const first = slots.findIndex((n) => n > 0);
+      if (first < 0) continue;
+      let last = slots.length - 1;
+      while (slots[last] === 0) last -= 1;
+      out.set(day, { startHour: (6 + first) % 24, counts: slots.slice(first, last + 1) });
+    }
+    return out;
+  }
+
+  // --- Abend-Archiv: jeder Party-Tag mit Sieger, Teilnehmern und Gesamtmengen ---
+  function getArchive() {
+    const days = new Map(); // day -> { totals, perPlayer: Map }
+    for (const row of rowsDayCounts()) {
+      let d = days.get(row.day);
+      if (!d) {
+        d = { day: row.day, beers: 0, shots: 0, mixes: 0, perPlayer: new Map() };
+        days.set(row.day, d);
+      }
+      if (row.drink === 'beer') d.beers += row.n;
+      else if (row.drink === 'shot') d.shots += row.n;
+      else d.mixes += row.n;
+      d.perPlayer.set(row.player_id, (d.perPlayer.get(row.player_id) ?? 0) + row.n);
+    }
+
+    const names = new Map(stmts.listPlayers.all().map((p) => [p.id, p.name]));
+    const winners = getDayWinners();   // Tagessieger inkl. Uhrzeit-Tiebreak (D-020)
+    const nightNames = listNightNames();
+    const timelines = buildTimelines();
+    return [...days.values()]
+      .map((d) => {
+        const w = winners.get(d.day);
+        return {
+          day: d.day,
+          name: nightNames.get(d.day) ?? '',
+          timeline: timelines.get(d.day) ?? null,
+          beers: d.beers,
+          shots: d.shots,
+          mixes: d.mixes,
+          total: d.beers + d.shots + d.mixes,
+          participants: d.perPlayer.size,
+          winner: w ? { name: names.get(w.playerId) ?? '—', total: w.n } : null,
+        };
+      })
+      .sort((a, b) => b.day.localeCompare(a.day));
+  }
+
+  // Detail eines Party-Tags: alle Spieler (auch mit 0, damit der Admin nachträglich
+  // Getränke ergänzen kann), Teilnehmer zuerst nach Menge, Rest alphabetisch.
+  function getArchiveDay(day) {
+    const [start, end] = partyDayRangeMs(day);
+    const perPlayer = new Map();
+    for (const row of stmts.dayLogs.all(start, end)) {
+      let e = perPlayer.get(row.player_id);
+      if (!e) { e = { beers: 0, shots: 0, mixes: 0, lastTs: 0 }; perPlayer.set(row.player_id, e); }
+      if (row.drink === 'beer') e.beers = row.n;
+      else if (row.drink === 'shot') e.shots = row.n;
+      else e.mixes = row.n;
+      e.lastTs = Math.max(e.lastTs, row.last_ts);
+    }
+
+    const players = stmts.listPlayers.all().map((p) => {
+      const e = perPlayer.get(p.id) ?? { beers: 0, shots: 0, mixes: 0, lastTs: null };
+      return {
+        id: p.id,
+        name: p.name,
+        beers: e.beers,
+        shots: e.shots,
+        mixes: e.mixes,
+        total: e.beers + e.shots + e.mixes,
+        lastDrinkTs: e.lastTs || null,
+      };
+    });
+    players.sort((a, b) =>
+      b.total - a.total ||
+      (a.lastDrinkTs ?? Infinity) - (b.lastDrinkTs ?? Infinity) ||
+      a.name.localeCompare(b.name, 'de')
+    );
+    return { day, name: getNightName(day), players };
+  }
+
+  // Export fürs Abend-Archiv (D-025): eine Zeile je Party-Tag und Person, im
+  // Langformat — so lässt sich die Datei ohne Nacharbeit als Pivot auswerten.
+  // Ohne `day` über alle Abende, mit `day` nur dieser eine. Personen ohne
+  // Getränke an dem Abend bleiben draußen; ausgeblendete Personen sind dabei,
+  // damit die Übergabe vollständig ist (wie die Tagessummen im Archiv).
+  function getExportNights(day = null) {
+    const names = new Map(stmts.listPlayers.all().map((p) => [p.id, p.name]));
+    const byDay = new Map();  // day -> Map(playerId -> { beers, shots, mixes })
+
+    for (const row of rowsDayCounts()) {
+      if (day && row.day !== day) continue;
+      let players = byDay.get(row.day);
+      if (!players) { players = new Map(); byDay.set(row.day, players); }
+      let e = players.get(row.player_id);
+      if (!e) { e = { beers: 0, shots: 0, mixes: 0 }; players.set(row.player_id, e); }
+      if (row.drink === 'beer') e.beers = row.n;
+      else if (row.drink === 'shot') e.shots = row.n;
+      else e.mixes = row.n;
+    }
+
+    const rows = [];
+    for (const [d, players] of byDay) {
+      for (const [playerId, e] of players) {
+        const total = e.beers + e.shots + e.mixes;
+        if (total === 0) continue;
+        rows.push({ day: d, name: names.get(playerId) ?? '—', ...e, total });
+      }
+    }
+    // Chronologisch, innerhalb eines Abends die stärkste Bilanz zuerst
+    rows.sort((a, b) =>
+      a.day.localeCompare(b.day) || b.total - a.total || a.name.localeCompare(b.name, 'de')
+    );
+    return rows;
+  }
+
+  // --- Getränke-Protokoll (D-073) -------------------------------------------
+  // Der Admin sieht jedes gezählte Getränk eines Abends einzeln und kann es
+  // umhängen (Konto, Sorte, Uhrzeit), löschen oder nachtragen. Die
+  // All-Time-Zähler ziehen immer mit, damit Rangliste, Archiv und Rekorde
+  // zusammenpassen. (Ersetzt die frühere ±1-Korrektur im Archiv, D-076.)
+  function getDayLog(day) {
+    const [start, end] = partyDayRangeMs(day);
+    const names = new Map(stmts.listPlayers.all().map((p) => [p.id, p.name]));
+    return {
+      day,
+      entries: stmts.dayLogEntries.all(start, end).map((r) => ({
+        id: r.id, playerId: r.player_id, name: names.get(r.player_id) ?? '—', drink: r.drink, ts: r.ts,
+      })),
+    };
+  }
+
+  const editLogEntry = db.transaction((id, playerId, drink, ts) => {
+    const row = stmts.getLogEntry.get(id);
+    if (!row) throw new Error('Eintrag nicht gefunden');
+    if (!getPlayer(playerId)) throw new Error('Konto nicht gefunden');
+    if (partyDayString(ts) !== partyDayString(row.ts)) throw new Error('Die Uhrzeit muss im selben Abend bleiben');
+    if (ts > Date.now() + 60 * 1000) throw new Error('Die Uhrzeit liegt in der Zukunft');
+    invalidateHistory();
+    stmts.updateLogEntry.run(playerId, drink, ts, id);
+    if (playerId !== row.player_id || drink !== row.drink) {
+      incrementDrink(row.player_id, row.drink, -1);
+      incrementDrink(playerId, drink, 1);
+    }
+  });
+
+  const deleteLogEntry = db.transaction((id) => {
+    const row = stmts.getLogEntry.get(id);
+    if (!row) throw new Error('Eintrag nicht gefunden');
+    invalidateHistory();
+    stmts.deleteLogEntry.run(id);
+    incrementDrink(row.player_id, row.drink, -1);
+  });
+
+  function addLogAdmin(playerId, drink, ts) {
+    if (ts > Date.now() + 60 * 1000) throw new Error('Die Uhrzeit liegt in der Zukunft');
+    if (!logDrink(playerId, drink, ts)) throw new Error('Konto nicht gefunden');
+  }
+
+  // Treue-Abzeichen (D-031): Stufen nach der Anzahl besuchter Abende. Es gilt
+  // immer nur die höchste erreichte Stufe; unter der ersten Schwelle gibt es
+  // gar keins.
+  const VISIT_TIERS = [
+    { days: 10, label: 'Stammgast' },
+    { days: 20, label: 'Dauergast' },
+    { days: 50, label: 'Kellerlegende' },
+    { days: 100, label: 'Ehrenmitglied' },
+    { days: 200, label: 'Urgestein' },
+  ];
+
+  function visitBadge(days) {
+    let best = null;
+    for (const tier of VISIT_TIERS) if (days >= tier.days) best = tier;
+    if (!best) return null;
+    const next = VISIT_TIERS.find((t) => t.days > best.days) ?? null;
+    return { level: best.days, label: best.label, days, next: next ? next.days : null };
+  }
+
+  // --- Persönliche Statistik + Abzeichen (für das Profil im Nutzer-Dashboard) ---
+  // Jedes Abzeichen wird pro Party-Tag vergeben; `count` zählt, an wie vielen
+  // Abenden (inkl. heute) es erreicht wurde, `today` gilt für den laufenden Abend:
+  //  - firstDrinker:  erstes geloggtes Getränk des Abends kam von diesem Spieler
+  //  - midnightBeer:  ein Bier zwischen 00:00 und 00:59 geloggt
+  //  - threeInHour:   drei Getränke innerhalb von 60 Minuten
+  //  - mixMaster:     mindestens 3 Mischgetränke an einem Abend
+  //  - dayWinner:     Gesamt-Tagessieger des Abends (heute: führt aktuell)
+  function getPlayerStats(id) {
+    const rows = stmts.playerDays.all(id);
+    let best = null;
+    let drinksTotal = 0;
+    for (const r of rows) {
+      drinksTotal += r.n;
+      if (!best || r.n > best.total) best = { day: r.day, total: r.n };
+    }
+
+    const today = partyDayString();
+
+    // Abzeichen-Historie: alle Logs des Spielers nach Party-Tag gruppieren
+    const perDay = new Map(); // day -> [{drink, ts}]
+    for (const l of stmts.playerLogsAll.all(id)) {
+      const day = partyDayString(l.ts);
+      let list = perDay.get(day);
+      if (!list) { list = []; perDay.set(day, list); }
+      list.push(l);
+    }
+
+    const counts = { firstDrinker: 0, midnightBeer: 0, threeInHour: 0, mixMaster: 0, dayWinner: 0 };
+    const todayFlags = { firstDrinker: false, midnightBeer: false, threeInHour: false, mixMaster: false, dayWinner: false };
+    const award = (key, day) => {
+      counts[key] += 1;
+      if (day === today) todayFlags[key] = true;
+    };
+
+    for (const [day, logs] of perDay) {
+      let midnightBeer = false;
+      let mixes = 0;
+      for (const l of logs) {
+        if (l.drink === 'mix') mixes += 1;
+        if (l.drink === 'beer' && new Date(l.ts).getHours() === 0) midnightBeer = true;
+      }
+      if (midnightBeer) award('midnightBeer', day);
+      if (mixes >= 3) award('mixMaster', day);
+      for (let i = 0; i + 2 < logs.length; i++) {
+        if (logs[i + 2].ts - logs[i].ts <= 60 * 60 * 1000) { award('threeInHour', day); break; }
+      }
+    }
+
+    for (const row of rowsDayFirstLogs()) {
+      if (row.player_id === id) award('firstDrinker', row.day);
+    }
+    for (const [day, w] of getDayWinners()) {
+      if (w.playerId === id) award('dayWinner', day);
+    }
+
+    // Tempo-Vergleich (D-072): wie viele Getränke hatte der Spieler an
+    // früheren Abenden im Schnitt bis zu einer Uhrzeit? 96 Viertelstunden ab
+    // 06:00, jeweils kumuliert bis zum Ende der Viertelstunde. Der laufende
+    // Abend zählt nicht mit, sonst liefe der Schnitt beim Trinken mit.
+    const SLOT = 15 * 60 * 1000;
+    const slots = new Array(96).fill(0);
+    let nights = 0;
+    for (const [day, logs] of perDay) {
+      if (day === today) continue;
+      nights += 1;
+      const [start] = partyDayRangeMs(day);
+      for (const l of logs) slots[Math.min(95, Math.max(0, Math.floor((l.ts - start) / SLOT)))] += 1;
+    }
+    let run = 0;
+    const pace = {
+      nights,
+      slots: slots.map((n) => { run += n; return nights ? Math.round((run / nights) * 100) / 100 : 0; }),
+    };
+
+    return {
+      days: rows.length,
+      best,
+      pace,
+      // Die letzten vier Abende (neueste zuerst) für den Echo-Stapel im
+      // Profil (L20): daraus rechnet das Dashboard den All-Time-Stand nach
+      // jedem dieser Abende zurück
+      recentNights: rows.slice(-4).reverse().map((r) => ({ day: r.day, total: r.n })),
+      // Treue-Abzeichen: null, solange die erste Stufe nicht erreicht ist (D-031)
+      visitBadge: visitBadge(rows.length),
+      // Ø Getränke pro Abend (nur geloggte Getränke, eine Nachkommastelle)
+      avgPerNight: rows.length ? Math.round((drinksTotal / rows.length) * 10) / 10 : 0,
+      achievements: Object.fromEntries(
+        Object.keys(counts).map((k) => [k, { count: counts[k], today: todayFlags[k] }])
+      ),
+    };
+  }
+
+  // --- Jahresrückblick (L23, D-095) ------------------------------------------
+  // Alles für die Story-Seiten einer Person in einem Kalenderjahr (nach
+  // Party-Tagen, ein Abend bis 6 Uhr früh zählt zum Vortag). Ohne `year` das
+  // jüngste Jahr, in dem die Person etwas getrunken hat.
+  function getPlayerReview(id, year = null) {
+    const logs = stmts.playerLogsAll.all(id).map((l) => ({ ...l, day: partyDayString(l.ts) }));
+    const years = [...new Set(logs.map((l) => Number(l.day.slice(0, 4))))].sort((a, b) => b - a);
+    const y = year ?? years[0] ?? Number(partyDayString().slice(0, 4));
+    const mine = logs.filter((l) => l.day.startsWith(`${y}-`));
+
+    const drinks = { beer: 0, shot: 0, mix: 0 };
+    const perDay = new Map();    // day -> [logs]
+    const hours = new Map();     // Stunde (18..29, nach Mitternacht +24) -> Anzahl
+    for (const l of mine) {
+      drinks[l.drink] += 1;
+      if (!perDay.has(l.day)) perDay.set(l.day, []);
+      perDay.get(l.day).push(l);
+      const h = new Date(l.ts).getHours();
+      const hh = h < 6 ? h + 24 : h;
+      hours.set(hh, (hours.get(hh) ?? 0) + 1);
+    }
+
+    // Bester Abend samt Verlauf pro Stunde (lückenlos von der ersten bis zur
+    // letzten Stunde, wie die Kurve im Archiv)
+    let best = null;
+    for (const [day, list] of perDay) {
+      if (!best || list.length > best.total) best = { day, total: list.length, logs: list };
+    }
+    if (best) {
+      const hs = best.logs.map((l) => { const h = new Date(l.ts).getHours(); return h < 6 ? h + 24 : h; });
+      const startHour = Math.min(...hs);
+      const counts = new Array(Math.max(...hs) - startHour + 1).fill(0);
+      for (const h of hs) counts[h - startHour] += 1;
+      best = { day: best.day, total: best.total, timeline: { startHour, counts } };
+    }
+
+    let topHour = null;
+    for (const [h, n] of hours) {
+      if (!topHour || n > topHour.n || (n === topHour.n && h < topHour.hour)) topHour = { hour: h % 24, n };
+    }
+
+    // Jahreswertung aller sichtbaren Personen: Platz und Rivale (wer direkt
+    // davor liegt, für die Nummer 1 der Verfolger)
+    const hidden = new Set(stmts.listPlayers.all().filter((p) => p.hidden).map((p) => p.id));
+    const totals = new Map();
+    for (const row of rowsDayPlayerTotals()) {
+      if (!row.day.startsWith(`${y}-`) || (hidden.has(row.player_id) && row.player_id !== id)) continue;
+      const cur = totals.get(row.player_id) ?? { n: 0, last: 0 };
+      cur.n += row.n;
+      cur.last = Math.max(cur.last, row.last_ts);
+      totals.set(row.player_id, cur);
+    }
+    const board = [...totals].sort((a, b) => b[1].n - a[1].n || a[1].last - b[1].last).map(([pid, t]) => ({ pid, n: t.n }));
+    const pos = board.findIndex((r) => r.pid === id);
+    let rival = null;
+    if (pos >= 0 && board.length > 1) {
+      const other = board[pos === 0 ? 1 : pos - 1];
+      rival = { name: stmts.getPlayer.get(other.pid)?.name ?? '—', total: other.n, ahead: pos > 0 };
+    }
+
+    let wins = 0;
+    for (const [day, w] of getDayWinners()) if (w.playerId === id && day.startsWith(`${y}-`)) wins += 1;
+
+    const days = [...perDay.keys()].sort();
+    return {
+      year: y,
+      years: years.length ? years : [y],
+      total: mine.length,
+      drinks,
+      nights: perDay.size,
+      firstDay: days[0] ?? null,
+      best,
+      topHour,
+      rank: pos >= 0 ? pos + 1 : null,
+      of: board.length,
+      rival,
+      wins,
+    };
+  }
+
+  function setPinHash(id, pinHash) {
+    return stmts.setPinHash.run(pinHash, id).changes > 0;
+  }
+
+  function deletePlayer(id) {
+    invalidateHistory();   // ON DELETE CASCADE nimmt die Log-Einträge mit
+    return stmts.deletePlayer.run(id).changes > 0;
+  }
+
+  const resetAll = db.transaction(() => {
+    invalidateHistory();
+    stmts.resetCounters.run();
+    stmts.clearLog.run();
+  });
+
+  // --- Vollsicherung (D-034) ---
+
+  // Alles, was diesen Bereich ausmacht, in einem JSON-tauglichen Objekt.
+  function exportBackup() {
+    return {
+      format: BACKUP_FORMAT,
+      version: BACKUP_VERSION,
+      createdAt: new Date().toISOString(),
+      players: stmts.backupPlayers.all(),
+      drinkLog: stmts.backupLog.all(),
+      settings: stmts.backupSettings.all(),
+      facts: stmts.backupFacts.all(),
+    };
+  }
+
+  // Spielt eine von parseBackup() geprüfte Sicherung ein: ersetzt den kompletten
+  // Bestand dieses Bereichs. Als eine Transaktion — schlägt irgendetwas fehl
+  // (z. B. ein doppelter Name), bleibt der alte Stand unverändert stehen.
+  const importBackup = db.transaction((data) => {
+    invalidateHistory();
+    stmts.clearLog.run();
+    stmts.clearPlayers.run();
+    stmts.clearSettings.run();
+    stmts.clearFacts.run();
+    for (const p of data.players) {
+      stmts.insertPlayerFull.run(p.id, p.name, p.pin_hash, p.beers, p.shots, p.mixes, p.hidden, p.created_at);
+    }
+    for (const e of data.drinkLog) stmts.insertLogFull.run(e.id, e.player_id, e.drink, e.ts);
+    for (const s of data.settings) setSetting(s.key, s.value);
+    for (const f of data.facts) stmts.insertFactFull.run(f.id, f.title, f.text, f.created_at);
+    return {
+      players: data.players.length,
+      drinks: data.drinkLog.length,
+      facts: data.facts.length,
+    };
+  });
+
+  // Rangliste + Heute-Werte je Spieler (ohne pin_hash!), sortiert wie auf
+  // dem TV. Eigenständig, damit die Anmeldeseite nur die Namen holen kann,
+  // ohne dass der Server Rekorde und Fun-Facts mitrechnet (D-047).
+  function rankedPlayers() {
+    const today = new Map();
+    for (const row of stmts.todayCounts.all(partyDayStartMs())) {
+      const entry = today.get(row.player_id) ?? { beer: 0, shot: 0, mix: 0 };
+      entry[row.drink] = row.n;
+      today.set(row.player_id, entry);
+    }
+
+    const lastTs = lastLogTsMap();
+    const lastTsToday = new Map();
+    for (const row of stmts.lastLogTsToday.all(partyDayStartMs())) lastTsToday.set(row.player_id, row.ts);
+
+    const players = stmts.listPlayers
+      .all()
+      .map((p) => {
+        const t = today.get(p.id) ?? { beer: 0, shot: 0, mix: 0 };
+        return {
+          id: p.id,
+          name: p.name,
+          beers: p.beers,
+          shots: p.shots,
+          mixes: p.mixes,
+          total: p.beers + p.shots + p.mixes,
+          beersToday: t.beer,
+          shotsToday: t.shot,
+          mixesToday: t.mix,
+          hidden: !!p.hidden,
+          hasPin: !!p.pin_hash,   // ob eine PIN gesetzt ist (D-018); der Hash selbst bleibt geheim
+          createdAt: p.created_at,
+          // Zeitpunkt des letzten Getränks (all-time / heute) für den Tiebreak
+          lastDrinkTs: lastTs.get(p.id) ?? null,
+          lastDrinkTsToday: lastTsToday.get(p.id) ?? null,
+        };
+      })
+      // Tiebreak bei Punktegleichstand: zuerst nach Uhrzeit (wer zuerst auf dem
+      // Stand war), erst wenn auch die unbekannt ist (z. B. reine Admin-Korrektur
+      // ohne Log-Eintrag), alphabetisch als letzter Fallback.
+      .sort((a, b) =>
+        b.total - a.total ||
+        (a.lastDrinkTs ?? Infinity) - (b.lastDrinkTs ?? Infinity) ||
+        a.name.localeCompare(b.name, 'de')
+      );
+
+    players.forEach((p, i) => { p.rank = i + 1; });
+    return players;
+  }
+
+  // Kompletter Client-State: Rangliste + Einstellungen + Rekorde + Fun-Fact-Zahlen
+  function getState() {
+    const players = rankedPlayers();
+
+    // Bestwerte bisheriger Abende (D-093, TV-Timing-Tower): je Person der
+    // beste frühere Abend, fürs Haus der beste Einzelabend einer Person
+    // (ohne Ausgeblendete). Nur Vergangenheit — aus dem Historien-Cache.
+    const bestNight = new Map();
+    const hiddenIds = new Set(players.filter((p) => p.hidden).map((p) => p.id));
+    let houseBestNight = 0;
+    for (const row of getHistory().dayPlayerTotals) {
+      if (row.n > (bestNight.get(row.player_id) ?? 0)) bestNight.set(row.player_id, row.n);
+      if (!hiddenIds.has(row.player_id) && row.n > houseBestNight) houseBestNight = row.n;
+    }
+    for (const p of players) p.bestNight = bestNight.get(p.id) ?? 0;
+
+    // joinUrl: vom Admin gesetzte Beitritts-Adresse für den TV-QR-Code
+    // (leer => TV nutzt die eigene Server-Adresse als Fallback)
+    // boardMode: vom Admin gewählte TV-Ansicht ('alltime' | 'today' | 'archive')
+    // boardDay/archivePlayers: bei 'archive' der gezeigte Party-Tag samt Werten
+    // scrollSeconds: Verweildauer pro Ranglisten-Schritt (TV-Rotation)
+    // funfactSeconds: Wechseltakt des Fun-Fact-Bands (30–300 s, im Admin einstellbar)
+    // customFacts: vom Admin gepflegte eigene Meldungen fürs Fun-Fact-Band
+    // funStats: berechnete Zahlen fürs Fun-Fact-Band (siehe getFunStats)
+    const boardMode = getSetting('board_mode', 'alltime');
+    const boardDay = getSetting('board_day', '');
+    const state = {
+      players,
+      joinUrl: getSetting('join_url', ''),
+      boardMode,
+      scrollSeconds: Number(getSetting('scroll_seconds', '3.2')),
+      funfactSeconds: Number(getSetting('funfact_seconds', '30')),
+      // seasonal: Saison-Akzente an (Standard) oder im Admin abgeschaltet (D-071)
+      seasonal: getSetting('seasonal', '1') !== '0',
+      // paceCompare: Vergleich mit dem eigenen Schnitt im Dashboard (D-072/D-075)
+      paceCompare: getSetting('pace_compare', '1') !== '0',
+      customFacts: listFacts(),
+      records: getRecords(),
+      funStats: getFunStats(),
+      houseBestNight,
+    };
+    if (boardMode === 'archive' && validDayString(boardDay)) {
+      state.boardDay = boardDay;
+      state.boardName = getNightName(boardDay);
+      state.archivePlayers = getArchiveDay(boardDay).players.filter((p) => p.total > 0);
+    }
+    return state;
+  }
+
+  // --- Momente fürs Fun-Fact-Band (D-036) -----------------------------------
+  // Meilensteine: volle 50er je Sorte und volle 100er gesamt pro Person, volle
+  // 500er fürs ganze Haus. Grundlage ist das Log und nicht die All-Time-Zähler,
+  // weil nur dort steht, WANN eine Marke gefallen ist.
+  const MILESTONE_DRINK = 50;
+  const MILESTONE_PLAYER = 100;
+  const MILESTONE_HOUSE = 500;
+  const MILESTONE_WINDOW_MS = 30 * 60 * 1000;
+  // Comeback erst ab einem Monat Pause — kürzer ist keine Rückkehr, sondern Alltag
+  const COMEBACK_MIN_DAYS = 30;
+
+  // Stand vor 06:00 laden, dann die heutigen Getränke der Reihe nach durchgehen
+  // und schauen, welche runde Marke dabei gefallen ist.
+  function getMilestones(dayStart, hiddenIds, names) {
+    const perDrink = new Map();    // 'playerId:drink' -> Anzahl
+    const perPlayer = new Map();   // playerId -> Anzahl gesamt
+    let house = 0;
+    for (const row of getHistory().countsBefore) {
+      if (hiddenIds.has(row.player_id)) continue;
+      perDrink.set(`${row.player_id}:${row.drink}`, row.n);
+      perPlayer.set(row.player_id, (perPlayer.get(row.player_id) ?? 0) + row.n);
+      house += row.n;
+    }
+
+    let player = null;
+    let houseHit = null;
+    for (const row of stmts.logsSince.all(dayStart)) {
+      if (hiddenIds.has(row.player_id)) continue;
+      const key = `${row.player_id}:${row.drink}`;
+      const nDrink = (perDrink.get(key) ?? 0) + 1;
+      const nTotal = (perPlayer.get(row.player_id) ?? 0) + 1;
+      perDrink.set(key, nDrink);
+      perPlayer.set(row.player_id, nTotal);
+      house += 1;
+
+      const name = names.get(row.player_id) ?? '—';
+      // Fallen beide Marken auf dasselbe Getränk, gewinnt die Gesamtmarke
+      if (nTotal % MILESTONE_PLAYER === 0) player = { name, kind: 'total', n: nTotal, ts: row.ts };
+      else if (nDrink % MILESTONE_DRINK === 0) player = { name, kind: row.drink, n: nDrink, ts: row.ts };
+      if (house % MILESTONE_HOUSE === 0) houseHit = { total: house };
+    }
+
+    // Eine persönliche Marke ist ein Moment, kein Dauerzustand: nur eine halbe
+    // Stunde zeigen. Die Hausmarke fällt selten, sie darf den Abend über bleiben.
+    const fresh = player && Date.now() - player.ts <= MILESTONE_WINDOW_MS;
+    return {
+      milestone: fresh ? { name: player.name, kind: player.kind, n: player.n } : null,
+      houseMilestone: houseHit,
+    };
+  }
+
+  // Log-Bilanz eines Spielers aufaddieren: Getränke gesamt + letzter Zeitpunkt
+  function addLogTotal(map, row) {
+    const cur = map.get(row.player_id);
+    if (cur) {
+      cur.n += row.n;
+      cur.last = Math.max(cur.last, row.last_ts);
+    } else {
+      map.set(row.player_id, { n: row.n, last: row.last_ts });
+    }
+  }
+
+  // Spitzenreiter einer Log-Bilanz: meiste Getränke, bei Gleichstand wer zuerst
+  // auf dem Stand war (Tiebreak wie in der Rangliste, D-020)
+  function logLeader(totals) {
+    let best = null;
+    for (const [id, t] of totals) {
+      if (!best || t.n > best.n || (t.n === best.n && t.last < best.last)) best = { id, ...t };
+    }
+    return best;
+  }
+
+  // Sichtbarer Platz 1 der Rangliste (All-Time-Zähler, gleiche Sortierung wie
+  // in getState) — Gegenprobe für den Führungswechsel.
+  function boardLeaderId(players) {
+    const lastTs = lastLogTsMap();
+    let best = null;
+    for (const p of players) {
+      if (p.hidden) continue;
+      const cur = {
+        id: p.id,
+        name: p.name,
+        total: p.beers + p.shots + p.mixes,
+        last: lastTs.get(p.id) ?? Infinity,
+      };
+      const better =
+        !best ||
+        cur.total > best.total ||
+        (cur.total === best.total && cur.last < best.last) ||
+        (cur.total === best.total && cur.last === best.last &&
+          cur.name.localeCompare(best.name, 'de') < 0);
+      if (better) best = cur;
+    }
+    return best ? best.id : null;
+  }
+
+  // Kennzahlen fürs Fun-Fact-Band: alles aus drink_log, ausgeblendete Spieler
+  // zählen nicht mit (wie bei den Rekorden).
+  function getFunStats() {
+    const players = stmts.listPlayers.all();
+    const hiddenIds = new Set(players.filter((p) => p.hidden).map((p) => p.id));
+    const names = new Map(players.map((p) => [p.id, p.name]));
+    const today = partyDayString();
+
+    // Abende gesamt + Rekord-Abend (meiste Getränke aller zusammen) +
+    // Stammgast (meiste Abende) + meiste Tagessiege + Log-Bilanz je Spieler,
+    // einmal komplett und einmal ohne den laufenden Abend (Führungswechsel)
+    const dayTotals = new Map();     // day -> Getränke gesamt (ohne Ausgeblendete)
+    const dayTotalsAll = new Map();  // day -> Getränke gesamt aller Personen (wie im Archiv)
+    const nightsBy = new Map();      // playerId -> Anzahl Abende
+    const daysBy = new Map();        // playerId -> Party-Tage (fürs Comeback)
+    const allTotals = new Map();     // playerId -> { n, last } über alle Abende
+    const beforeTotals = new Map();  // dasselbe ohne den laufenden Abend
+    for (const row of rowsDayPlayerTotals()) {
+      dayTotalsAll.set(row.day, (dayTotalsAll.get(row.day) ?? 0) + row.n);
+      if (hiddenIds.has(row.player_id)) continue;
+      dayTotals.set(row.day, (dayTotals.get(row.day) ?? 0) + row.n);
+      nightsBy.set(row.player_id, (nightsBy.get(row.player_id) ?? 0) + 1);
+      const days = daysBy.get(row.player_id);
+      if (days) days.push(row.day);
+      else daysBy.set(row.player_id, [row.day]);
+      addLogTotal(allTotals, row);
+      if (row.day !== today) addLogTotal(beforeTotals, row);
+    }
+    let recordNight = null;
+    for (const [day, total] of dayTotals) {
+      if (!recordNight || total > recordNight.total) recordNight = { day, total };
+    }
+    let regular = null;
+    for (const [pid, nights] of nightsBy) {
+      if (!regular || nights > regular.nights) regular = { name: names.get(pid) ?? '—', nights };
+    }
+    const wins = new Map();
+    for (const w of getDayWinners().values()) {
+      if (hiddenIds.has(w.playerId)) continue;
+      wins.set(w.playerId, (wins.get(w.playerId) ?? 0) + 1);
+    }
+    let topWinner = null;
+    for (const [pid, n] of wins) {
+      if (!topWinner || n > topWinner.wins) topWinner = { name: names.get(pid) ?? '—', wins: n };
+    }
+
+    const dayStart = partyDayStartMs();
+    const first = stmts.firstLogToday.get(dayStart);
+    const topHour = stmts.topHourToday.get(dayStart);
+
+    // Rekordkurs (D-045): läuft der laufende Abend schneller als der beste
+    // BISHERIGE Abend? Verglichen wird ab dem jeweils ERSTEN Getränk des Abends
+    // (nicht nach Uhrzeit seit 06:00 — sonst „gewinnt" jeder Nachmittag gegen
+    // einen Abend, der erst um 21 Uhr begann). Rekord-Abend = meiste Getränke
+    // aller Personen, wie das Archiv ihn zeigt. Erst ab 30 Minuten und nur,
+    // wenn der Rekord-Abend zu dem Zeitpunkt selbst schon Getränke hatte.
+    const PACE_MIN_MS = 30 * 60 * 1000;
+    let bestPrev = null;
+    for (const [day, total] of dayTotalsAll) {
+      if (day === today) continue;
+      if (!bestPrev || total > bestPrev.total) bestPrev = { day, total };
+    }
+    const todayTotal = dayTotalsAll.get(today) ?? 0;
+    let pace = null;
+    if (bestPrev && first && todayTotal > 0) {
+      const elapsed = Math.max(0, Date.now() - first.ts);
+      const [recStart, recEnd] = partyDayRangeMs(bestPrev.day);
+      const recFirst = stmts.firstLogInRange.get(recStart, recEnd)?.ts ?? null;
+      if (recFirst != null && elapsed >= PACE_MIN_MS) {
+        const recordAtSameTime = stmts.countLogsRange.get(recFirst, recFirst + elapsed).n;
+        pace = {
+          todayTotal,
+          recordDay: bestPrev.day,
+          recordTotal: bestPrev.total,
+          recordAtSameTime,
+          elapsedMin: Math.floor(elapsed / 60000),
+          onPace: recordAtSameTime > 0 && todayTotal > recordAtSameTime,
+        };
+      }
+    }
+
+    // Comeback: heute wieder dabei, davor lange weg. Es gewinnt die längste Pause.
+    let comeback = null;
+    for (const [pid, days] of daysBy) {
+      if (days.length < 2) continue;
+      days.sort();
+      if (days[days.length - 1] !== today) continue;
+      const prev = days[days.length - 2];
+      const gap = Math.round((dayStart - partyDayRangeMs(prev)[0]) / 86400000);
+      if (gap < COMEBACK_MIN_DAYS) continue;
+      if (!comeback || gap > comeback.days) {
+        comeback = { name: names.get(pid) ?? '—', lastDay: prev, days: gap };
+      }
+    }
+
+    // Führungswechsel: Wer stand vor diesem Abend an der Spitze, wer jetzt?
+    // Stimmt der Log-Spitzenreiter nicht mit dem sichtbaren Platz 1 überein
+    // (reine Admin-Korrekturen stehen nicht im Log), sagen wir lieber nichts.
+    const leaderNow = logLeader(allTotals);
+    const leaderBefore = logLeader(beforeTotals);
+    const newLeader =
+      leaderNow && leaderBefore &&
+      leaderNow.id !== leaderBefore.id &&
+      leaderNow.id === boardLeaderId(players)
+        ? { name: names.get(leaderNow.id) ?? '—', previous: names.get(leaderBefore.id) ?? '—' }
+        : null;
+
+    const { milestone, houseMilestone } = getMilestones(dayStart, hiddenIds, names);
+
+    return {
+      nights: dayTotals.size,
+      recordNight,
+      regular,
+      topWinner,
+      pace,
+      comeback,
+      milestone,
+      houseMilestone,
+      newLeader,
+      firstToday: first && !hiddenIds.has(first.player_id)
+        ? { name: names.get(first.player_id) ?? '—', ts: first.ts }
+        : null,
+      topHourToday: topHour ? { hour: Number(topHour.hour), n: topHour.n } : null,
+    };
+  }
+
+  return {
+    getSetting, setSetting,
+    createPlayer, getPlayer, getPlayerByName, countPlayers,
+    incrementDrink, addLogEntry, logDrink, setCounter, renamePlayer, setHidden,
+    getRecords, listFacts, addFact, updateFact, deleteFact,
+    getArchive, getArchiveDay, getExportNights, getPlayerStats, getPlayerReview,
+    getDayLog, editLogEntry, deleteLogEntry, addLogAdmin,
+    getNightName, setNightName,
+    setPinHash, deletePlayer, resetAll, getState, rankedPlayers,
+    exportBackup, importBackup,
+  };
+}

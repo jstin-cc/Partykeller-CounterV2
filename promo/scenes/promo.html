@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Partykeller Promo</title>
+<!--
+  Promo-Komposition 1920×1080. Jeder Frame ist eine reine Funktion der Zeit:
+  window.__seek(t) setzt alle Stile für Sekunde t — keine CSS-Animationen,
+  keine Timer. Dadurch rendert render.mjs Frame für Frame deterministisch.
+  Vorschau im Browser: promo.html?play  (Echtzeit) oder promo.html?t=14.2
+-->
+<style>
+@font-face { font-family: 'Mona Sans'; font-weight: 200 900; font-stretch: 75% 125%; src: url('../../public/assets/fonts/monasans-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Instrument Serif'; font-weight: 400; src: url('../../public/assets/fonts/instrumentserif-latin.woff2') format('woff2'); }
+
+:root {
+  --green: #282c20; --green-deep: #20231a; --white: #f4f4ed; --cream: #efefe5;
+  --lime: #d2ff00; --lime-off: #b2c73a; --orange: #ff6b00; --orange-text: #ff8a3d;
+  --navy: #0f131c; --muted: #b4b8a5;
+  --sans: 'Mona Sans', Arial, sans-serif; --serif: 'Instrument Serif', serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; font-family: var(--sans); color: var(--white); }
+
+.scene { position: absolute; inset: 0; overflow: hidden; display: none; will-change: clip-path, transform; }
+.topo {
+  position: absolute; inset: -12%; pointer-events: none;
+  -webkit-mask: url('../../public/assets/topo.svg') center / cover no-repeat;
+  mask: url('../../public/assets/topo.svg') center / cover no-repeat;
+}
+.shade { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; }
+.abs { position: absolute; }
+
+/* Typo wie in der App (.t-impact, .t-serif, .eyebrow) */
+.impact { font-weight: 800; text-transform: uppercase; line-height: .86; letter-spacing: -.035em; white-space: nowrap; }
+.serif { font-family: var(--serif); font-weight: 400; text-transform: uppercase; letter-spacing: -.01em; line-height: .86; -webkit-text-stroke: .012em currentColor; }
+.eyebrow { font-weight: 600; font-size: 22px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 14px; }
+.eyebrow::before { content: ''; width: 12px; height: 12px; background: var(--lime); }
+.ln { display: block; overflow: hidden; padding: .1em 0 .04em; margin: -.1em 0 -.04em; }
+.ln > .in { display: inline-block; will-change: transform; }
+
+/* Wortmarke „PARTY / KELLER" */
+.wm { display: inline-flex; flex-direction: column; line-height: .82; text-transform: uppercase; }
+.wm .top { font-family: var(--serif); font-size: 1.12em; letter-spacing: -.01em; }
+.wm .bot { font-weight: 800; letter-spacing: -.03em; }
+
+/* Geräte */
+.phone { position: absolute; background: #0b0c09; padding: var(--b); border-radius: calc(var(--w) * .16);
+  box-shadow: 0 50px 90px rgb(0 0 0 / .45), inset 0 0 0 2px #3b3c38; transform-origin: 50% 50%; }
+.phone .screen { position: relative; width: var(--w); height: calc(var(--w) * 2532 / 1170); border-radius: calc(var(--w) * .125); overflow: hidden; background: var(--green); }
+.layer { position: absolute; left: 0; top: 0; width: 100%; display: block; }
+.tv { position: absolute; background: #0b0c09; padding: 14px; border-radius: 18px; box-shadow: 0 60px 120px rgb(0 0 0 / .5), inset 0 0 0 2px #2a2d24; }
+.tv .screen { position: relative; width: 1280px; height: 720px; overflow: hidden; background: var(--green); }
+.tv .layer { width: 1280px; }
+
+.ripple { position: absolute; width: 90px; height: 90px; margin: -45px 0 0 -45px; border-radius: 50%; border: 5px solid var(--lime); opacity: 0; pointer-events: none; }
+.dot { position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; background: rgb(244 244 237 / .55); opacity: 0; pointer-events: none; }
+
+.chip { display: inline-flex; align-items: center; height: 64px; padding: 0 28px; border-radius: 10px; font-weight: 800; font-size: 30px; letter-spacing: .02em; text-transform: uppercase; }
+.btn { display: inline-flex; align-items: center; gap: 22px; height: 96px; padding: 0 40px; border-radius: 10px; font-weight: 700; font-size: 38px; letter-spacing: .01em; }
+svg.scr { position: absolute; overflow: visible; pointer-events: none; }
+svg.scr path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.logo-mask { position: absolute; -webkit-mask: url('../../public/assets/logo.png') center / contain no-repeat; mask: url('../../public/assets/logo.png') center / contain no-repeat; }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- S1 — Kinetischer Einstieg -->
+  <section class="scene" id="s1" style="background: var(--green)">
+    <div class="topo" style="background:#3b4130"></div>
+    <div class="abs wm" style="left:140px; top:64px; font-size:40px"><span class="top">Party</span><span class="bot">Keller</span></div>
+    <div class="abs eyebrow" style="right:140px; top:84px">SV Partykeller</div>
+    <div class="abs" style="left:140px; top:0; height:1080px; display:flex; align-items:center">
+      <div style="position:relative; height:420px; width:1640px">
+        <div class="g abs impact" style="top:110px; font-size:200px"><span class="ln"><span class="in">Ein Keller.</span></span></div>
+        <div class="g abs impact" style="top:110px; font-size:200px"><span class="ln"><span class="in">Ein TV.</span></span></div>
+        <div class="g abs impact" style="top:110px; font-size:200px"><span class="ln"><span class="in">Zehn Handys.</span></span></div>
+        <div class="g abs" style="top:0">
+          <span class="ln impact" style="font-size:200px"><span class="in">Eine</span></span>
+          <span class="ln serif" style="font-size:250px; color:var(--lime-off)"><span class="in">Rangliste.</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- S2 — Wortmarke auf Lime -->
+  <section class="scene" id="s2" style="background: var(--lime); color: var(--green)">
+    <div class="topo" style="background:#c0ea00"></div>
+    <div class="grp abs" style="left:160px; top:150px; transform-origin: 0 50%">
+      <div class="eyebrow e1" style="color:var(--green)"><span>Getränke-Counter</span></div>
+      <div class="wm" style="font-size:300px; margin-top:40px">
+        <span class="ln top"><span class="in">Party</span></span>
+        <span class="ln bot"><span class="in">Keller</span></span>
+      </div>
+      <svg class="scr u1" viewBox="0 0 240 30" preserveAspectRatio="none" style="left:-10px; top:640px; width:1180px; height:70px"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1" stroke="#282c20" stroke-width="4"/></svg>
+    </div>
+    <div class="logo-mask lg" style="right:150px; top:110px; width:340px; height:290px; background: var(--green)"></div>
+    <div class="abs" style="left:160px; top:900px; display:flex; gap:22px">
+      <span class="chip c1" style="background:var(--green); color:var(--lime)">Bier</span>
+      <span class="chip c2" style="background:var(--orange); color:#1a1206">Shots</span>
+      <span class="chip c3" style="background:var(--white); color:var(--green)">Mischen</span>
+    </div>
+  </section>
+
+  <!-- S3 — Anmelden -->
+  <section class="scene" id="s3" style="background: var(--green)">
+    <div class="topo" style="background:#3b4130"></div>
+    <div class="abs" style="left:140px; top:330px">
+      <div class="eyebrow e1"><span>01 — Anmelden</span></div>
+      <div style="margin-top:44px">
+        <span class="ln impact" style="font-size:150px"><span class="in">Name</span></span>
+        <span class="ln impact" style="font-size:150px"><span class="in">wählen.</span></span>
+        <span class="ln serif" style="font-size:190px; color:var(--lime-off)"><span class="in">Fertig.</span></span>
+      </div>
+    </div>
+    <div class="phone p1" style="--w:380px; --b:14px; left:1140px; top:110px">
+      <div class="screen">
+        <img class="layer" src="../work/screens/onboarding.png">
+        <img class="layer l2" src="../work/screens/dashboard.png">
+        <div class="ripple r1"></div><div class="dot d1"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- S4 — Zählen: ein Tipp -->
+  <section class="scene" id="s4" style="background: var(--green)">
+    <div class="topo" style="background:#3b4130"></div>
+    <div class="phone p1" style="--w:560px; --b:18px; left:200px; top:0">
+      <div class="screen">
+        <img class="layer" src="../work/screens/dashboard.png">
+        <img class="layer l2" src="../work/screens/dashboard-tap.png">
+        <div class="ripple r1"></div><div class="dot d1"></div>
+      </div>
+    </div>
+    <div class="abs" style="left:1000px; top:200px">
+      <div class="eyebrow e1"><span>02 — Zählen</span></div>
+      <div class="abs plus impact" style="left:-20px; top:40px; font-size:380px; color:var(--lime); transform-origin: 30% 60%">+1</div>
+      <div style="margin-top:390px">
+        <span class="ln impact" style="font-size:130px"><span class="in">Ein Tipp.</span></span>
+        <span class="ln serif" style="font-size:170px; color:var(--lime-off)"><span class="in">Gezählt.</span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- S5 — Live auf dem TV -->
+  <section class="scene" id="s5" style="background: var(--green-deep)">
+    <div class="topo" style="background:#31362a"></div>
+    <div class="cam abs" style="inset:0; transform-origin: 1493px 535px">
+      <div class="abs ttl" style="left:110px; top:110px">
+        <div class="eyebrow e1"><span>03 — Rangliste</span></div>
+        <div style="margin-top:34px">
+          <span class="ln impact" style="font-size:120px"><span class="in">Live</span></span>
+          <span class="ln serif" style="font-size:136px; color:var(--lime-off)"><span class="in">am TV.</span></span>
+        </div>
+      </div>
+      <div class="tv t1" style="left:600px; top:290px">
+        <div class="screen">
+          <img class="layer" src="../work/screens/tv-pk.png">
+          <img class="layer l2" src="../work/screens/tv-pk-after.png">
+          <div class="abs flash" style="left:748px; top:155px; width:262px; height:152px; background:#f4ffd0; border-radius:8px; opacity:0"></div>
+          <svg class="scr c1" viewBox="0 0 260 130" preserveAspectRatio="none" style="left:715px; top:105px; width:340px; height:240px"><path d="M176 14C128 1 58 6 24 34-4 58 12 104 88 118c64 12 150 0 164-40 11-32-26-64-92-72-40-5-80 1-104 12" pathLength="1" stroke="#f4f4ed" stroke-width="3.2"/></svg>
+        </div>
+      </div>
+      <div class="phone p1" style="--w:260px; --b:12px; left:130px; top:560px; transform: rotate(-6deg)">
+        <div class="screen">
+          <img class="layer" src="../work/screens/dashboard.png">
+          <img class="layer l2" src="../work/screens/dashboard-tap.png">
+          <div class="ripple r1"></div><div class="dot d1"></div>
+        </div>
+      </div>
+      <svg class="scr wire" viewBox="0 0 1920 1080" style="left:0; top:0; width:1920px; height:1080px">
+        <path class="wp" d="M368 867 C 620 1010, 1150 820, 1493 535" stroke="#d2ff00" stroke-width="7" pathLength="1"/>
+        <circle class="wd" r="16" fill="#d2ff00"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- S6 — Mehr als zählen (Creme) -->
+  <section class="scene" id="s6" style="background: var(--white); color: var(--green)">
+    <div class="topo" style="background:#e1e4d4"></div>
+    <div class="abs" style="left:110px; top:250px">
+      <div class="eyebrow e1" style="color:#5f6254"><span>04 — Extras</span></div>
+      <div style="margin-top:40px">
+        <span class="ln impact" style="font-size:118px"><span class="in">Mehr</span></span>
+        <span class="ln impact" style="font-size:118px"><span class="in">als</span></span>
+        <span class="ln serif" style="font-size:150px"><span class="in">Zählen.</span></span>
+      </div>
+      <svg class="scr u1" viewBox="0 0 240 30" preserveAspectRatio="none" style="left:-6px; top:470px; width:420px; height:40px"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1" stroke="#b2c73a" stroke-width="5"/></svg>
+    </div>
+    <div class="phone ph1" style="--w:300px; --b:12px; left:690px; top:150px"><div class="screen"><img class="layer" src="../work/screens/profile-full.png"></div></div>
+    <div class="phone ph2" style="--w:300px; --b:12px; left:1094px; top:150px"><div class="screen"><img class="layer" src="../work/screens/abende-full.png"></div></div>
+    <div class="phone ph3" style="--w:300px; --b:12px; left:1498px; top:150px"><div class="screen"><img class="layer" src="../work/screens/profile-full.png"></div></div>
+    <div class="abs lb1 chip" style="left:690px; top:880px; background:var(--green); color:var(--lime); font-size:24px; height:52px">Rang &amp; Statistik</div>
+    <div class="abs lb2 chip" style="left:1094px; top:880px; background:var(--green); color:var(--lime); font-size:24px; height:52px">Abend-Archiv</div>
+    <div class="abs lb3 chip" style="left:1498px; top:880px; background:var(--green); color:var(--lime); font-size:24px; height:52px">Abzeichen</div>
+  </section>
+
+  <!-- S7 — Youngstars (Navy/Orange) -->
+  <section class="scene" id="s7" style="background: var(--navy)">
+    <div class="topo" style="background:#1d2433"></div>
+    <div class="abs" style="left:110px; top:110px">
+      <div class="eyebrow e1"><span style="color:#aab0bf">05 — Partykeller · Youngstars</span></div>
+      <div style="margin-top:34px">
+        <span class="ln impact" style="font-size:120px"><span class="in">Zwei</span></span>
+        <span class="ln serif" style="font-size:104px; color:var(--orange-text)"><span class="in">Bereiche.</span></span>
+      </div>
+    </div>
+    <div class="tv t1" style="left:600px; top:290px"><div class="screen"><img class="layer" src="../work/screens/tv-ys.png"></div></div>
+    <div class="phone p1" style="--w:260px; --b:12px; left:130px; top:560px; transform: rotate(-6deg)">
+      <div class="screen"><img class="layer" src="../work/screens/dashboard-ys.png"></div>
+    </div>
+  </section>
+
+  <!-- S8 — Offline, Pi, QR -->
+  <section class="scene" id="s8" style="background: var(--green)">
+    <div class="topo" style="background:#3b4130"></div>
+    <div class="abs" style="left:140px; top:270px">
+      <div class="r1"><span class="ln" style="font-size:132px"><span class="in"><span class="impact">Offline </span><span class="serif" style="font-size:1.15em; color:var(--lime-off)">im WLAN.</span></span></span></div>
+      <div class="r2" style="margin-top:36px"><span class="ln" style="font-size:132px"><span class="in"><span class="impact">Läuft </span><span class="serif" style="font-size:1.15em; color:var(--lime-off)">auf dem Pi.</span></span></span></div>
+      <div class="r3" style="margin-top:36px"><span class="ln" style="font-size:132px"><span class="in"><span class="impact">Scannen. </span><span class="serif" style="font-size:1.15em; color:var(--lime-off)">Mitmachen.</span></span></span></div>
+    </div>
+    <div class="abs qr" style="left:1300px; top:330px; width:300px; height:132px; background: url('../work/screens/tv-pk.png') -1556px -28px / 1920px 1080px; transform-origin: 0 0; border-radius: 10px"></div>
+    <svg class="scr ar" viewBox="0 0 260 130" preserveAspectRatio="none" style="left:1245px; top:285px; width:660px; height:350px"><path d="M176 14C128 1 58 6 24 34-4 58 12 104 88 118c64 12 150 0 164-40 11-32-26-64-92-72-40-5-80 1-104 12" pathLength="1" stroke="#d2ff00" stroke-width="3"/></svg>
+  </section>
+
+  <!-- S9 — Endkarte (Lime) -->
+  <section class="scene" id="s9" style="background: var(--lime); color: var(--green)">
+    <div class="topo" style="background:#c0ea00"></div>
+    <div class="abs" style="left:160px; top:170px; display:flex; flex-direction:column; align-items:flex-start">
+      <div class="eyebrow e1" style="color:var(--green)"><span>Getränke-Counter · SV Partykeller</span></div>
+      <div class="wm" style="font-size:250px; margin-top:40px">
+        <span class="ln top"><span class="in">Party</span></span>
+        <span class="ln bot"><span class="in">Keller</span></span>
+      </div>
+      <div class="btn b1" style="margin-top:70px; background:var(--green); color:var(--white)">
+        partykeller.local
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#d2ff00" stroke-width="3" stroke-linecap="square"><path d="M6 18L18 6M8 6h10v10"/></svg>
+      </div>
+    </div>
+    <div class="logo-mask lg" style="right:170px; top:250px; width:560px; height:480px; background: var(--green)"></div>
+    <div class="shade end" style="background:#000"></div>
+  </section>
+
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Zeit-Helfer
+// ---------------------------------------------------------------------------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const mix = (a, b, k) => a + (b - a) * k;
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+  const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (u) => ((ax * u + bx) * u + cx) * u;
+  const sy = (u) => ((ay * u + by) * u + cy) * u;
+  return (x) => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let lo = 0, hi = 1, u = x;
+    for (let i = 0; i < 40; i++) { u = (lo + hi) / 2; if (sx(u) < x) lo = u; else hi = u; }
+    return sy(u);
+  };
+}
+const E = {
+  lando: bezier(0.65, 0.05, 0, 1),         // --ease der App
+  out: bezier(0.2, 0.8, 0.2, 1),
+  spring: bezier(0.32, 1.35, 0.4, 1),
+  inout: bezier(0.45, 0, 0.55, 1),
+  lin: (x) => x,
+};
+const P = (t, a, d, ease = E.lando) => ease(clamp((t - a) / d));
+
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+const S = (id) => document.getElementById(id);
+
+// Wortzeile: k=0 versteckt (unter der Maske), 1 sichtbar, out=1 oben hinaus
+function line(el, k, out = 0) {
+  const inner = el.classList.contains('in') ? el : $('.in', el);
+  inner.style.transform = `translateY(${(1 - k) * 110 - out * 110}%)`;
+}
+function lines(root, t, a, step = 0.08, d = 0.7) {
+  $$('.ln', root).forEach((el, i) => line(el, P(t, a + i * step, d)));
+}
+function fadeUp(el, k, dist = 40) {
+  el.style.opacity = k;
+  el.style.transform = `translateY(${(1 - k) * dist}px)`;
+}
+function draw(svg, k) { $('path', svg).style.strokeDashoffset = 1 - k; $('path', svg).style.strokeDasharray = 1; svg.style.opacity = k > 0 ? 1 : 0; }
+function ripple(r, d, t, a) {
+  const k = clamp((t - a) / 0.6);
+  r.style.opacity = t < a ? 0 : (1 - k);
+  r.style.transform = `scale(${0.4 + E.out(k) * 1.8})`;
+  const kd = clamp((t - a + 0.12) / 0.3);
+  d.style.opacity = t < a - 0.12 || kd >= 1 ? 0 : Math.sin(kd * Math.PI);
+  d.style.transform = `scale(${1 - kd * 0.3})`;
+}
+function at(el, x, y) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
+
+// ---------------------------------------------------------------------------
+// Szenenplan (Sekunden, 120 BPM: ein Schlag = 0,5 s). Schnitte liegen auf Schlägen.
+// ---------------------------------------------------------------------------
+const SCENES = [
+  { id: 's1', start: 0 },
+  { id: 's2', start: 4 },
+  { id: 's3', start: 8 },
+  { id: 's4', start: 13 },
+  { id: 's5', start: 18 },
+  { id: 's6', start: 24.5 },
+  { id: 's7', start: 30.5 },
+  { id: 's8', start: 35 },
+  { id: 's9', start: 38.5 },
+];
+const DURATION = 43;
+const CURTAIN_LEAD = 0.3, CURTAIN = 0.75;
+
+// Vorhang wie der Seitenübergang der App: neue Szene fährt von unten ein
+function layout(t) {
+  SCENES.forEach((sc, i) => {
+    const el = S(sc.id);
+    const next = SCENES[i + 1];
+    const a = sc.start - CURTAIN_LEAD;
+    const visible = t >= (i === 0 ? -1 : a) && (!next || t < next.start - CURTAIN_LEAD + CURTAIN);
+    el.style.display = visible ? 'block' : 'none';
+    el.style.zIndex = i + 1;
+    if (!visible) return;
+    const k = i === 0 ? 1 : P(t, a, CURTAIN);
+    el.style.clipPath = k >= 1 ? 'none' : `inset(${(1 - k) * 100}% 0 0 0)`;
+    const lift = next ? P(t, next.start - CURTAIN_LEAD, CURTAIN) : 0;
+    el.style.transform = `translateY(${-lift * 140 + (1 - k) * 160}px)`;
+    // Höhenlinien driften langsam
+    const topo = $('.topo', el);
+    if (topo) topo.style.transform = `translate(${Math.sin(t * 0.11 + i) * 40}px, ${-t * 6}px) scale(1.02)`;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Szenen
+// ---------------------------------------------------------------------------
+function s1(t) {
+  const el = S('s1');
+  const groups = $$('.g', el);
+  groups.forEach((g, i) => {
+    const a = i;                          // Wort auf jedem Takt
+    const lns = $$('.ln', g);
+    lns.forEach((ln, j) => {
+      const kin = P(t, a + j * 0.08, 0.55);
+      const kout = i < 3 ? P(t, a + 1, 0.5) : 0;
+      line(ln, kin, kout);
+    });
+    g.style.display = (t >= a - 0.05 && (i === 3 || t < a + 1.6)) ? 'block' : 'none';
+  });
+  fadeUp($('.wm', el), P(t, 0.1, 0.8), 20);
+  fadeUp($('.eyebrow', el), P(t, 0.2, 0.8), 20);
+}
+
+function s2(t) {
+  const el = S('s2'), u = t - 4;
+  fadeUp($('.e1', el), P(u, 0.1, 0.6), 20);
+  lines(el, u, 0.0, 0.12, 0.8);
+  draw($('.u1', el), P(u, 0.9, 0.9, E.inout));
+  $('.grp', el).style.transform = `scale(${1 + u * 0.008})`;
+  const lg = $('.lg', el); const kl = P(u, 0.4, 0.9);
+  lg.style.opacity = kl; lg.style.transform = `translateY(${(1 - kl) * 60}px) rotate(${(1 - kl) * 6}deg)`;
+  ['.c1', '.c2', '.c3'].forEach((c, i) => {
+    const k = P(u, 1.5 + i * 0.5, 0.5, E.spring);
+    const ch = $(c, el); ch.style.opacity = clamp(k * 3); ch.style.transform = `translateY(${(1 - k) * 60}px) scale(${0.85 + 0.15 * k})`;
+  });
+}
+
+function s3(t) {
+  const el = S('s3'), u = t - 8;
+  fadeUp($('.e1', el), P(u, 0.1, 0.6), 20);
+  lines(el, u, 0.15, 0.12, 0.75);
+  const ph = $('.p1', el);
+  const kp = P(u, 0.25, 1.0, E.spring);
+  ph.style.transform = `translateY(${(1 - kp) * 900 + Math.sin(u * 1.3) * 6}px) rotate(${(1 - kp) * 8 + 2}deg)`;
+  // Tipp auf „Basti" in der Kontenliste, dann wischt das Dashboard herein
+  const W = 380, sc = W / 390;
+  const r = $('.r1', el), d = $('.d1', el);
+  at(r, 127 * sc, 498 * sc); at(d, 127 * sc, 498 * sc);
+  ripple(r, d, t, 10.0);
+  const kw = P(u, 2.15, 0.75);
+  $('.l2', el).style.clipPath = `inset(${(1 - kw) * 100}% 0 0 0)`;
+  $('.l2', el).style.transform = `translateY(${(1 - kw) * 40}px)`;
+}
+
+function s4(t) {
+  const el = S('s4'), u = t - 13;
+  const W = 560, sc = W / 390;
+  const ph = $('.p1', el);
+  const kp = P(u, 0.0, 1.0, E.out);
+  // Kamera: Handy groß, Fahrt über die Bier-Karte
+  const y = mix(-60, -330, E.inout(clamp(u / 5)));
+  ph.style.transform = `translateY(${y + (1 - kp) * 500}px) rotate(${(1 - kp) * -6}deg)`;
+  const r = $('.r1', el), d = $('.d1', el);
+  at(r, 336 * sc, 457 * sc); at(d, 336 * sc, 457 * sc);
+  ripple(r, d, t, 14.0);
+  $('.l2', el).style.opacity = t >= 14.04 ? 1 : 0;
+  // Zifferntausch mit kleinem Ruck des ganzen Handys
+  const bump = t >= 14 ? Math.exp(-(t - 14) * 9) * Math.sin((t - 14) * 40) : 0;
+  ph.style.transform += ` scale(${1 + bump * 0.012})`;
+  fadeUp($('.e1', el), P(u, 0.2, 0.6), 20);
+  const plus = $('.plus', el);
+  const kplus = P(t, 14.0, 0.7, E.spring);
+  plus.style.opacity = clamp((t - 13.98) * 20);
+  plus.style.transform = `translateY(${(1 - kplus) * 120}px) scale(${0.5 + 0.5 * kplus}) rotate(${(1 - kplus) * -14}deg)`;
+  $$('.ln', el).forEach((ln, i) => line(ln, P(t, 14.25 + i * 0.12, 0.75)));
+}
+
+const WIRE_A = 19.3; // Tipp am Handy, Signal fliegt zum TV
+function s5(t) {
+  const el = S('s5'), u = t - 18;
+  fadeUp($('.e1', el), P(u, 0.1, 0.6), 20);
+  lines($('.ttl', el), u, 0.2, 0.12, 0.75);
+  const tv = $('.t1', el), kt = P(u, 0.0, 1.0, E.out);
+  tv.style.transform = `translateX(${(1 - kt) * 200}px) scale(${0.94 + 0.06 * kt})`;
+  tv.style.opacity = clamp(kt * 2);
+  const ph = $('.p1', el), kp = P(u, 0.35, 0.9, E.spring);
+  ph.style.transform = `translateY(${(1 - kp) * 600}px) rotate(-6deg)`;
+  const W = 260, sc = W / 390;
+  const r = $('.r1', el), d = $('.d1', el);
+  at(r, 336 * sc, 457 * sc); at(d, 336 * sc, 457 * sc);
+  ripple(r, d, t, WIRE_A);
+  $('.l2', ph).style.opacity = t >= WIRE_A + 0.04 ? 1 : 0;
+  // Signal: Linie zeichnet sich, Punkt fährt mit, Linie verschwindet am Ende
+  const wire = $('.wire', el), wp = $('.wp', wire), wd = $('.wd', wire);
+  const kw = P(t, WIRE_A + 0.05, 0.6, E.inout);
+  const kgone = P(t, WIRE_A + 0.6, 0.45, E.inout);
+  wp.style.strokeDasharray = '1 1';
+  wp.style.strokeDashoffset = 1 - kw;
+  wp.style.opacity = t < WIRE_A ? 0 : 1 - kgone;
+  const len = wp.getTotalLength();
+  const pt = wp.getPointAtLength(len * kw);
+  wd.setAttribute('cx', pt.x); wd.setAttribute('cy', pt.y);
+  wd.style.opacity = t < WIRE_A + 0.05 || t > WIRE_A + 0.75 ? 0 : 1;
+  // TV springt um: Basti 57 → 58
+  const hit = WIRE_A + 0.65;
+  $('.l2', tv).style.opacity = t >= hit ? 1 : 0;
+  const kf = clamp((t - hit) / 0.7);
+  $('.flash', tv).style.opacity = t >= hit ? (1 - E.out(kf)) * 0.85 : 0;
+  draw($('.c1', tv), P(t, hit + 0.2, 0.8, E.inout));
+  // Kamerafahrt aufs Podest
+  const kc = P(t, 22.0, 2.4, E.inout);
+  $('.cam', el).style.transform = `scale(${1 + kc * 0.55})`;
+  $('.ttl', el).style.opacity = 1 - P(t, 22.0, 0.6, E.lin);
+  ph.style.opacity = 1 - P(t, 22.0, 0.6, E.lin);
+}
+
+function s6(t) {
+  const el = S('s6'), u = t - 24.5;
+  fadeUp($('.e1', el), P(u, 0.1, 0.6), 20);
+  lines(el, u, 0.15, 0.12, 0.75);
+  draw($('.u1', el), P(u, 1.0, 0.8, E.inout));
+  const scale = 300 / 1170;
+  const phones = [
+    { el: $('.ph1', el), lb: $('.lb1', el), from: 0, to: 1540, a: 0.3 },     // Rang → Statistik
+    { el: $('.ph2', el), lb: $('.lb2', el), from: 0, to: 2700, a: 0.45 },    // Archiv
+    { el: $('.ph3', el), lb: $('.lb3', el), from: 3300, to: 4200, a: 0.6 },  // Abzeichen
+  ];
+  phones.forEach((p, i) => {
+    const k = P(u, p.a, 1.0, E.spring);
+    p.el.style.transform = `translateY(${(1 - k) * 800 + Math.sin(u * 1.1 + i) * 5}px) rotate(${(1 - k) * (i - 1) * 6}deg)`;
+    const ks = E.inout(clamp((u - 1.4) / 4.4));
+    $('.layer', p.el).style.transform = `translateY(${-mix(p.from, p.to, ks) * scale}px)`;
+    fadeUp(p.lb, P(u, p.a + 0.6, 0.6), 24);
+  });
+}
+
+function s7(t) {
+  const el = S('s7'), u = t - 30.5;
+  const e1 = $('.e1', el); fadeUp(e1, P(u, 0.1, 0.6), 20);
+  e1.style.setProperty('--x', 1);
+  lines(el, u, 0.15, 0.12, 0.75);
+  const tv = $('.t1', el), kt = P(u, 0.1, 1.0, E.out);
+  tv.style.transform = `translateX(${(1 - kt) * 240}px) scale(${0.94 + 0.06 * kt + u * 0.006})`;
+  tv.style.opacity = clamp(kt * 2);
+  const ph = $('.p1', el), kp = P(u, 0.6, 0.9, E.spring);
+  ph.style.transform = `translateY(${(1 - kp) * 600}px) rotate(-6deg)`;
+}
+
+function s8(t) {
+  const el = S('s8'), u = t - 35;
+  ['.r1', '.r2', '.r3'].forEach((r, i) => line($(`${r} .ln`, el), P(u, 0.1 + i * 0.5, 0.7)));
+  const qr = $('.qr', el), k = P(u, 0.6, 0.9, E.spring);
+  qr.style.opacity = clamp(k * 2);
+  qr.style.transform = `scale(${1.9 * (0.8 + 0.2 * k)}) rotate(${(1 - k) * 4}deg)`;
+  draw($('.ar', el), P(u, 1.5, 0.7, E.inout));
+}
+
+function s9(t) {
+  const el = S('s9'), u = t - 38.5;
+  fadeUp($('.e1', el), P(u, 0.15, 0.6), 20);
+  lines(el, u, 0.1, 0.12, 0.85);
+  const b = $('.b1', el), kb = P(u, 0.9, 0.8, E.spring);
+  b.style.opacity = clamp(kb * 2); b.style.transform = `translateY(${(1 - kb) * 50}px)`;
+  const lg = $('.lg', el), kl = P(u, 0.3, 1.1);
+  lg.style.opacity = kl; lg.style.transform = `translateY(${(1 - kl) * 70}px) scale(${0.96 + kl * 0.04 + u * 0.004})`;
+  $('.end', el).style.opacity = P(t, DURATION - 0.7, 0.7, E.lin);
+}
+
+const SCENE_FN = { s1, s2, s3, s4, s5, s6, s7, s8, s9 };
+
+window.__seek = (t) => {
+  layout(t);
+  for (const sc of SCENES) if (S(sc.id).style.display !== 'none') SCENE_FN[sc.id](t);
+};
+window.__duration = DURATION;
+window.__ready = (async () => {
+  await document.fonts.ready;
+  await Promise.all([...document.images].map((img) => img.decode().catch(() => {})));
+  // Masken-Bilder (topo, logo) vorladen
+  await Promise.all(['../../public/assets/topo.svg', '../../public/assets/logo.png'].map((src) => {
+    const i = new Image(); i.src = src; return i.decode().catch(() => {});
+  }));
+  return true;
+})();
+
+// Vorschau
+const params = new URLSearchParams(location.search);
+window.__ready.then(() => {
+  if (params.has('play')) {
+    const t0 = performance.now() - (Number(params.get('play')) || 0) * 1000;
+    const loop = () => { const t = ((performance.now() - t0) / 1000) % DURATION; __seek(t); requestAnimationFrame(loop); };
+    loop();
+  } else {
+    __seek(Number(params.get('t') ?? 0));
+  }
+});
+</script>
+</body>
+</html>

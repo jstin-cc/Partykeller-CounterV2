@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ideen L20–L27</title>
+<link rel="stylesheet" href="../../public/css/theme.css">
+<style>
+  body { padding: 48px clamp(16px, 4vw, 56px) 80px; }
+  .page-head { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 56px; }
+  .idea { padding: 40px 0 56px; border-top: 1px solid var(--line); }
+  .idea-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 28px; }
+  .idea-head .eyebrow { color: var(--accent-text); font-size: 13px; }
+  .stage { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+
+  .phone {
+    position: relative; width: 340px; height: 680px; flex: none; overflow: hidden;
+    border-radius: 38px; border: 1px solid var(--line-strong); background: var(--bg);
+    padding: 54px 20px 24px; display: flex; flex-direction: column; gap: 18px;
+  }
+  .phone::before { content: ''; position: absolute; top: 14px; left: 50%; width: 92px; height: 24px; margin-left: -46px; border-radius: 14px; background: #000; }
+  .tv {
+    position: relative; flex: 1 1 760px; max-width: 1100px; aspect-ratio: 16 / 9; overflow: hidden;
+    border-radius: 18px; border: 1px solid var(--line-strong); background: var(--bg-deep);
+    container-type: inline-size;
+  }
+
+  .avatar.acc { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  .row { display: grid; grid-template-columns: 22px 34px 1fr auto; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .row .pos { font-weight: 800; color: var(--ink-muted); font-size: 13px; }
+  .row .avatar { width: 34px; height: 34px; font-size: 18px; }
+  .row .nm { font-weight: 800; text-transform: uppercase; letter-spacing: -0.01em; font-size: 15px; }
+  .row .val { font-size: 20px; }
+  .outline { color: transparent; -webkit-text-stroke: 1.5px var(--line-strong); }
+
+  /* L20 */
+  .drink-card { position: relative; padding: 18px 18px 22px; }
+  .echo-stack { position: relative; height: 312px; margin-top: 4px; }
+  .echo-stack .n { position: absolute; left: 0; top: 0; font-size: 150px; line-height: 0.85; }
+  .echo-stack .e1 { transform: translateY(98px); opacity: 0.75; }
+  .echo-stack .e2 { transform: translateY(180px); opacity: 0.35; }
+  .plus { margin-top: auto; height: 76px; border-radius: 14px; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: space-between; padding: 0 22px; font-weight: 800; text-transform: uppercase; font-size: 18px; }
+  .plus b { font-size: 40px; font-weight: 700; }
+  .stack-hist { display: flex; flex-direction: column; margin-top: 6px; }
+  .stack-hist .line { display: flex; align-items: baseline; justify-content: space-between; }
+  .stack-hist .big { font-size: 112px; line-height: 0.84; }
+  .stack-hist .line:nth-child(2) .big { opacity: 0.55; }
+  .stack-hist .line:nth-child(3) .big { opacity: 0.3; }
+  .stack-hist .line:nth-child(4) .big { opacity: 0.14; }
+
+  /* L21 */
+  .poster-name {
+    position: absolute; top: 50%; left: 0; white-space: nowrap; translate: 0 -54%;
+    font-weight: 900; text-transform: uppercase; font-size: 30cqw; letter-spacing: -0.04em; line-height: 1;
+    color: transparent; -webkit-text-stroke: 0.3cqw var(--accent);
+    animation: drift 14s linear infinite alternate;
+  }
+  @keyframes drift { from { transform: translateX(2cqw); } to { transform: translateX(-40cqw); } }
+  .poster-front { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.6cqw; }
+  .poster-front .avatar { width: 15cqw; height: 15cqw; font-size: 9cqw; box-shadow: 0 0 0 1.2cqw var(--bg-deep); }
+  .poster-front .who { font-family: var(--font-serif); font-size: 4.4cqw; line-height: 1; color: var(--ink); background: var(--bg-deep); padding: 0.3cqw 1.4cqw 0.6cqw; border-radius: 1cqw; }
+  .poster-front .cnt { background: var(--bg-deep); padding: 0.2cqw 1.2cqw; border-radius: 0.8cqw; font-size: 2cqw; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-muted); }
+  .tv .corner { position: absolute; top: 3cqw; left: 3.4cqw; font-size: 1.3cqw; }
+  .tv .corner-r { left: auto; right: 3.4cqw; }
+
+  /* L22 */
+  .race { position: absolute; inset: 0; padding: 4cqw 4.6cqw; }
+  .race-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 2.6cqw; }
+  .race-head .date { font-family: var(--font-serif); font-size: 6cqw; line-height: 0.9; color: var(--accent-text); }
+  .race-head .eyebrow { font-size: 1.3cqw; }
+  .race-rows { position: relative; height: 34cqw; }
+  .race-row { position: absolute; left: 0; right: 0; height: 5cqw; display: grid; grid-template-columns: 3cqw 14cqw 1fr 7cqw; align-items: center; gap: 1.4cqw; transition: top 0.9s var(--ease); }
+  .race-row .p { font-weight: 800; font-size: 1.8cqw; color: var(--ink-muted); }
+  .race-row .nm { font-weight: 800; font-size: 2.2cqw; text-transform: uppercase; letter-spacing: -0.02em; }
+  .race-row .bar { height: 3.2cqw; border-radius: 0.6cqw; background: var(--mixc); transition: width 0.9s var(--ease); }
+  .race-row.lead .bar { background: var(--accent); }
+  .race-row .v { font-size: 2.6cqw; text-align: right; }
+  .race-row .mv { position: absolute; left: -2.6cqw; font-size: 1.4cqw; color: var(--gain); opacity: 0; transition: opacity 0.3s; }
+  .race-row.up .mv { opacity: 1; }
+
+  /* L23 */
+  .story { padding-top: 48px; }
+  .segs { display: flex; gap: 4px; }
+  .segs i { flex: 1; height: 3px; border-radius: 2px; background: var(--line-strong); }
+  .segs i.on { background: var(--ink); }
+  .story .t-title { font-size: 54px; }
+  .mixbar { display: flex; height: 18px; border-radius: 5px; overflow: hidden; }
+  .legend { display: flex; gap: 14px; font-size: 11px; color: var(--ink-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
+  .legend span::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 1px; margin-right: 6px; background: var(--c); }
+  .vs { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; text-align: center; gap: 10px; }
+  .vs .avatar { width: 72px; height: 72px; font-size: 38px; margin: 0 auto 10px; }
+  .story-btn { margin-top: auto; height: 52px; border-radius: 12px; border: 1px solid var(--line-strong); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* L24 */
+  .tiles { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 1fr); gap: 0.6cqw; padding: 0.6cqw; perspective: 900px; }
+  .tile { display: grid; place-items: center; border-radius: 0.8cqw; font-weight: 900; font-size: 3.4cqw; letter-spacing: -0.03em; text-transform: uppercase; animation: flip 1.4s var(--ease) both; animation-delay: calc(var(--i) * 70ms); }
+  .tile.o { background: var(--accent); color: var(--accent-ink); }
+  .tile.d { background: var(--bg); color: transparent; -webkit-text-stroke: 0.15cqw var(--accent); }
+  @keyframes flip { from { transform: rotateX(90deg); opacity: 0; } }
+  .milestone { z-index: 3; position: absolute; left: 50%; top: 50%; translate: -50% -50%; padding: 2.6cqw 4cqw; border-radius: 1.4cqw; background: var(--bg-deep); text-align: center; box-shadow: 0 0 0 0.6cqw var(--bg-deep); }
+  .milestone .big { font-size: 11cqw; line-height: 0.85; }
+  .milestone .t-serif { font-size: 3.4cqw; color: var(--accent-text); }
+  .arrow { position: absolute; top: 50%; translate: 0 -50%; font-size: 7cqw; font-weight: 900; color: var(--ink); z-index: 2; animation: in-l 1.2s var(--ease) 0.6s both; }
+  .arrow.l { left: 2cqw; } .arrow.r { right: 2cqw; animation-name: in-r; }
+  @keyframes in-l { from { transform: translateX(-20cqw); } }
+  @keyframes in-r { from { transform: translateX(20cqw); } }
+
+  /* L25 */
+  .tv-board { position: absolute; inset: 0; padding: 3.6cqw 4.6cqw 0; }
+  .tv-board .t-title { font-size: 5cqw; margin-bottom: 2cqw; }
+  .tv-board .r { display: grid; grid-template-columns: 3cqw 1fr 8cqw; align-items: center; height: 5.2cqw; border-bottom: 1px solid var(--line); font-size: 2.2cqw; }
+  .tv-board .r .n { font-weight: 800; text-transform: uppercase; }
+  .ticker { position: absolute; left: 0; right: 0; bottom: 0; height: 7cqw; display: flex; align-items: center; border-top: 1px solid var(--line-strong); background: var(--bg); overflow: hidden; }
+  .ticker .live { flex: none; height: 100%; display: flex; align-items: center; gap: 0.8cqw; padding: 0 2.4cqw; background: var(--accent); color: var(--accent-ink); font-weight: 900; font-size: 1.6cqw; letter-spacing: 0.06em; text-transform: uppercase; position: relative; z-index: 1; }
+  .ticker .live::before { content: ''; width: 1cqw; height: 1cqw; border-radius: 50%; background: var(--accent-ink); animation: blink 1.2s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0.2; } }
+  .ticker .track { display: flex; gap: 4cqw; padding-left: 3cqw; white-space: nowrap; animation: tick 16s linear infinite; }
+  @keyframes tick { to { transform: translateX(-50%); } }
+  .tk { display: inline-flex; align-items: center; gap: 1cqw; font-size: 1.8cqw; }
+  .tk .avatar { width: 3.6cqw; height: 3.6cqw; font-size: 2cqw; }
+  .tk b { font-weight: 800; text-transform: uppercase; }
+  .tk .sq { width: 1cqw; height: 1cqw; border-radius: 0.2cqw; background: var(--c); }
+  .tk .ago { color: var(--ink-faint); font-size: 1.5cqw; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
+
+  /* L26 */
+  .podline { position: relative; height: 0; border-top: 2px dashed var(--accent); margin: 10px 0; }
+  .podline span { position: absolute; right: 0; top: -11px; padding: 3px 8px; border-radius: 5px; background: var(--accent); color: var(--accent-ink); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+  .gap-chip { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-text); margin-left: 8px; }
+  .row.me { background: color-mix(in srgb, var(--accent) 10%, transparent); margin: 0 -10px; padding-inline: 10px; border-radius: 8px; }
+
+  /* L27 */
+  .bento { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tile-b { position: relative; padding: 14px 14px 16px; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between; --notch-fill: var(--surface); }
+  .tile-b.wide { grid-column: span 2; min-height: 170px; }
+  .tile-b.acc { --notch-fill: var(--accent); color: var(--accent-ink); }
+  .tile-b.acc .eyebrow { color: var(--accent-ink); }
+  .tile-b .v { font-size: 46px; line-height: 0.9; }
+  .tile-b.wide .v { font-size: 92px; }
+  .tile-b .t-serif { font-size: 38px; line-height: 0.9; color: var(--accent-text); }
+  .tile-b .notch-tag { font-size: 10px; }
+</style>
+</head>
+<body class="area-pk">
+
+<header class="page-head">
+  <h1 class="t-title">Ideen <span class="t-serif t-accent">L20–L27</span></h1>
+  <span class="eyebrow">Mockups · Stand 15.10.2026</span>
+</header>
+
+<!-- L20 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">L20</span><h2 class="t-h3">Echo-Zahl</h2></div>
+  <div class="stage">
+    <div class="phone">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">Heute · Donnerstag</span><span class="chip">Platz 2</span></div>
+      <div class="drink-card" data-notch="tabW:120;tabH:30;r:14;slant:18" style="--notch-fill:var(--surface)">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="t-h3">Bier</span><span class="eyebrow">0,5 l</span></div>
+        <div class="echo-stack">
+          <span class="n num outline e2">5</span>
+          <span class="n num outline e1">6</span>
+          <span class="n num cur">7</span>
+        </div>
+        <span class="notch-tag">Heute <span class="hl num">7</span></span>
+      </div>
+      <div class="plus"><span>Bier</span><b>+</b></div>
+    </div>
+    <div class="phone">
+      <span class="eyebrow">Profil · All-Time</span>
+      <div class="stack-hist">
+        <div class="line"><span class="big num">312</span><span class="eyebrow" style="color:var(--accent-text)">Heute</span></div>
+        <div class="line"><span class="big num">305</span><span class="eyebrow">14.10.</span></div>
+        <div class="line"><span class="big num">256</span><span class="eyebrow">09.10.</span></div>
+        <div class="line"><span class="big num">253</span><span class="eyebrow">01.10.</span></div>
+      </div>
+      <div style="margin-top:auto;display:flex;align-items:baseline;gap:10px"><span class="t-h3">Getränke</span><span class="t-serif t-accent" style="font-size:24px">seit 2025</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- L21 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">L21</span><h2 class="t-h3">Namens-Plakat</h2></div>
+  <div class="stage">
+    <div class="tv">
+      <span class="eyebrow corner">Donnerstag · 15.10.2026</span>
+      <span class="eyebrow corner corner-r">SV Partykeller</span>
+      <div class="poster-name">Brocky Brocky</div>
+      <div class="poster-front">
+        <span class="avatar acc">B</span>
+        <span class="who">Abendsieger</span>
+        <span class="cnt"><span class="num" style="color:var(--ink);font-size:2.6cqw">9</span> Getränke</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- L22 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">L22</span><h2 class="t-h3">Rangliste im Zeitraffer</h2></div>
+  <div class="stage">
+    <div class="tv">
+      <div class="race">
+        <div class="race-head">
+          <div><span class="eyebrow">All-Time · Abend <span id="race-n">1</span> / 6</span><div class="date" id="race-date">29.07.</div></div>
+          <span class="eyebrow">SV Partykeller</span>
+        </div>
+        <div class="race-rows" id="race"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- L23 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">L23</span><h2 class="t-h3">Saison-Rückblick</h2></div>
+  <div class="stage">
+    <div class="phone story">
+      <div class="segs"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+      <span class="eyebrow">Saison 2026 · Luki</span>
+      <h3 class="t-title">Dein<br>Getränk:<br><span class="t-serif t-accent">Bier.</span></h3>
+      <div style="display:flex;align-items:baseline;gap:8px"><span class="num" style="font-size:88px;line-height:.85">62</span><span class="t-h3">%</span></div>
+      <div class="mixbar"><span style="width:62%;background:var(--beer)"></span><span style="width:29%;background:var(--shot)"></span><span style="width:9%;background:var(--mixc)"></span></div>
+      <div class="legend"><span style="--c:var(--beer)">Bier 194</span><span style="--c:var(--shot)">Shots 91</span><span style="--c:var(--mixc)">Mischen 27</span></div>
+    </div>
+    <div class="phone story">
+      <div class="segs"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+      <span class="eyebrow">Saison 2026 · Luki</span>
+      <h3 class="t-title">Dein<br><span class="t-serif t-accent">bester</span><br>Abend</h3>
+      <span class="num" style="font-size:150px;line-height:.82">49</span>
+      <div><div class="t-h3">Mittwoch</div><div class="num" style="font-size:22px;color:var(--ink-faint)">14.10.2026</div></div>
+      <svg viewBox="0 0 300 70" style="width:100%;height:70px;margin-top:auto" fill="none"><rect x="236" y="0" width="34" height="70" fill="var(--accent)" opacity=".85"/><path d="M0 64 C60 60 120 62 170 60 S220 50 252 8" stroke="var(--ink)" stroke-width="2.5"/><line x1="0" y1="69" x2="300" y2="69" stroke="var(--line-strong)"/></svg>
+    </div>
+    <div class="phone story">
+      <div class="segs"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+      <span class="eyebrow">Saison 2026 · Luki</span>
+      <h3 class="t-title">Dein<br><span class="t-serif t-accent">Rivale</span></h3>
+      <div class="vs" style="margin-top:20px">
+        <div><span class="avatar acc">L</span><div class="t-h3">Luki</div><div class="num" style="font-size:40px">312</div></div>
+        <span class="t-serif t-accent" style="font-size:34px">vs</span>
+        <div><span class="avatar">T</span><div class="t-h3">Tom</div><div class="num" style="font-size:40px;color:var(--ink-faint)">298</div></div>
+      </div>
+      <div class="eyebrow" style="text-align:center">14 Getränke Vorsprung</div>
+      <div class="story-btn">Story speichern <span class="i-arrow" style="transform:rotate(135deg)"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- L24 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">L24</span><h2 class="t-h3">Meilenstein-Bild</h2></div>
+  <div class="stage">
+    <div class="tv">
+      <div class="tiles" id="tiles"></div>
+      <span class="arrow l">→</span><span class="arrow r">←</span>
+      <div class="milestone"><div class="big num">1000.</div><div class="t-serif">Getränk der Saison</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- L25 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">L25</span><h2 class="t-h3">Ticker auf dem TV</h2></div>
+  <div class="stage">
+    <div class="tv">
+      <div class="tv-board">
+        <h3 class="t-title">Heute <span class="t-serif t-accent">Abend</span></h3>
+        <div class="r"><span class="num">1</span><span class="n">Brocky</span><span class="num" style="text-align:right">9</span></div>
+        <div class="r"><span class="num">2</span><span class="n">Justin</span><span class="num" style="text-align:right">7</span></div>
+        <div class="r"><span class="num">3</span><span class="n">Luki</span><span class="num" style="text-align:right">6</span></div>
+        <div class="r"><span class="num">4</span><span class="n">Tom</span><span class="num" style="text-align:right">5</span></div>
+        <div class="r"><span class="num">5</span><span class="n">Pauli</span><span class="num" style="text-align:right">4</span></div>
+        <div class="r" style="opacity:.5"><span class="num">6</span><span class="n">Kathi</span><span class="num" style="text-align:right">2</span></div>
+      </div>
+      <div class="ticker">
+        <span class="live">Live</span>
+        <div class="track" id="ticker"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- L26 + L27 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">L26 · L27</span><h2 class="t-h3">Podestlinie und Profil als Bento</h2></div>
+  <div class="stage">
+    <div class="phone">
+      <div style="display:flex;justify-content:space-between;align-items:end"><h3 class="t-title" style="font-size:40px">Rang<span class="t-serif t-accent">liste</span></h3><span class="chip chip--accent">Heute</span></div>
+      <div>
+        <div class="row"><span class="pos">1</span><span class="avatar acc">B</span><span class="nm">Brocky</span><span class="val num">9</span></div>
+        <div class="row"><span class="pos">2</span><span class="avatar">J</span><span class="nm">Justin</span><span class="val num">7</span></div>
+        <div class="row"><span class="pos">3</span><span class="avatar">L</span><span class="nm">Luki</span><span class="val num">6</span></div>
+        <div class="podline"><span>Podest</span></div>
+        <div class="row me"><span class="pos">4</span><span class="avatar">T</span><span class="nm">Tom<span class="gap-chip">noch 2</span></span><span class="val num">5</span></div>
+        <div class="row"><span class="pos">5</span><span class="avatar">P</span><span class="nm">Pauli<span class="gap-chip">noch 3</span></span><span class="val num">4</span></div>
+        <div class="row"><span class="pos">6</span><span class="avatar">K</span><span class="nm">Kathi</span><span class="val num">2</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <h3 class="t-title" style="font-size:40px">Dein <span class="t-serif t-accent">Profil</span></h3>
+      <div class="bento">
+        <div class="tile-b wide" data-notch="tabW:126;tabH:30;r:14;slant:18"><span class="eyebrow">All-Time</span><span class="v num">312</span><span class="notch-tag">seit <span class="hl num">2025</span></span></div>
+        <div class="tile-b acc" data-notch="tabW:0;tabH:0;r:14;slant:0"><span class="eyebrow">Abendsiege</span><span class="v num">4</span></div>
+        <div class="tile-b" data-notch="tabW:0;tabH:0;r:14;slant:0"><span class="eyebrow">Bester Abend</span><span class="v num">49</span></div>
+        <div class="tile-b" data-notch="tabW:0;tabH:0;r:14;slant:0"><span class="eyebrow">Lieblings&shy;getränk</span><span class="t-serif">Bier</span></div>
+        <div class="tile-b" data-notch="tabW:84;tabH:26;r:14;slant:14"><span class="eyebrow">Stärkste Stunde</span><span class="v num" style="font-size:40px">22</span><span class="notch-tag">Uhr</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function notchPath(w, h, { tabW = 140, tabH = 30, r = 12, slant = 18 } = {}) {
+  if (!tabW || !tabH) return `M${r} 0H${w - r}Q${w} 0 ${w} ${r}V${h - r}Q${w} ${h} ${w - r} ${h}H${r}Q0 ${h} 0 ${h - r}V${r}Q0 0 ${r} 0Z`;
+  const W = w, H = h, yT = H - tabH, rr = Math.min(r, W / 2, yT / 2), c = Math.min(8, tabH / 3), xs = W - tabW;
+  return `M${rr} 0H${W - rr}Q${W} 0 ${W} ${rr}V${yT - rr}Q${W} ${yT} ${W - rr} ${yT}H${xs + c}Q${xs} ${yT} ${xs - c * 0.6} ${yT + c * 0.8}L${xs - slant + c * 0.6} ${H - c * 0.8}Q${xs - slant} ${H} ${xs - slant - c} ${H}H${rr}Q0 ${H} 0 ${H - rr}V${rr}Q0 0 ${rr} 0Z`;
+}
+document.querySelectorAll('[data-notch]').forEach((el) => {
+  const o = {};
+  el.dataset.notch.split(';').forEach((p) => { const [k, v] = p.split(':'); o[k] = Number(v); });
+  el.classList.add('is-notched');
+  el.style.setProperty('--notch-w', `${o.tabW}px`);
+  el.style.setProperty('--notch-h', `${o.tabH}px`);
+  const bg = document.createElement('span');
+  bg.className = 'notch-bg';
+  el.prepend(bg);
+  const apply = () => { bg.style.clipPath = `path('${notchPath(el.offsetWidth, el.offsetHeight, o)}')`; };
+  apply();
+  new ResizeObserver(apply).observe(el);
+});
+
+// L22: kleine Zeitraffer-Schleife
+const frames = [
+  ['29.07.', { Brocky: 6, Justin: 4, Luki: 8, Tom: 5, Pauli: 3, Kathi: 2 }],
+  ['12.08.', { Brocky: 18, Justin: 15, Luki: 21, Tom: 14, Pauli: 12, Kathi: 6 }],
+  ['26.08.', { Brocky: 31, Justin: 33, Luki: 29, Tom: 27, Pauli: 19, Kathi: 15 }],
+  ['15.09.', { Brocky: 44, Justin: 46, Luki: 52, Tom: 39, Pauli: 30, Kathi: 22 }],
+  ['01.10.', { Brocky: 61, Justin: 58, Luki: 66, Tom: 60, Pauli: 41, Kathi: 33 }],
+  ['15.10.', { Brocky: 79, Justin: 70, Luki: 72, Tom: 68, Pauli: 47, Kathi: 35 }],
+];
+const race = document.getElementById('race');
+const rows = {};
+Object.keys(frames[0][1]).forEach((name) => {
+  const r = document.createElement('div');
+  r.className = 'race-row';
+  r.innerHTML = `<span class="mv">▲</span><span class="p num"></span><span class="nm">${name}</span><span class="bar"></span><span class="v num"></span>`;
+  race.appendChild(r);
+  rows[name] = { el: r, prev: 99 };
+});
+let fi = 0;
+function showFrame() {
+  const [date, vals] = frames[fi];
+  document.getElementById('race-date').textContent = date;
+  document.getElementById('race-n').textContent = fi + 1;
+  const max = Math.max(...Object.values(vals));
+  Object.entries(vals).sort((a, b) => b[1] - a[1]).forEach(([name, v], i) => {
+    const r = rows[name];
+    r.el.style.top = `calc(${i} * 5.6cqw)`;
+    r.el.querySelector('.p').textContent = i + 1;
+    r.el.querySelector('.bar').style.width = `${(v / max) * 100}%`;
+    r.el.querySelector('.v').textContent = v;
+    r.el.classList.toggle('lead', i === 0);
+    r.el.classList.toggle('up', fi > 0 && i < r.prev);
+    r.prev = i;
+  });
+  fi = (fi + 1) % frames.length;
+}
+showFrame();
+setInterval(showFrame, 1600);
+
+// L24: Kacheln
+const tiles = document.getElementById('tiles');
+for (let i = 0; i < 24; i++) {
+  const t = document.createElement('div');
+  t.className = 'tile ' + ((i + Math.floor(i / 6)) % 2 ? 'd' : 'o');
+  t.style.setProperty('--i', (i % 6) + Math.floor(i / 6));
+  t.textContent = 'Prost';
+  tiles.appendChild(t);
+}
+
+// L25: Ticker (zweimal hintereinander für die Endlosschleife)
+const items = [
+  ['T', 'Tom', 'Bier', 'var(--beer)', 'gerade eben'],
+  ['J', 'Justin', 'Shot', 'var(--shot)', 'vor 1 Min.'],
+  ['B', 'Brocky', 'Bier', 'var(--beer)', 'vor 2 Min.'],
+  ['K', 'Kathi', 'Mischen', 'var(--mixc)', 'vor 4 Min.'],
+  ['L', 'Luki', 'Bier', 'var(--beer)', 'vor 5 Min.'],
+];
+const track = document.getElementById('ticker');
+const html = items.map(([i, n, d, c, a]) => `<span class="tk"><span class="avatar">${i}</span><b>${n}</b><span class="sq" style="--c:${c}"></span>${d}<span class="ago">${a}</span></span>`).join('');
+track.innerHTML = html + html;
+</script>
+</body>
+</html>

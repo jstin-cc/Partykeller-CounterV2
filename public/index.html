@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SV Partykeller – Anmeldung</title>
+<script>document.documentElement.classList.add('js-motion');
+// Seitenwechsel (D-085/D-087): Morph-Schlüssel vor dem ersten Bild setzen
+// (die Seite benennt daraufhin ihr Gegenstück), nach dem Übergang lösen.
+try {
+  var h = document.documentElement, ss = sessionStorage;
+  var m = ss.getItem('pk-morph');
+  ss.removeItem('pk-morph'); ss.removeItem('pk-curtain');   // pk-curtain: Rest des alten Vorhangs (D-084)
+  var vt = 'CSSViewTransitionRule' in window, flip = null;
+  try { flip = JSON.parse(ss.getItem('pk-flip')); } catch (e) {}
+  // Firefox (keine seitenübergreifenden View Transitions): Morph per Skript
+  // (D-087) — unsichtbar starten, lando.js legt die Elemente an ihre alte Stelle
+  var flipOn = !vt && !!flip && Date.now() - flip.t < 10000 && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!flipOn) ss.removeItem('pk-flip');
+  if (flipOn) { h.dataset.flip = '1'; setTimeout(function () { delete h.dataset.flip; }, 1500); }
+  // Kaltstart-Bild (D-093): nur beim ersten Öffnen in diesem Tab (PWA-Start,
+  // neuer Tab), nie bei Seitenwechseln in der App. Fläche in Akzentfarbe mit
+  // der Wortmarke, die nach dem Laden an ihren Platz in der Kopfleiste fliegt
+  // (frühestens 0,8 s, spätestens 1,4 s); Einblendungen starten erst dann
+  // (h.pkBootDone, lando.js initBoot).
+  if (!ss.getItem('pk-booted') && !m && !flipOn && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    h.classList.add('pk-boot');
+    var t0 = Date.now();
+    h.pkBootDone = new Promise(function (res) {
+      var out = function () {
+        if (h.classList.contains('pk-boot-out')) return;
+        h.classList.add('pk-boot-out');
+        res();
+        setTimeout(function () { h.classList.remove('pk-boot', 'pk-boot-out'); }, 1800);   // Rückfall, falls lando.js fehlt
+      };
+      addEventListener('load', function () { setTimeout(out, Math.max(0, 800 - (Date.now() - t0))); });
+      setTimeout(out, 1400);
+    });
+  }
+  ss.setItem('pk-booted', '1');
+  if (m && (vt || flipOn)) {
+    h.dataset.morph = m;
+    h.pkMorphDone = new Promise(function (res) {
+      var done = function () { delete h.dataset.morph; res(); };
+      h.pkMorphEnd = done;
+      setTimeout(done, 2000);
+      if (vt) addEventListener('pagereveal', function (e) {
+        if (e.viewTransition) { e.viewTransition.ready.catch(function () {}); e.viewTransition.finished.then(done, done); } else done();
+      }, { once: true });
+    });
+  }
+} catch (e) {}</script>
+<link rel="icon" href="assets/cones-flat.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f131c">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="css/theme.css">
+<style>
+  /* Anmeldung im Lando-Stil (D-078): dunkler Bereichsgrund mit Höhenlinien,
+     riesige Frage als Headline, die Konten als Versal-Zeilen wie die Links im
+     Lando-Menü, darunter „Neu hier?" als Kerben-Karte. Ab 960 px zweispaltig:
+     links klebt die Headline, rechts stehen Liste und Registrierung. */
+  .login {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: max(14px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+  }
+  .login-top .wordmark { font-size: 21px; }
+  .login-grid { flex: 1; display: flex; flex-direction: column; gap: 44px; padding-top: 26px; }
+
+  /* --- Hero: Embleme, Eyebrow, Frage --- */
+  .hero { display: flex; flex-direction: column; gap: 18px; }
+  .hero-emblems { display: flex; align-items: center; gap: 14px; }
+  /* Partykeller-Logo als Maske (nimmt die Schriftfarbe an); gleitet per
+     View Transition in den Dashboard-Kopf (D-068) */
+  .pk-logo {
+    display: block;
+    flex: none;
+    width: 86px;
+    aspect-ratio: 1181 / 1000;
+    background: var(--ink);
+    -webkit-mask: url('assets/logo.png') center / contain no-repeat;
+    mask: url('assets/logo.png') center / contain no-repeat;
+  }
+  .hero-meta { margin-left: auto; text-align: right; line-height: 1.35; }
+  .hero-meta .eyebrow { display: block; }
+
+  .hero-eyebrow { margin: 6px 0 0; display: flex; align-items: center; gap: 10px; }
+  .hero-eyebrow::before { content: ''; width: 22px; height: 1px; background: var(--accent); }
+  .hero-title { font-size: clamp(58px, 17vw, 150px); line-height: 0.84; }
+  .hero-title .t-serif { font-size: 1.12em; line-height: 0.8; }
+  /* „du?" steht immer in einer eigenen Zeile, mit etwas Luft darüber, damit
+     der Kringel unter der Grundlinie von „Wer bist" beginnt statt durch
+     deren Fuß zu laufen (eigener Block, weil die Wort-Masken oben
+     ausgerichtet sind – ein Rand in derselben Zeile verschöbe das Wort) */
+  .hero-title .scribbled { display: block; width: fit-content; margin-top: 0.24em; }
+  .hero-title .scribbled > .scribble--circle {
+    --scribble-width: 3.5;
+    --draw-dur: 1.15s;
+    left: -20%; top: -17%; width: 142%; height: 132%;
+  }
+  .hero-jump { align-self: flex-start; }
+
+  /* --- rechte Spalte: Fehler, Konten, Registrierung --- */
+  .side { display: flex; flex-direction: column; gap: 44px; min-width: 0; }
+
+  /* Fehlerbanner klebt oben, damit eine falsche PIN auch unten in einer
+     langen Liste sichtbar bleibt (Text setzt showError, [hidden] wie bisher) */
+  .error-banner {
+    position: sticky;
+    top: 10px;
+    z-index: 5;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: -22px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-deep);
+    border: 1px solid color-mix(in srgb, var(--danger) 60%, transparent);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .error-banner::before {
+    content: '!';
+    flex: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--danger);
+    color: var(--lando-black);
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 800; line-height: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .error-banner:not([hidden]) { animation: err-in 0.55s var(--ease) both; }
+    .error-banner.is-leaving { animation: leave-up 0.4s var(--ease) both; }
+  }
+  @keyframes err-in { from { opacity: 0; transform: translateY(-10px); } }
+
+  .acc-head { margin-bottom: 6px; }
+  .acc-count { order: 1; color: var(--ink-muted); }
+
+  /* Kontenliste: Versal-Zeilen mit Haarlinien (D-044). Jedes Konto ist ein
+     div-Wrapper (Zeile + ggf. PIN-Form) als direktes Kind von #user-list. */
+  .user-list { border-top: 1px solid var(--line); }
+  .user-list:empty { border-top: 0; }
+  .user-list > div { position: relative; border-bottom: 1px solid var(--line); }
+  .user-row {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    min-height: 74px;
+    padding: 12px 8px;
+    background: none;
+    border: 0;
+    color: var(--ink);
+    text-align: left;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Fläche fährt beim Hover/Öffnen von unten herein */
+  .user-row::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--surface);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 0.5s var(--ease);
+  }
+  .user-row:active::before { transform: none; }
+  .user-item.is-open > .user-row::before { transform: none; }
+  .user-row .avatar { transition: background-color 0.35s var(--ease), color 0.35s var(--ease), border-color 0.35s var(--ease); }
+  .user-name {
+    flex: 1;
+    min-width: 0;
+    font-weight: 800;
+    font-size: clamp(25px, 7.4vw, 36px);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+    transition: transform 0.55s var(--ease), color 0.3s ease;
+  }
+  .user-row.is-long .user-name { font-size: clamp(19px, 5.4vw, 26px); }
+  .user-name > span { display: inline-block; max-width: 100%; }   /* Übergang me-name */
+  .user-go {
+    flex: none;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    transition: background-color 0.35s var(--ease), border-color 0.35s var(--ease), color 0.35s var(--ease), rotate 0.55s var(--ease);
+  }
+  .user-go .i-arrow { width: 12px; height: 12px; }
+  .user-item.is-open .user-go { rotate: 90deg; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .user-item.is-open .avatar { border-color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) {
+    .user-row:hover::before { transform: none; }
+    .user-row:hover .user-name { transform: translateX(10px); color: var(--accent-text); }
+    .user-row:hover .avatar { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+    .user-row:hover .user-go { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+    .user-row:hover .user-go .i-arrow::before { transform: translate(120%, -120%); }
+    .user-row:hover .user-go .i-arrow::after { transform: translate(0, 0); }
+  }
+
+  /* Erster Aufbau: Zeilen gleiten gestaffelt herein. Die PIN-Zeile klappt
+     auf und wieder zu: Höhe (--h, misst das Skript) und Inhalt gleiten mit,
+     die Zeilen darunter rutschen weich nach statt zu springen. */
+  @media (prefers-reduced-motion: no-preference) {
+    .user-list.is-entering > div { animation: row-in 0.8s var(--ease) both; animation-delay: calc(min(var(--i, 0), 12) * 45ms + 200ms); }
+    .pin-row { animation: pin-open 0.6s var(--ease); }
+    .pin-row.is-leaving { animation: pin-close 0.45s var(--ease) both; }
+    .pin-row > * { animation: pin-content 0.6s var(--ease); }
+  }
+  @keyframes row-in { from { opacity: 0; transform: translateY(22px); } }
+  /* Vom Dashboard zurück (Abmelden): Namenskreis und Name
+     gleiten in die eigene Zeile oben in der Liste (D-085); die Zeile steht
+     dafür sofort da, statt hereinzugleiten */
+  html[data-morph="me"] .user-item.is-last .avatar { view-transition-name: me-avatar; }
+  html[data-morph="me"] .user-item.is-last .user-name > span { view-transition-name: me-name; }
+  html[data-morph="me"] .user-list.is-entering > .user-item.is-last { animation: none; }
+  @keyframes pin-open {
+    from { height: 0; padding-top: 0; padding-bottom: 0; clip-path: inset(0); }
+    to { height: var(--h); clip-path: inset(0); }
+  }
+  @keyframes pin-close {
+    from { height: var(--h); clip-path: inset(0); }
+    to { height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; clip-path: inset(0); }
+  }
+  @keyframes pin-content { from { opacity: 0; translate: 0 -10px; } }
+
+  /* Laden: leise pulsierende Zeile, bis die Konten da sind */
+  .user-list.is-loading:empty::before {
+    content: 'Konten werden geladen …';
+    display: block;
+    padding: 26px 8px;
+    border-bottom: 1px solid var(--line);
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-muted);
+    animation: pulse 1.1s ease-in-out infinite alternate;
+  }
+  .user-list.is-loading:empty { border-top: 1px solid var(--line); }
+  @keyframes pulse { to { opacity: 0.35; } }
+  /* Server nicht erreichbar: statt einer nackten Linie ein Hinweis in der Serif */
+  .user-list.is-error:empty {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 22px 8px 24px;
+  }
+  .user-list.is-error:empty::before {
+    content: 'Keine Verbindung zum Keller. Seite neu laden, sobald das WLAN wieder steht.';
+    display: block;
+    max-width: 26ch;
+    font-family: var(--font-serif);
+    font-size: 24px;
+    line-height: 1.08;
+    color: var(--ink-2);
+  }
+
+  /* Aufklappende PIN-Zeile */
+  .pin-row {
+    display: flex;
+    gap: 8px;
+    padding: 4px 8px 16px 64px;
+    background: var(--surface);
+  }
+  .pin-row .field { flex: 1; min-width: 0; font-size: 18px; letter-spacing: 0.3em; }
+  .pin-row .field::placeholder { letter-spacing: 0.06em; }
+  .pin-row .btn { min-height: 50px; padding: 0 18px; }
+
+  /* Leerzustand */
+  .list-empty {
+    position: relative;
+    padding: 26px 20px 30px;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-lg);
+  }
+  .list-empty .t-quote { margin: 0; font-size: 28px; color: var(--ink); max-width: 16ch; }
+  .list-empty .scribble { position: absolute; right: 18px; bottom: -26px; width: 64px; height: 70px; rotate: 100deg; }
+
+  /* --- Registrieren als Kerben-Karte --- */
+  .reg-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 24px 20px 60px;
+    --notch-fill: var(--surface);
+    scroll-margin-top: 16px;
+  }
+  .reg-topo { z-index: -1; opacity: 0.55; background: var(--topo-line); }
+  .reg-title { font-size: clamp(46px, 13vw, 76px); line-height: 0.86; }
+  .reg-title .t-serif { font-size: 1.1em; }
+  .reg-form { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+  .fld { display: flex; flex-direction: column; gap: 7px; }
+  .fld .eyebrow { color: var(--ink-2); }
+  .fld .eyebrow em { font-style: normal; color: var(--ink-faint); }
+  .reg-card .field { background: var(--bg); }
+  .reg-form .btn { margin-top: 6px; }
+  .reg-card .notch-tag { font-weight: 700; }
+
+  /* --- Fuß: Emblem und die alten Fußlinks --- */
+  .login-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px 24px;
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+  /* Tippflächen mind. 44 px hoch; die Hover-Linie sitzt knapp unter der Schrift */
+  .foot-links { display: flex; flex-wrap: wrap; gap: 0 20px; }
+  .foot-links a {
+    font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-muted);
+    text-decoration: none;
+    display: inline-flex; align-items: center;
+    min-height: 44px;
+    background: linear-gradient(var(--accent), var(--accent)) left calc(100% - 12px) / 0 1px no-repeat;
+    transition: color 0.3s ease, background-size 0.45s var(--ease);
+  }
+  .foot-links a:hover { color: var(--ink); background-size: 100% 1px; }
+
+  .menu-foot .eyebrow { line-height: 1.4; }
+
+  /* --- Desktop: zweispaltig, Headline klebt links --- */
+  @media (min-width: 960px) {
+    .login { padding-left: clamp(28px, 3vw, 48px); padding-right: clamp(28px, 3vw, 48px); }
+    .login-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+      gap: 0 clamp(48px, 6vw, 120px);
+      align-items: start;
+      padding-top: 48px;
+    }
+    .hero { position: sticky; top: 40px; gap: 22px; }
+    .pk-logo { width: 104px; }
+    .hero-title { font-size: clamp(90px, 8.6vw, 150px); }
+    .side { padding-top: 8px; }
+    .reg-card { padding: 30px 30px 64px; }
+    .reg-title { font-size: clamp(56px, 5vw, 84px); }
+  }
+</style>
+
+</head>
+<body>
+<div class="topo" aria-hidden="true"></div>
+<div class="topo-spot" aria-hidden="true"></div>
+
+<div class="login">
+  <header class="topbar login-top">
+    <a class="wordmark" href="./" aria-label="Anmeldung">
+      <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
+    </a>
+    <div class="topbar-actions">
+      <button class="btn btn--ghost btn--icon" type="button" data-menu-toggle data-magnetic="0.2" aria-controls="site-menu" aria-expanded="false" aria-label="Menü"><span class="i-menu"></span></button>
+    </div>
+  </header>
+
+  <div class="login-grid">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-emblems">
+        <span class="pk-logo" role="img" aria-label="SV Partykeller" style="view-transition-name:area-logo"></span>
+        <span class="hero-meta">
+          <span class="eyebrow">SV Partykeller</span>
+        </span>
+      </div>
+      <p class="eyebrow hero-eyebrow" data-reveal="up">Anmeldung</p>
+      <h1 id="hero-title" class="t-impact hero-title" data-reveal="words">Wer bist <span class="scribbled"><span class="t-serif t-accent">du?</span><svg class="scribble scribble--circle" data-draw="750" viewBox="0 0 260 130" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M176 14C128 1 58 6 24 34-4 58 12 104 88 118c64 12 150 0 164-40 11-32-26-64-92-72-40-5-80 1-104 12" pathLength="1"/></svg></span></h1>
+      <a class="btn btn--ghost btn--sm hero-jump" href="#register" data-reveal="up" data-delay="420">Konto anlegen <span class="i-arrow" style="rotate:90deg"></span></a>
+    </section>
+
+    <div class="side">
+      <div id="error-banner" class="error-banner" role="alert" hidden></div>
+
+      <section class="accounts" aria-labelledby="acc-title">
+        <div class="sec acc-head"><span id="acc-title" class="sec-title">Dein Konto</span><span id="user-count" class="eyebrow num acc-count"></span></div>
+        <div id="user-list" class="user-list is-loading"></div>
+        <script>
+          // Rückweg vom Dashboard (D-085): die Liste schon fürs erste Bild aus
+          // dem Zwischenspeicher setzen, damit Namenskreis und Name in die
+          // eigene Zeile gleiten können. Gleiches Markup wie renderUsers();
+          // das Modul übernimmt nach dem Übergang.
+          (() => {
+            if (document.documentElement.dataset.morph !== 'me') return;
+            let players;
+            try { players = JSON.parse(localStorage.getItem('pk_players_cache') || 'null'); } catch (e) { return; }
+            if (!Array.isArray(players)) return;
+            players = players.filter((p) => !p.hidden);
+            if (!players.length) return;
+            const last = localStorage.getItem('pk_last_player_id');
+            const at = players.findIndex((p) => p.id === last);
+            if (at > 0) players.unshift(players.splice(at, 1)[0]);
+            const el = (tag, cls, text) => { const n = document.createElement(tag); n.className = cls; if (text) n.textContent = text; return n; };
+            const list = document.getElementById('user-list');
+            list.classList.remove('is-loading');
+            for (const [i, p] of players.entries()) {
+              const wrap = el('div', 'user-item' + (p.id === last ? ' is-last' : ''));
+              wrap.style.setProperty('--i', i);
+              const row = el('button', 'user-row' + (p.name.length > 11 ? ' is-long' : ''));
+              row.type = 'button';
+              const name = el('div', 'user-name');
+              name.append(el('span', '', p.name));
+              const go = el('span', 'user-go');
+              go.append(el('span', 'i-arrow'));
+              row.append(el('div', 'avatar', p.name.charAt(0).toUpperCase()), name, go);
+              wrap.append(row);
+              list.append(wrap);
+            }
+            document.getElementById('user-count').textContent = `${players.length} ${players.length === 1 ? 'Konto' : 'Konten'}`;
+          })();
+        </script>
+        <div id="list-empty" class="list-empty" hidden>
+          <p class="t-quote">Noch niemand da – leg unten los.</p>
+          <svg class="scribble scribble--arrow is-drawn is-static" viewBox="0 0 140 80" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M8 70C28 34 64 14 116 22M100 8l18 15-16 18" pathLength="1"/></svg>
+        </div>
+      </section>
+
+      <section id="register" class="reg-card" aria-labelledby="reg-title" data-notch="tabW:150;tabH:36;r:14;slant:20" data-reveal="up">
+        <span class="topo topo--abs notch-clip reg-topo" aria-hidden="true"></span>
+        <p class="eyebrow">Registrieren</p>
+        <h2 id="reg-title" class="t-title reg-title" data-reveal="words">Neu <span class="t-serif t-accent">hier?</span></h2>
+        <form id="create-form" class="reg-form">
+          <label class="fld"><span class="eyebrow">Name</span>
+            <input id="create-name" class="field" type="text" maxlength="24" placeholder="Dein Name" autocomplete="off" required>
+          </label>
+          <label class="fld"><span class="eyebrow">PIN <em>– optional, 4 Ziffern</em></span>
+            <input id="create-pin" class="field" type="password" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="PIN (optional, 4 Ziffern)" autocomplete="off">
+          </label>
+          <button class="btn btn--block btn--lg" data-magnetic="0.08">Konto anlegen <span class="i-arrow"></span></button>
+        </form>
+        <span class="notch-tag">PIN <span class="hl">optional</span></span>
+      </section>
+    </div>
+  </div>
+
+  <footer class="login-foot">
+    <div class="emblem">
+      <span class="laurel" aria-hidden="true"></span>
+      <span class="eyebrow">SV Partykeller</span>
+    </div>
+    <nav class="foot-links" aria-label="Weitere Seiten">
+      <a href="abende">Abend-Archiv</a>
+      <a href="admin">Admin-Zugang</a>
+    </nav>
+  </footer>
+</div>
+
+<!-- Vollbild-Menü (lando.js initMenu) -->
+<nav id="site-menu" class="site-menu" aria-hidden="true" aria-label="Menü">
+  <div class="topo topo--abs" aria-hidden="true"></div>
+  <div class="topbar" style="position:relative;z-index:1;">
+    <span class="wordmark">
+      <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
+    </span>
+    <button class="btn btn--ghost btn--icon" type="button" data-menu-toggle aria-label="Menü schließen"><span class="i-menu"></span></button>
+  </div>
+  <div class="menu-nav">
+    <a class="menu-link is-current" style="--i:0" href="./" aria-current="page">Anmeldung<svg class="scribble scribble--strike" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 18c26-8 44 6 70-2s46-9 74-2 52 5 88-6" pathLength="1"/></svg></a>
+    <a class="menu-link" style="--i:1" href="abende">Abend-Archiv</a>
+    <a class="menu-link" style="--i:2" href="admin" data-morph="admin" data-morph-self>Admin</a>
+  </div>
+  <div class="menu-foot">
+    <div class="emblem"><span class="laurel" aria-hidden="true"></span><span class="eyebrow">SV Partykeller</span></div>
+  </div>
+</nav>
+
+
+<script type="module">
+import { post, fetchPlayers, setSession, getLastPlayerId } from './js/api.js';
+import { initLando, leave, enter, go } from './js/lando.js';
+
+const $ = (id) => document.getElementById(id);
+let selectedId = null;
+let firstRender = true;
+
+// Übergang ins Dashboard (D-068): Namenskreis und Name der angetippten Zeile
+// bekommen die Übergangsnamen, die dort Kopf-Kreis und Kopf-Name tragen — der
+// Browser lässt sie beim Seitenwechsel an die neue Stelle gleiten.
+function toDashboard(avatar, nameText) {
+  avatar.style.viewTransitionName = 'me-avatar';
+  nameText.style.viewTransitionName = 'me-name';
+  go('dashboard');
+}
+
+// Zurück per bfcache: gesetzte Übergangsnamen wieder lösen, sonst gäbe es beim
+// nächsten Tipp doppelte Namen und der Übergang fiele still aus.
+addEventListener('pageshow', (e) => {
+  if (!e.persisted) return;
+  document.querySelectorAll('.user-row .avatar, .user-name > span').forEach((el) => { el.style.viewTransitionName = ''; });
+});
+
+function showError(msg) {
+  const el = $('error-banner');
+  if (!msg) { leave(el); return; }
+  el.textContent = msg;
+  enter(el);
+}
+
+// Im Admin ausgeblendete Konten stehen auch hier nicht mehr in der Auswahl
+// (D-037) — angemeldet bleibt, wer schon ein Token auf dem Handy hat.
+// Wer sich an diesem Handy zuletzt angemeldet hat, steht oben (D-041): ohne
+// Kennzeichnung, die Reihenfolge dahinter bleibt die der Rangliste.
+// Zeilen im Lando-Stil (D-078): Namenskreis, Name in Versalien, Pfeil ↗.
+function renderUsers(all) {
+  const lastId = getLastPlayerId();
+  const players = all.filter((p) => !p.hidden);
+  const mine = players.findIndex((p) => p.id === lastId);
+  if (mine > 0) players.unshift(players.splice(mine, 1)[0]);
+  const list = $('user-list');
+  list.textContent = '';
+  list.hidden = players.length === 0;   // leere Liste wäre nur eine Linie
+  $('list-empty').hidden = players.length > 0;
+  $('user-count').textContent = players.length ? `${players.length} ${players.length === 1 ? 'Konto' : 'Konten'}` : '';
+  // Nur der erste Aufbau gleitet herein, nicht das Neu-Rendern beim PIN-Öffnen
+  list.classList.toggle('is-entering', firstRender);
+  firstRender = false;
+
+  players.forEach((p, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'user-item' + (selectedId === p.id ? ' is-open' : '') + (p.id === lastId ? ' is-last' : '');
+    wrap.style.setProperty('--i', i);
+
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'user-row' + (p.name.length > 11 ? ' is-long' : '');
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = p.name.charAt(0).toUpperCase();
+
+    const name = document.createElement('div');
+    name.className = 'user-name';
+    const nameText = document.createElement('span');   // nur der Text, für den Übergang
+    nameText.textContent = p.name;
+    name.append(nameText);
+
+    const go = document.createElement('span');
+    go.className = 'user-go';
+    go.setAttribute('aria-hidden', 'true');
+    const arrow = document.createElement('span');
+    arrow.className = 'i-arrow';
+    go.append(arrow);
+
+    row.append(avatar, name, go);
+    wrap.appendChild(row);
+
+    row.addEventListener('click', async () => {
+      showError('');
+      // Konto ohne PIN (D-018): direkt anmelden, keine Eingabe nötig
+      if (!p.hasPin) {
+        try {
+          const { token, player } = await post('/api/login', { playerId: p.id });
+          setSession(token, player.id, player.name);
+          toDashboard(avatar, nameText);
+        } catch (err) {
+          showError(err.message);
+        }
+        return;
+      }
+      // Zweiter Tipp klappt wieder zu; eine andere offene PIN-Zeile schließt
+      if (selectedId === p.id) { selectedId = null; closePin(wrap); return; }
+      list.querySelectorAll('.user-item.is-open').forEach(closePin);
+      selectedId = p.id;
+      openPin(wrap, p, avatar, nameText);
+    });
+
+    if (selectedId === p.id) openPin(wrap, p, avatar, nameText);
+
+    list.appendChild(wrap);
+  });
+}
+
+// PIN-Zeile unter dem Konto auf- und zuklappen, ohne die Liste neu zu bauen —
+// so gleiten Fläche, Pfeil und Höhe weich statt umzuspringen.
+function openPin(wrap, p, avatar, nameText) {
+  wrap.classList.add('is-open');
+  const pinRow = document.createElement('form');
+  pinRow.className = 'pin-row';
+
+  const pin = document.createElement('input');
+  pin.type = 'password';
+  pin.inputMode = 'numeric';
+  pin.maxLength = 4;
+  pin.placeholder = 'PIN';
+  pin.autocomplete = 'off';
+  pin.required = true;
+  pin.className = 'field';
+  pin.setAttribute('aria-label', `PIN für ${p.name}`);
+
+  const ok = document.createElement('button');
+  ok.className = 'btn';
+  ok.append('OK ');
+  const okArrow = document.createElement('span');
+  okArrow.className = 'i-arrow';
+  ok.append(okArrow);
+
+  pinRow.append(pin, ok);
+  pinRow.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      const { token, player } = await post('/api/login', { playerId: p.id, pin: pin.value });
+      setSession(token, player.id, player.name);
+      toDashboard(avatar, nameText);
+    } catch (err) {
+      showError(err.message === 'Name oder PIN falsch' ? 'Falsche PIN.' : err.message);
+    }
+  });
+  // Zielhöhe fürs Aufklappen ohne laufende Animation messen
+  pinRow.style.animation = 'none';
+  wrap.appendChild(pinRow);
+  pinRow.style.setProperty('--h', `${pinRow.offsetHeight}px`);
+  pinRow.style.animation = '';
+  queueMicrotask(() => pin.focus({ preventScroll: true }));
+}
+
+function closePin(wrap) {
+  wrap.classList.remove('is-open');
+  const pinRow = wrap.querySelector('.pin-row');
+  if (!pinRow) return;
+  pinRow.style.setProperty('--h', `${pinRow.offsetHeight}px`);
+  leave(pinRow, () => pinRow.remove());
+}
+
+$('create-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const { token, player } = await post('/api/players', { name: $('create-name').value, pin: $('create-pin').value });
+    setSession(token, player.id, player.name);
+    // Neues Konto: erst die drei Willkommens-Seiten, dann das Dashboard (D-052);
+    // der Knopf gleitet dabei in „Weiter" des Onboardings (D-085)
+    $('create-form').querySelector('.btn').style.viewTransitionName = 'morph-cta';
+    go('onboarding', { morph: 'cta' });
+  } catch (err) {
+    showError(err.message);
+  }
+});
+
+// Die Liste kommt sofort aus dem letzten Abruf (pk_players_cache) und wird
+// nur neu aufgebaut, wenn der frische Abruf abweicht. Kommt ein Morph vom
+// Dashboard herein (D-085), hat das Inline-Skript unter der Liste sie schon
+// fürs erste Bild gesetzt — dann erst nach dem Übergang übernehmen, sonst
+// verschwände die Zeile, in die Namenskreis und Name gerade gleiten.
+const CACHE_KEY = 'pk_players_cache';
+const slim = (players) => JSON.stringify(players.map(({ id, name, hasPin, hidden }) => ({ id, name, hasPin, hidden })));
+const prerendered = $('user-list').childElementCount > 0;
+if (prerendered) firstRender = false;
+const ready = prerendered ? (document.documentElement.pkMorphDone ?? Promise.resolve()) : Promise.resolve();
+let shownList = '';
+const showUsers = (players) => ready.then(() => {
+  const next = slim(players);
+  if (next === shownList) return;
+  shownList = next;
+  renderUsers(players);
+  $('user-list').classList.remove('is-loading');
+});
+try {
+  const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+  if (Array.isArray(cached) && cached.length) showUsers(cached);
+} catch { /* ohne Zwischenspeicher wie bisher */ }
+
+fetchPlayers()
+  .then(({ players }) => {
+    try { localStorage.setItem(CACHE_KEY, slim(players)); } catch { /* egal */ }
+    return showUsers(players);
+  })
+  .catch(() => { showError('Server nicht erreichbar.'); $('user-list').classList.add('is-error'); })
+  .finally(() => $('user-list').classList.remove('is-loading'));
+
+initLando();
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+</body>
+</html>

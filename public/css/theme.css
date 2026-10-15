@@ -1,0 +1,988 @@
+/* ==========================================================================
+   Design-System im Stil von landonorris.com (D-078)
+   Palette 1:1 von der Seite: Dunkelgrün #282C20, Off-White #F4F4ED, Neon-Lime
+   #D2FF00, Lime-Off #B2C73A, Orange #FF6B00. Schriften: Mona Sans (variabel,
+   Versal-Headlines, Fließtext, Zahlen) und Instrument Serif (Akzentwörter,
+   Zitate) als freie Entsprechung zu Landos „Brier". Alles lokal (offline).
+   Farben (D-080, D-082): Fast-Schwarz mit Navy-Stich + Orange, dazu nur
+   Off-White (Shots) und ein helleres Navy-Grau (Mischen) — kein Lime.
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Mona Sans';
+  font-style: normal;
+  font-weight: 200 900;
+  font-stretch: 75% 125%;
+  font-display: swap;
+  src: url('../assets/fonts/monasans-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/instrumentserif-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/instrumentserif-italic-latin.woff2') format('woff2');
+}
+
+:root {
+  /* --- Lando-Palette (Rohwerte) --- */
+  --lando-dark-green: #282c20;
+  --lando-black: #111112;
+  --lando-white: #f4f4ed;
+  --lando-cream: #efefe5;
+  --lando-lime: #d2ff00;
+  --lando-lime-off: #b2c73a;
+  --lando-orange: #ff6b00;
+  --lando-ow-1: #dde1d2;       /* green-off-white-1 */
+  --lando-ow-2: #b4b8a5;       /* green-off-white-2 */
+  --lando-tint-1: #3b3c38;
+  --lando-tint-2: #535450;
+
+  /* --- Schriften --- */
+  --font-sans: 'Mona Sans', 'Arial Narrow', Arial, sans-serif;
+  --font-serif: 'Instrument Serif', 'Times New Roman', serif;
+
+  /* --- Bewegung (von der Seite übernommen) --- */
+  --ease: cubic-bezier(0.65, 0.05, 0, 1);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.32, 1.15, 0.4, 1);
+  --dur: 0.75s;
+
+  /* Radien: Lando ist kantig-weich — Knöpfe 7–8 px, Karten 12–14 px */
+  --radius-sm: 7px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 32px;
+
+  --danger: #ff6b4a;
+  /* Timing-Tower (D-093): Plätze gewonnen/verloren, persönlicher Bestwert
+     (Grün) und Hausrekord (Lila) wie die Sektorfarben der F1 */
+  --gain: #2fd27a;
+  --loss: #ff4655;
+  --pb: #2fd27a;
+  --pb-ink: #04140a;
+  --record: #b45cff;
+  --record-ink: #12041f;
+  color-scheme: dark;
+}
+
+/* --- Semantische Tokens: Fast-Schwarz mit Navy-Stich, Akzent Landos
+   Orange, Off-White als Zweitakzent (Shots), Navy-Grau für Mischen. Auch als Klasse .area-pk, damit ein
+   Element die Grundfarben unabhängig von html[data-surface] tragen kann. --- */
+:root, .area-pk {
+  --bg: #0f131c;
+  --bg-deep: #0a0d14;            /* tiefer als der Grund: TV-Rand, Blätter */
+  --bg-hi: #171d2a;              /* eine Stufe heller */
+  --surface: #161b27;            /* Karten */
+  --surface-alt: #0c1018;        /* eingelassene Flächen (Felder, Umschalter) */
+  --surface-2: #232a3a;          /* erhabene Chips, Avatare */
+  --line: rgb(244 244 237 / 0.12);          /* Haarlinien */
+  --line-strong: rgb(244 244 237 / 0.24);
+  --topo-line: #1d2433;          /* Höhenlinien */
+  --ink: var(--lando-white);
+  --ink-2: #dde0e8;
+  --ink-muted: #aab0bf;
+  --ink-faint: #6f7689;
+  --accent: var(--lando-orange);        /* Flächen, Knöpfe, Balken */
+  --accent-ink: #140a02;                /* Schrift auf Akzentfläche */
+  --accent-text: #ff8a3d;               /* Akzent als Schrift (Serif-Wörter) */
+  --accent-2: var(--lando-white);       /* Zweitakzent (Shots, Platz 2) */
+  --accent-2-ink: #0f131c;
+  --mixc: #2c3650;                      /* Mischen, Platz 3 (Fläche) */
+  --mixc-ink: var(--lando-white);
+  --mix-text: #9aa6c2;                  /* Mischen als Schrift auf dem Grund */
+  --scrim: rgb(5 7 12 / 0.7);
+  --theme-color: #0f131c;
+}
+
+/* --- Helle Fläche (Creme), wie die hellen Abschnitte auf landonorris.com.
+   Als Klasse auf einem Abschnitt oder über html[data-surface="light"]
+   (Hintergrundwechsel beim Scrollen, siehe lando.js initSurfaceMorph). --- */
+.surface-light,
+html[data-surface="light"] {
+  --bg: var(--lando-white);
+  --bg-hi: #ffffff;
+  --surface: #ebeee0;
+  --surface-alt: #e4e7d8;
+  --surface-2: #dde1d2;
+  --line: rgb(40 44 32 / 0.14);
+  --line-strong: rgb(40 44 32 / 0.3);
+  --topo-line: #dcdfd6;
+  --ink: #0f131c;
+  --ink-2: #3b3c38;
+  --ink-muted: #5f6254;
+  --ink-faint: #8c8f80;
+  --accent-text: #c24f00;
+  /* Auf Creme kehrt sich Hell/Dunkel um: Shots dunkles Navy, Mischen Navy-Grau */
+  --accent-2: #0f131c;
+  --accent-2-ink: var(--lando-white);
+  --mixc: #9aa5bd;
+  --mixc-ink: #0f131c;
+  --mix-text: #4a5672;
+  color-scheme: light;
+}
+/* Der Grund ist schon fast schwarz: schwarze Flächen (Fußkarte, Hall of
+   Fame) bekommen ein tieferes Schwarz, damit sie sich absetzen */
+.surface-black,
+html[data-surface="black"] {
+  --bg: #05070b;
+  --surface: #11151e;
+  --surface-alt: #020305;
+  --topo-line: #121722;
+}
+.surface-olive,
+html[data-surface="olive"] {
+  --bg: #6c705c;
+  --surface: #767a66;
+  --topo-line: #7a7e69;
+  --ink-muted: #e3e6d6;
+}
+
+/* --- Abgeleitete Tokens. Stehen in einem eigenen Block, der für JEDEN
+   Farbbereich neu ausgewertet wird — sonst erbten z. B. .area-pk-Elemente
+   in einer hellen Fläche deren schon aufgelöste Werte. Canvas-Code (seasonfx.js,
+   story.js) liest einige davon per getComputedStyle; die Werte sind daher
+   immer canvas-lesbare Farben. --- */
+:root, .area-pk,
+.surface-light, .surface-black, .surface-olive, html[data-surface] {
+  /* Getränkefarben: Bier = Akzent, Shots = Zweitakzent, Mischen = Navy-Grau */
+  --beer: var(--accent);
+  --beer-ink: var(--accent-ink);
+  --shot: var(--accent-2);
+  --shot-ink: var(--accent-2-ink);
+
+  /* Rangfarben (Podest): 1 = Akzent, 2 = Zweitakzent, 3 = Mischen-Ton */
+  --rank-1: var(--accent);
+  --rank-2: var(--accent-2);
+  --rank-3: var(--mixc);
+
+  /* Kompatibilität: alte Token-Namen zeigen auf die neue Palette */
+  --creme: var(--lando-cream);
+  --green: var(--accent);
+  --gold: var(--accent);
+  --amber: var(--beer);
+  --brick: var(--shot);
+  --mix: var(--mixc);
+  --silver: var(--rank-2);
+  --bronze: var(--rank-3);
+  --glass-edge: var(--line);
+  --hair-gold: var(--line-strong);
+  --glass-blur: 0px;
+}
+
+/* ==========================================================================
+   Grundlagen
+   ========================================================================== */
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+/* Kaltstart-Bild (D-093, Idee L15 nach dem Ladebild von landonorris.com):
+   Fläche in Akzentfarbe, gesetzt vom Kopf-Skript (html.pk-boot). Darauf steht
+   groß eine Kopie der Wortmarke (.pk-boot-mark, lando.js initBoot), die an
+   ihren Platz in der Kopfleiste fliegt, während die Fläche nach oben
+   wegwischt (.pk-boot-out). Die echte Wortmarke wartet so lange unsichtbar. */
+html.pk-boot body::before {
+  content: ''; position: fixed; inset: 0; z-index: 1000; pointer-events: none;
+  background: var(--accent);
+}
+html.pk-boot-out body::before { animation: pk-boot-wipe 0.85s cubic-bezier(0.7, 0, 0.15, 1) 0.22s forwards; }
+@keyframes pk-boot-wipe { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 0 100% 0); } }
+html.pk-boot .topbar .wordmark { visibility: hidden; }
+.wordmark.pk-boot-mark {
+  position: fixed; z-index: 1001; margin: 0;
+  pointer-events: none; transform-origin: 50% 50%;
+  color: var(--accent-ink);
+}
+.wordmark.pk-boot-mark > span { display: block; overflow: hidden; padding: 0.08em 0.2em; margin: -0.08em -0.2em; }
+.wordmark.pk-boot-mark > span > span { display: block; }
+
+html { -webkit-text-size-adjust: 100%; }
+html, body { background: var(--bg); }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+input, button, select, textarea { font-family: inherit; }
+::selection { background: var(--accent); color: var(--accent-ink); }
+
+a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 3px; }
+a:hover { color: var(--accent-text); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ==========================================================================
+   Typografie
+   ========================================================================== */
+.t-impact {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-stretch: 100%;
+  text-transform: uppercase;
+  line-height: 0.86;
+  letter-spacing: -0.035em;
+  font-size: clamp(44px, 12vw, 128px);
+  margin: 0;
+}
+.t-title {
+  font-family: var(--font-sans);
+  font-weight: 750;
+  text-transform: uppercase;
+  line-height: 0.9;
+  letter-spacing: -0.028em;
+  font-size: clamp(30px, 7vw, 60px);
+  margin: 0;
+}
+.t-h3 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  font-size: 22px;
+  margin: 0;
+}
+/* Akzentwort in der Serif (in Überschriften: gleiche Größe, Versalien) */
+.t-serif, .serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  font-stretch: normal;
+}
+/* Instrument Serif ist feiner als Landos „Brier Bold" — in Display-Größen
+   mit einer hauchdünnen Kontur (nur nach außen) etwas kräftiger. */
+.t-impact .t-serif, .t-title .t-serif, .t-serif--bold {
+  -webkit-text-stroke: 0.022em currentColor;
+  paint-order: stroke fill;
+}
+.t-accent { color: var(--accent-text); }
+.t-quote {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  line-height: 1.08;
+  letter-spacing: 0.01em;
+  color: var(--ink-2);
+}
+.t-quote b, .t-quote strong { color: var(--ink); font-weight: 400; font-style: italic; }
+.t-body { font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+.t-small { font-size: 13px; line-height: 1.4; color: var(--ink-muted); }
+
+/* Winzige Versal-Zeile („NEXT RACE", „QATAR, 2024") */
+.eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 10.5px;
+  line-height: 1.1;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Zahlen: Mona Sans, schwer, mit den normalen (proportionalen) Ziffern wie
+   auf landonorris.com. Die Tabellenziffern von Mona Sans haben eine
+   durchgestrichene Null und eine „1" mit Fuß und wirken wie eine Code-Schrift
+   (D-078) — Spalten richten sich stattdessen über feste Breiten und
+   rechtsbündigen Satz aus. */
+.num {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-variant-numeric: proportional-nums;
+  letter-spacing: -0.03em;
+}
+
+/* Wortmarke oben links, wie „LANDO / NORRIS": Serif über fetter Grotesk */
+.wordmark {
+  display: inline-flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: var(--ink);
+  line-height: 0.82;
+  text-transform: uppercase;
+  user-select: none;
+}
+.wordmark .wm-top { font-family: var(--font-serif); font-size: 1.12em; letter-spacing: -0.01em; }
+.wordmark .wm-bottom { font-family: var(--font-sans); font-weight: 800; letter-spacing: -0.03em; }
+.wordmark { font-size: 21px; }
+a.wordmark:hover { color: var(--ink); }
+
+/* Emblem mit Lorbeer und Mini-Zeile („MCLAREN F1 SINCE 2019") */
+.emblem { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.emblem .laurel {
+  width: 46px; height: 46px; background: var(--accent-text);
+  -webkit-mask: url('../assets/laurel.svg') center / contain no-repeat;
+  mask: url('../assets/laurel.svg') center / contain no-repeat;
+}
+.emblem .eyebrow { font-size: 8.5px; letter-spacing: 0.08em; }
+
+/* ==========================================================================
+   Höhenlinien-Hintergrund (statisches SVG als Maske — Farbe über --topo-line)
+   ========================================================================== */
+.topo {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--topo-line);
+  -webkit-mask: url('../assets/topo-portrait.svg') center / cover no-repeat;
+  mask: url('../assets/topo-portrait.svg') center / cover no-repeat;
+  transition: background-color var(--dur) var(--ease);
+}
+@media (min-aspect-ratio: 1/1) {
+  .topo {
+    -webkit-mask-image: url('../assets/topo.svg');
+    mask-image: url('../assets/topo.svg');
+  }
+}
+.topo--abs { position: absolute; }
+/* Spotlight: die Linien unter dem Cursor leuchten in der Akzentfarbe */
+.topo-spot {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  -webkit-mask:
+    url('../assets/topo.svg') center / cover no-repeat,
+    radial-gradient(circle 240px at var(--mx, 50%) var(--my, 50%), #000 0%, transparent 70%);
+  -webkit-mask-composite: source-in;
+  mask:
+    url('../assets/topo.svg') center / cover no-repeat,
+    radial-gradient(circle 240px at var(--mx, 50%) var(--my, 50%), #000 0%, transparent 70%);
+  mask-composite: intersect;
+}
+@media (max-aspect-ratio: 999/1000) {
+  .topo-spot {
+    -webkit-mask-image: url('../assets/topo-portrait.svg'), radial-gradient(circle 240px at var(--mx, 50%) var(--my, 50%), #000 0%, transparent 70%);
+    mask-image: url('../assets/topo-portrait.svg'), radial-gradient(circle 240px at var(--mx, 50%) var(--my, 50%), #000 0%, transparent 70%);
+  }
+}
+.spot-on .topo-spot { opacity: 0.85; }
+/* Strömungs-Spotlight (topo-fluid.js, D-081): das Canvas zeichnet Linien und
+   Leuchten selbst, die CSS-Ebenen der Seite treten zurück */
+.topo-fluid { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.topo-gl body > .topo, .topo-gl .topo-spot { display: none; }
+
+/* ==========================================================================
+   Layout: Handy-Spalte (Hochformat)
+   ========================================================================== */
+.screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: clip;
+}
+.screen-inner {
+  max-width: 520px;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 32px;
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Kopfleiste: Wortmarke links, Aktionen rechts (wie „STORE" + Menü) */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+}
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+/* Altlasten: Zapfen-Wasserzeichen und Baum-Footer gibt es im Lando-Look
+   nicht mehr — falls noch Markup existiert, bleibt es unsichtbar. */
+.watermark, .login-watermark, .admin-watermark, .archive-watermark, .tv-mark { display: none !important; }
+.footer-woods { display: none !important; }
+
+/* ==========================================================================
+   Knöpfe — Akzent-Fläche, 7 px Radius, Versalien, Pfeil ↗ der beim Hover
+   hinaus- und wieder hineinfliegt
+   ========================================================================== */
+button { cursor: pointer; }
+.btn {
+  --btn-bg: var(--accent);
+  --btn-ink: var(--accent-ink);
+  --btn-line: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--btn-line);
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease, background-color 0.3s var(--ease), color 0.3s var(--ease), border-color 0.3s var(--ease), translate 0.35s var(--ease-out);
+}
+.btn:hover { color: var(--btn-ink); }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
+.btn--ghost { --btn-bg: transparent; --btn-ink: var(--ink); --btn-line: var(--line-strong); }
+.btn--ghost:hover { --btn-line: var(--ink); }
+.btn--dark { --btn-bg: var(--ink); --btn-ink: var(--bg); --btn-line: var(--ink); }
+.btn--quiet { --btn-bg: var(--surface-2); --btn-ink: var(--ink); --btn-line: transparent; }
+.btn--danger { --btn-bg: transparent; --btn-ink: var(--danger); --btn-line: color-mix(in srgb, var(--danger) 55%, transparent); }
+.btn--danger:hover { --btn-bg: var(--danger); --btn-ink: var(--lando-black); }
+.btn--block { width: 100%; }
+.btn--lg { min-height: 54px; font-size: 14.5px; padding: 0 22px; }
+.btn--sm { min-height: 34px; font-size: 11.5px; padding: 0 12px; gap: 7px; }
+/* Quadratischer Icon-Knopf (Menü, Schließen) */
+.btn--icon { width: 44px; padding: 0; }
+.btn--icon.btn--sm { width: 34px; }
+
+/* Pfeil-Icon ↗ (zwei Kopien: eine fliegt raus, eine kommt rein) */
+.i-arrow { position: relative; display: inline-block; width: 11px; height: 11px; overflow: hidden; flex: none; }
+.i-arrow::before, .i-arrow::after {
+  content: ''; position: absolute; inset: 0;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 9.5 9.5 2.5M4 2.5h5.5V8' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='square'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 9.5 9.5 2.5M4 2.5h5.5V8' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='square'/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: transform 0.5s var(--ease);
+}
+.i-arrow::after { transform: translate(-120%, 120%); }
+:is(.btn, a, button):hover > .i-arrow::before { transform: translate(120%, -120%); }
+:is(.btn, a, button):hover > .i-arrow::after { transform: translate(0, 0); }
+.i-arrow--back { transform: rotate(-135deg); }
+
+/* Menü-Icon wie bei Lando (ein langer, ein kurzer Strich) */
+.i-menu { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 5px; width: 16px; }
+.i-menu::before, .i-menu::after { content: ''; height: 1.6px; background: currentColor; border-radius: 1px; transition: transform 0.45s var(--ease), width 0.45s var(--ease); }
+.i-menu::before { width: 100%; }
+.i-menu::after { width: 55%; }
+.menu-open .i-menu::before { transform: translateY(3.3px) rotate(45deg); }
+.menu-open .i-menu::after { width: 100%; transform: translateY(-3.3px) rotate(-45deg); }
+
+/* Druck-Reaktion für alle Knöpfe */
+button:not(:disabled):active, .btn:active { transform: scale(0.97); }
+
+/* ==========================================================================
+   Karten und Flächen
+   ========================================================================== */
+.card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.card--flat { background: transparent; }
+.card--accent { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.glass { border: 1px solid var(--line); }
+
+/* Kerben-Karte (Form über lando.js notch()): Etikett in der Stufe unten.
+   Die Fläche malt .notch-bg (Füllung über --notch-fill); das Element selbst
+   bleibt ohne Hintergrund und Rahmen, damit das Etikett frei steht. */
+.is-notched { border: none !important; background: transparent !important; box-shadow: none !important; isolation: isolate; }
+/* Ebenen hängen am Element selbst — ohne eigene Positionierung (Spezifität 0,
+   damit Seitenregeln wie position: absolute gewinnen) */
+:where(.is-notched) { position: relative; }
+.notch-bg { position: absolute; inset: 0; z-index: -1; background: var(--notch-fill, var(--surface)); pointer-events: none; }
+.notch-line {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; overflow: visible;
+}
+.notch-line path { fill: none; stroke: var(--notch-line, var(--line-strong)); stroke-width: 1.5; }
+.notch-tag {
+  position: absolute;
+  right: 0; bottom: 0;
+  width: var(--notch-w, 140px);
+  height: var(--notch-h, 30px);
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  padding: 0 4px 0 18px;
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--notch-tag-ink, var(--ink-2));
+  white-space: nowrap;
+}
+.notch-tag .hl { color: var(--accent); font-weight: 800; }
+[data-notch*="side:left"] > .notch-tag { right: auto; left: 0; justify-content: flex-start; padding: 0 18px 0 4px; }
+
+/* Rundes Namenszeichen: Anmeldeliste und Dashboard-Kopf */
+.avatar {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+
+.card-title {
+  font-family: var(--font-sans);
+  font-weight: 750;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+/* Abschnittszeile: Versal-Eyebrow, Haarlinie läuft nach rechts aus */
+.sec { display: flex; align-items: baseline; gap: 12px; }
+.sec-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.sec-title::before {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  margin-right: 8px;
+  background: var(--accent);
+  border-radius: 1px;
+  transform: translateY(-1px);
+}
+.sec-hint { font-size: 12.5px; color: var(--ink-muted); }
+.sec::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+  transform: translateY(-3px);
+}
+
+/* Umschalter: Segmente mit gleitendem Lime-Balken. --tabs = Anzahl der
+   Segmente; Breite und Weg des Balkens ergeben sich aus Innenabstand (4 px)
+   und Spalt (4 px). Die Seiten setzen data-pos und .active wie bisher. */
+.tabs {
+  display: flex; gap: 4px; padding: 4px; position: relative;
+  background: var(--surface-alt); border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.tab-btn {
+  flex: 1; min-height: 40px; padding: 8px 10px; border: none; border-radius: var(--radius-sm); cursor: pointer;
+  background: transparent; color: var(--ink-muted);
+  font-family: var(--font-sans); font-weight: 700; font-size: 12.5px;
+  text-transform: uppercase; letter-spacing: 0.03em;
+  transition: color 0.3s var(--ease);
+  position: relative; z-index: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-btn:hover { color: var(--ink); }
+.tab-btn.active { color: var(--accent-ink); }
+.tab-indicator {
+  position: absolute; top: 4px; bottom: 4px; left: 4px;
+  width: calc((100% - 8px - (var(--tabs, 2) - 1) * 4px) / var(--tabs, 2));
+  background: var(--accent); border-radius: var(--radius-sm);
+  transition: transform 0.55s var(--ease);
+  pointer-events: none;
+}
+.tabs[data-pos="1"] .tab-indicator { transform: translateX(calc(100% + 4px)); }
+.tabs[data-pos="2"] .tab-indicator { transform: translateX(calc(200% + 8px)); }
+.tabs[data-pos="3"] .tab-indicator { transform: translateX(calc(300% + 12px)); }
+
+/* Heute/Gesamt-Zweispalter */
+.split { display: flex; }
+.split > .cell { text-align: center; flex: 1; }
+.split > .sep { width: 1px; background: var(--line); }
+.cell .value { font-size: 34px; line-height: 1; color: var(--ink); }
+.cell .value--gold { color: var(--accent-text); }
+.cell .label {
+  margin-top: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.cell .label--plain { text-transform: none; letter-spacing: 0; font-size: 12.5px; font-weight: 500; }
+
+/* Chips / Abzeichen: kantig, Versalien; erreicht = Akzentkontur */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 9px; border-radius: 6px;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  background: var(--surface-2); color: var(--ink-2);
+  white-space: nowrap;
+}
+.chip--accent { background: var(--accent); color: var(--accent-ink); }
+.chip--line { background: transparent; border: 1px solid var(--line-strong); }
+
+/* Abzeichen als Umriss-Kerbenkarten wie die Helm-Karten (D-093): Strich-Icon,
+   Name, Anzahl in der Kerbe. Grau = noch nie, .is-won = schon erreicht
+   (Linie und Icon im Akzent), .is-today = heute erreicht (gefüllt). */
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 10px; }
+.badge {
+  min-height: 116px; padding: 16px 12px 34px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  text-align: center;
+  color: var(--ink-faint);
+  --notch-fill: transparent;
+  --notch-line: var(--line-strong);
+}
+.badge .notch-bg { transition: background-color 0.4s var(--ease); }
+.badge-icon {
+  width: 34px; height: 34px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+}
+.badge-name {
+  font-size: 11px; font-weight: 800; line-height: 1.2;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.badge .badge-count {
+  padding: 0 3px 0 10px;
+  font-size: 15px; font-weight: 900; letter-spacing: -0.01em; text-transform: none;
+  color: var(--ink-faint);
+}
+.badge.is-won { color: var(--accent); --notch-line: var(--accent); }
+.badge.is-won .badge-name { color: var(--ink); }
+.badge.is-won .badge-count { color: var(--accent); }
+.badge.is-today { color: var(--accent-ink); --notch-fill: var(--accent); --notch-line: var(--accent); }
+.badge.is-today .badge-name { color: var(--accent-ink); }
+
+/* Formulare */
+.field {
+  width: 100%;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 500;
+  padding: 13px 14px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.field::placeholder { color: var(--ink-faint); }
+.field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+
+.error-msg { color: var(--danger); font-size: 13.5px; min-height: 1.2em; }
+
+/* Haarlinien-Liste (Anmeldeliste, Menü, Tabellen) */
+.rule-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.rule-list > li, .rule-list > .row { border-bottom: 1px solid var(--line); }
+
+/* ==========================================================================
+   Handgezeichnete Kringel (siehe lando.js scribble())
+   ========================================================================== */
+.scribble { display: block; overflow: visible; pointer-events: none; }
+.scribble path {
+  fill: none;
+  stroke: var(--scribble-color, var(--accent));
+  stroke-width: var(--scribble-width, 3);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.scribble.is-drawn path {
+  animation: scribble-draw var(--draw-dur, 0.9s) var(--ease) var(--draw-delay, 0ms) forwards;
+}
+.scribble.is-static path { animation: none; stroke-dashoffset: 0; }
+@keyframes scribble-draw { to { stroke-dashoffset: 0; } }
+/* Wort mit Kringel darunter bzw. drumherum */
+.scribbled { position: relative; display: inline-block; }
+.scribbled > .scribble--underline { position: absolute; left: -4%; right: -4%; bottom: -0.2em; width: 108%; height: 0.32em; }
+.scribbled > .scribble--circle { position: absolute; left: -14%; top: -22%; width: 128%; height: 144%; }
+.scribbled > .scribble--strike { position: absolute; left: -3%; top: 38%; width: 106%; height: 0.32em; }
+
+/* ==========================================================================
+   Einblenden (lando.js initReveal). Der versteckte Ausgangszustand gilt nur
+   mit html.js-motion und ohne „Bewegung reduzieren".
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .js-motion [data-reveal] {
+    transition: opacity 0.9s var(--ease), transform 0.9s var(--ease), clip-path 0.9s var(--ease);
+    transition-delay: calc(var(--d, 0) * 1ms);
+  }
+  .js-motion [data-reveal="up"]:not(.is-in) { opacity: 0; transform: translateY(26px); }
+  .js-motion [data-reveal="fade"]:not(.is-in) { opacity: 0; }
+  .js-motion [data-reveal="scale"]:not(.is-in) { opacity: 0; transform: scale(0.94); }
+  .js-motion [data-reveal="clip"]:not(.is-in) { clip-path: inset(0 0 100% 0); }
+  .js-motion [data-reveal="clip"].is-in { clip-path: inset(0 0 0 0); }
+  .js-motion [data-reveal="words"] .rw-i {
+    transform: translateY(135%);
+    transition: transform 0.95s var(--ease);
+    transition-delay: calc(var(--i, 0) * 55ms + var(--d, 0) * 1ms);
+  }
+  .js-motion [data-reveal="words"].is-in .rw-i { transform: none; }
+  /* Lime-Block wischt über den Text und gibt ihn frei (Footer-Effekt) */
+  .js-motion [data-reveal="wipe"] { position: relative; }
+  .js-motion [data-reveal="wipe"]:not(.is-in) { -webkit-text-fill-color: transparent; }
+  .js-motion [data-reveal="wipe"].is-in { animation: wipe-text 1.1s linear calc(var(--d, 0) * 1ms) both; }
+  .js-motion [data-reveal="wipe"]::after {
+    content: ''; position: absolute; inset: -0.04em -0.06em; background: var(--accent);
+    transform: scaleX(0); transform-origin: left center; pointer-events: none;
+  }
+  .js-motion [data-reveal="wipe"].is-in::after { animation: wipe-block 1.1s var(--ease) calc(var(--d, 0) * 1ms) both; }
+}
+/* Die Maske reicht oben und unten etwas über die (enge) Zeilenhöhe hinaus,
+   damit Umlaut-Punkte und Unterlängen nicht vorzeitig hervorlugen. */
+[data-reveal="words"] .rw { display: inline-block; overflow: hidden; vertical-align: top; padding: 0.16em 0 0.1em; margin: -0.16em 0 -0.1em; }
+/* Serif-Akzentwörter sitzen mit Zeilenhöhe ~.8 noch enger: größere Maske
+   und längerer Weg, damit Umlaut-Punkte nicht vorzeitig auftauchen */
+[data-reveal="words"] .t-serif .rw { padding-top: 0.34em; margin-top: -0.34em; }
+@media (prefers-reduced-motion: no-preference) {
+  .js-motion [data-reveal="words"] .t-serif .rw-i { transform: translateY(175%); }
+  .js-motion [data-reveal="words"].is-in .t-serif .rw-i { transform: none; }
+}
+[data-reveal="words"] .rw-i { display: inline-block; }
+/* Text erst zeigen, wenn der Block ihn ganz verdeckt */
+@keyframes wipe-text {
+  0%, 49% { -webkit-text-fill-color: transparent; }
+  50%, 100% { -webkit-text-fill-color: currentColor; }
+}
+@keyframes wipe-block {
+  0% { transform: scaleX(0); transform-origin: left center; }
+  45% { transform: scaleX(1); transform-origin: left center; }
+  55% { transform: scaleX(1); transform-origin: right center; }
+  100% { transform: scaleX(0); transform-origin: right center; }
+}
+
+/* ==========================================================================
+   Vollbild-Menü (lando.js initMenu)
+   ========================================================================== */
+.site-menu {
+  position: fixed; inset: 0; z-index: 90;
+  background: var(--bg-deep);
+  display: flex; flex-direction: column;
+  padding: 16px 20px calc(24px + env(safe-area-inset-bottom));
+  clip-path: inset(0 0 100% 0);
+  visibility: hidden;
+  transition: clip-path 0.8s var(--ease), visibility 0s linear 0.8s;
+  overflow-y: auto;
+}
+.menu-open .site-menu { clip-path: inset(0 0 0 0); visibility: visible; transition: clip-path 0.8s var(--ease), visibility 0s; }
+.menu-open body { overflow: hidden; }
+.site-menu .topo { position: absolute; }
+.menu-nav { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 24px 0; }
+.menu-link {
+  position: relative;
+  display: inline-block;
+  align-self: flex-start;
+  font-family: var(--font-sans); font-weight: 800; text-transform: uppercase;
+  font-size: clamp(38px, 11vw, 76px); line-height: 0.95; letter-spacing: -0.035em;
+  color: var(--ink); text-decoration: none;
+  background: none; border: none; padding: 0; cursor: pointer; text-align: left;
+  opacity: 0; transform: translateY(40px);
+  transition: opacity 0.6s var(--ease), transform 0.8s var(--ease), color 0.3s ease;
+}
+.menu-link:hover { color: var(--accent-text); }
+.menu-open .menu-link { opacity: 1; transform: none; transition-delay: calc(0.18s + var(--i, 0) * 0.06s); }
+/* Strich hinter der Schrift (eigene Ebene je Link, sonst rutscht er hinter das Menü) */
+.menu-link { isolation: isolate; }
+.menu-link .scribble { position: absolute; z-index: -1; left: -4%; top: 40%; width: 108%; height: 0.36em; }
+/* Nur der aktuelle Punkt ist durchgestrichen (bei reduzierter Bewegung
+   stehen sonst alle Striche fertig da) */
+.menu-link:not(.is-current) .scribble { visibility: hidden; }
+.menu-foot { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; }
+
+/* ==========================================================================
+   Laufband (lando.js initMarquee)
+   ========================================================================== */
+.marquee { overflow: hidden; position: relative; }
+.marquee-track { display: flex; width: max-content; animation: marquee var(--marquee-dur, 30s) linear infinite; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* ==========================================================================
+   Blatt von unten (Sheet) und Dialog — gemeinsame Grundform
+   ========================================================================== */
+.sheet-scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 80; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 81;
+  max-height: 88vh; overflow: auto;
+  background: var(--bg-deep);
+  border-top: 1px solid var(--line);
+  border-radius: 22px 22px 0 0;
+  padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
+}
+.sheet-grip { width: 42px; height: 4px; border-radius: 4px; background: var(--line-strong); margin: 4px auto 14px; }
+
+/* ==========================================================================
+   Lebendigkeit: Pop, Aufleuchten, Seitenwechsel
+   ========================================================================== */
+.card, .user-row { transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s var(--ease-out), opacity 0.3s ease; }
+.user-row:active { transform: scale(0.99); }
+
+@keyframes pk-pop {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+.pk-pop { animation: pk-pop 0.55s var(--ease-spring); transform-origin: center; }
+
+@keyframes pk-flash {
+  0%   { box-shadow: 0 0 0 0 transparent; }
+  30%  { box-shadow: 0 0 0 3px var(--pk-flash, var(--accent)), 0 0 36px 6px color-mix(in srgb, var(--pk-flash, var(--accent)) 45%, transparent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.pk-flash { animation: pk-flash 0.9s ease; }
+
+/* Seitenwechsel mit Morph (D-085): Die Seite selbst blendet nur weich über
+   (alt sinkt leicht weg, neu steigt auf) — die Bewegung machen die Elemente,
+   die auf beiden Seiten vorkommen: Sie gleiten an ihren neuen Platz und
+   wachsen bzw. schrumpfen dabei. Feste Paare:
+   - Wortmarke und Menüknopf der Kopfleiste (alle Seiten, unten)
+   - Logo (area-logo), Namenskreis und Name (me-avatar/me-name, D-068)
+   - per Klick-Schlüssel (lando.js, html[data-morph]): „Admin" → Admin-
+     Titel, „Konto anlegen" → „Weiter", Onboarding-Getränke → Dashboard,
+     Dashboard-Kopf → eigene Zeile der Anmeldeliste. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root) { animation: vt-page-out 0.38s var(--ease-out) both; }
+  ::view-transition-new(root) { animation: vt-page-in 0.7s var(--ease) 0.08s both; }
+  ::view-transition-group(*) { animation-duration: 0.75s; animation-timing-function: var(--ease); }
+  /* Was nur auf einer der beiden Seiten steht (z. B. der Namenskreis beim
+     Wechsel ins Archiv), blendet zügig aus bzw. ein */
+  ::view-transition-old(*):only-child, ::view-transition-new(*):only-child { animation-duration: 0.4s; }
+}
+@keyframes vt-page-out { to { opacity: 0; transform: translateY(-14px); } }
+@keyframes vt-page-in { from { opacity: 0; transform: translateY(22px); } }
+
+/* Kopfleiste: Wortmarke und Menüknopf bleiben beim Seitenwechsel stehen bzw.
+   gleiten an ihren Platz (nicht die Kopien im Vollbild-Menü) */
+:not(.site-menu) > .topbar .wordmark { view-transition-name: site-wordmark; }
+:not(.site-menu) > .topbar [data-menu-toggle] { view-transition-name: site-menu-btn; }
+
+/* Firefox-Morph (lando.js, D-087): die Seite startet unsichtbar, bis das
+   Skript die gleitenden Elemente an ihre alte Position gelegt hat */
+html[data-flip] body { opacity: 0; }
+
+/* Inhalt nach dem Umschalten (Heute/All-Time) kurz von der Seite herein */
+@media (prefers-reduced-motion: no-preference) {
+  .swap-in-r { animation: swap-in-r 0.55s var(--ease); }
+  .swap-in-l { animation: swap-in-l 0.55s var(--ease); }
+}
+@keyframes swap-in-r { from { opacity: 0; translate: 24px 0; } }
+@keyframes swap-in-l { from { opacity: 0; translate: -24px 0; } }
+
+/* Abgänge (lando.js leave): Abdunklung blendet aus, Blätter fahren nach
+   unten weg, Dialoge sinken leicht, Meldungen tauchen ab. Über die
+   Einzel-Eigenschaften translate/scale, damit ein vorhandenes transform
+   (z. B. translateX(-50%) bei zentrierten Meldungen) erhalten bleibt. */
+.is-leaving { pointer-events: none; }
+@keyframes leave-fade { to { opacity: 0; } }
+@keyframes leave-down { to { translate: 0 100%; } }
+@keyframes leave-drop { to { opacity: 0; translate: 0 16px; scale: 0.98; } }
+@keyframes leave-sink { to { opacity: 0; translate: 0 14px; } }
+@keyframes leave-up { to { opacity: 0; translate: 0 -10px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  .scribble path { stroke-dashoffset: 0; }
+}
+
+/* ==========================================================================
+   Saison-Akzente (D-071, im Lando-Stil neu gezeichnet, D-078): js/season.js
+   setzt die Deko in die mit data-deco-top / data-deco-foot markierten Flächen.
+   Flache Formen und feine Linien in der Lando-Palette; sie liegen am Rand,
+   fangen keine Tipps ab und stehen nie über Zahlen/Namen. Ohne Baum-Footer
+   sitzen Kürbisse und Schneewehe auf der Unterkante des Fuß-Streifens.
+   .season-in = frisch erschienen: jede Form spielt einmal ihre Einblendung
+   (nur transform/opacity/clip-path; bei „Bewegung reduzieren" steht alles).
+   ========================================================================== */
+:where([data-deco-top], [data-deco-foot]) { position: relative; }
+.season-deco { position: absolute; pointer-events: none; z-index: 2; }
+.season-deco svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* Oktoberfest: flache blau-weiße Wimpel an dünner Schnur ganz oben; der Kopf
+   rückt dafür nach unten (am TV regelt das tv.html über .tv-body) */
+.season-bunting { top: 0; left: 0; right: 0; --season-blue: #2f7fd8; }
+html[data-season="oktoberfest"] [data-deco-top] > .screen-inner { padding-top: 34px; }
+.season-string { fill: none; stroke: var(--ink-muted); stroke-opacity: 0.7; }
+.season-flag-blue { fill: var(--season-blue); }
+.season-flag-white { fill: var(--lando-white); }
+[data-deco-top="tv"] .season-flag { transform-box: view-box; animation: season-sway 3.4s ease-in-out infinite alternate; }
+@keyframes season-sway { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+
+/* Fasching: Luftschlangen als feine Kringel. Handy: oben mittig zwischen
+   Wortmarke und Menüknopf; TV: in der freien Kopf-Mitte (Design-px) */
+.season-streamers--phone { top: 0; left: 50%; width: 96px; translate: -50% 0; }
+.season-streamers--tv { top: 0; left: 600px; width: 680px; }
+
+/* Halloween: flache Kürbisse mit dunklem Gesicht auf der Unterkante */
+.season-pumpkin {
+  bottom: 0;
+  translate: -50% 0;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--lando-orange) 55%, transparent));
+}
+.season-pumpkin--phone { width: 22px; }
+.season-pumpkin--tv {
+  width: 44px;
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--lando-orange) 60%, transparent));
+  animation: season-flicker 2.8s steps(1) infinite;
+}
+@keyframes season-flicker { 0%, 100% { opacity: 1; } 12% { opacity: 0.86; } 16% { opacity: 1; } 55% { opacity: 0.92; } 58% { opacity: 1; } }
+
+/* Winter und Silvester: Schneewehe in Creme mit zwei feinen Höhenlinien
+   darüber, auf der Unterkante */
+.season-drift { left: 0; right: 0; bottom: 0; }
+.season-drift svg { height: 100%; }
+.season-drift--phone { height: 24px; }
+.season-drift--tv { height: 40px; }
+
+/* --- Einblendungen (einmal beim Erscheinen) --- */
+@media (prefers-reduced-motion: no-preference) {
+  /* Schnur wischt von links nach rechts herein, die Wimpel klappen der
+     Reihe nach herunter (--fd setzt season.js je Wimpel) */
+  .season-in.season-bunting { animation: season-wipe-x 1.1s var(--ease) backwards; }
+  .season-in .season-flag > polygon {
+    transform-box: view-box;
+    transform-origin: inherit;
+    animation: season-flag-in 0.75s var(--ease-spring) var(--fd, 0ms) backwards;
+  }
+  /* Luftschlangen rollen sich von oben ab */
+  .season-in.season-streamers { animation: season-unroll 1.3s var(--ease) 0.15s backwards; }
+  /* Kürbisse wachsen nacheinander aus der Kante */
+  .season-in.season-pumpkin { animation: season-rise 0.9s var(--ease-spring) calc(0.25s + var(--i, 0) * 0.14s) backwards; }
+  .season-in.season-pumpkin--tv {
+    animation: season-rise 0.9s var(--ease-spring) calc(0.25s + var(--i, 0) * 0.14s) backwards,
+               season-flicker 2.8s steps(1) 1.4s infinite;
+  }
+  /* Schneewehe schiebt sich von unten herauf */
+  .season-in.season-drift { animation: season-unroll-up 1.2s var(--ease) 0.1s backwards; }
+}
+@keyframes season-wipe-x { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes season-flag-in { from { transform: scale(0.1) rotate(-24deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes season-unroll { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes season-unroll-up { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes season-rise { from { transform: translateY(40%) scale(0.2); opacity: 0; } to { transform: none; opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .season-deco, .season-deco * { animation: none !important; }
+}
+

@@ -1,0 +1,766 @@
+# PROGRESS.md — Meilensteine & Status
+
+Nach jedem abgeschlossenen Schritt hier abhaken und committen. Diese Datei ist
+die Wahrheit über den Projektstand (Kontextverlust-sicher).
+
+**Aktueller Stand:** Alle Meilensteine M0–M8 abgeschlossen — die App ist
+funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
+Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
+getestet.
+Seit 2026-10-15 (D-097/D-098): **Name dockt an** (D3) — beim Scrollen fliegen
+Initiale und Name im Dashboard stufenlos in eine Pille der fixierten Kopfleiste. Handy,
+Desktop und Firefox geprüft. Offen aus INSPIRATION-DESIGN: D1, D2, D4–D9.
+Seit 2026-10-15 (D-096): Echo-Zahl hallt als wachsender Umriss nach (vorher
+an der Kartenkante abgeschnitten), Meilenstein-Karte springt deckend auf.
+In Firefox 158 geprüft.
+Seit 2026-10-15 (D-095): **Echo-Zahl** auf den Getränkekarten und
+All-Time-Stapel im Profil, **Jahresrückblick** als Story-Seiten mit
+speicherbarem Bild, auf dem TV **Namens-Plakat** (Abendsieger,
+Führungswechsel) und **Meilenstein-Bild** (runde Marken). In der
+Demo-Instanz (promo/demo-server.mjs) in Handybreite geprüft, TV-Momente über
+`?moment=` in 1600 × 900. Offen aus INSPIRATION-3: L22, L25–L29.
+Seit 2026-10-15 (D-094): **Abend-Archiv als 3D-Register** — die Abende
+liegen in einem seitlich blätterbaren Karussell (Trommel-Effekt, Ziehen mit
+Schwung, Zähler und Fortschrittsbalken) statt im Raster. In Handy- und
+Desktopbreite im Browser geprüft.
+Seit 2026-10-15: In der Dashboard-Fußkarte („Prost, bis zum nächsten Mal")
+steht oben rechts nur noch der Schriftzug „SV Partykeller", ohne Lorbeer
+(Handy und Desktop im Browser geprüft).
+Seit 2026-10-14 (D-093): **Abzeichen als Kerbenkarten** mit eigenen
+Strich-Icons, **TV-Timing-Tower** (Abstand, ▲/▼, Bestwert/Hausrekord) und
+**Kaltstart-Bild** (Wortmarke fliegt von der orangen Fläche in die
+Kopfleiste). Auf einem Testserver mit Kopie der Datenbank geprüft (TV in
+All-Time und Heute mit simulierten Getränken, Dashboard und Onboarding in
+Handy- und Desktopbreite, Startbild Bild für Bild in Firefox). Der laufende
+Server braucht einen Neustart für die neuen State-Felder.
+Offen: weitere Design-Ideen L6–L19 aus
+[docs/INSPIRATION-LANDO-2.md](docs/INSPIRATION-LANDO-2.md) nach Wahl des
+Nutzers (L9, L15, L18 umgesetzt).
+Seit 2026-10-14 (D-092): **Archiv-Kopf auf dem Handy** ohne Leere —
+Satz direkt unter der Kopfzeile, „Letzter Abend" als Datenleiste, Knopf und
+Logo in einer Reihe; im Dashboard-Menü kein „Konto wechseln" mehr.
+Seit 2026-10-14 (D-091): **Handy-Durchgang** — alle Seiten außer TV in
+Handygröße ganzseitig geprüft; Archiv-Kopf (Logo oben, „Letzter Abend" als
+Leiste), Story-/CSV-Pfeile, Verlauf erst ab zwei Stunden, Lorbeer und
+Rivalen-Zeilen im Dashboard, Menü-Strich bei reduzierter Bewegung.
+Seit 2026-10-14 (D-090): **Fußzeile im Dashboard** nur noch mit „Abmelden";
+Archiv über das Menü.
+Seit 2026-10-14 (D-089): **Leuchten auf dem Handy** — ohne Maus wischt alle
+7–13 s ein unsichtbarer Finger in einem Bogen über die Höhenlinien, ein Tipp
+lässt sie kurz aufleuchten; dazwischen schläft die Simulation (Akku). In
+einem echten Firefox mit Touch-Emulation (Handygröße) geprüft, Desktop
+unverändert.
+Seit 2026-10-14 (D-088): **Eigene Unterschrift** — statt der Zackenlinie
+zeichnet sich in den Fußkarten (Profil, Abend-Archiv) eine gestische
+„SV Partykeller"-Unterschrift in einem Zug. Im Browser geprüft (Handy- und
+Desktop-Breite). Im Vollbild-Menü liegt der Strich unter der aktuellen
+Seite jetzt hinter der Schrift (besser lesbar).
+Seit 2026-10-14 (D-087): **Übergänge in Firefox** — die Morphs zwischen
+den Seiten laufen dort per Skript (Positionen merken, Rest ausblenden, auf der
+neuen Seite von der alten Stelle gleiten); Onboarding-Schritte, Admin-Bereiche
+und Admin-Login wechseln überall per Web Animations statt View Transition
+(Firefox flackerte). Im echten Firefox 157 und in Chrome geprüft.
+Seit 2026-10-14 (D-086): **Kein Seitenvorhang mehr** — die orange/dunkle
+Fläche beim Seitenwechsel (D-084) ist ganz entfernt, auch als Ersatz für
+Browser ohne View Transitions; dort wird einfach umgeschaltet.
+Seit 2026-10-14 (D-085): **Seitenwechsel als Morph** — Wortmarke,
+Menüknopf und Logo gleiten von Seite zu Seite, Namenskreis und Name auch
+zurück vom Dashboard in die Anmeldeliste, „Admin" aus dem Menü in den
+Admin-Titel, „Konto anlegen" in „Weiter", die Probier-Karten des Onboardings
+in die echten Getränkekarten.
+Seit 2026-10-14 (D-083): **Übergänge überall** — Blätter, Dialoge und
+Meldungen schließen animiert, die PIN-Zeile klappt weich auf und zu,
+Onboarding-Schritte und Admin-Bereiche gleiten in Richtung des Umschalters,
+die Admin-Anmeldung morpht in die Zentrale (D-085), Heute/All-Time
+gleitet. Im Browser geprüft (Anmeldung, Dashboard, Onboarding, Admin).
+Seit 2026-10-14 (D-081): **Höhenlinien-Leuchten wie auf landonorris.com** —
+statt des Lichtkreises unter dem Cursor eine kleine Strömungssimulation
+(WebGL2): das Leuchten fließt der Maus mit Schwung nach, verwirbelt, biegt
+die Linien leicht und verblasst; im Leerlauf zieht ein schwacher Schimmer
+von selbst. Nur mit Maus und ohne „Bewegung reduzieren“, sonst wie bisher.
+Seit 2026-10-14 (D-080): **Nur noch der Partykeller, in Youngstars-Farben** —
+Auswahlseite und Youngstars-Bereich entfernt; `/` und alte
+`/youngstars/…`-Links leiten auf `/partykeller/`. Palette jetzt
+Fast-Schwarz/Orange mit Lime als Zweitakzent; `data/youngstars.db` bleibt
+ungenutzt liegen. Anmeldung, Dashboard, TV, Archiv und Admin im Browser geprüft.
+Seit 2026-10-01 (D-079): **Keine Erklär- und Fülltexte mehr** — Taglines
+(„läuft lokal …“), Lead-Sätze und Hinweiszeilen sind von allen Seiten
+entfernt; Danger-Zone-Warnungen und Onboarding-Texte bleiben.
+Seit 2026-09-30 (D-078): **Komplett-Redesign im Stil von landonorris.com** —
+alle Seiten, Story-Bild und Saison-Deko neu gestaltet (Lando-Palette, Mona
+Sans + Instrument Serif lokal, Höhenlinien, Kerben-Karten, Kringel,
+Vollbild-Menü, Einblendungen). Design-Quelle ist jetzt
+[docs/DESIGN-LANDO.md](docs/DESIGN-LANDO.md). Alle Features erhalten,
+in beiden Bereichen auf Handy, Desktop und TV geprüft.
+Seit 2026-09-29 (D-077): **Archiv: Name anklickbar** — Tipp auf den Namen
+(oder „Namen geben“) benennt den Abend, eigener Knopf entfällt.
+Seit 2026-09-29 (D-076): **Archiv ohne ±1-Korrektur** — Korrekturen nur
+noch im Getränke-Protokoll; die Archiv-Karte hat „Benennen“ und „Protokoll“
+(springt ins Protokoll dieses Abends).
+Seit 2026-09-29: **Fix Umschalter mit vier Feldern** — der grüne Balken
+gleitet jetzt auch aufs vierte Feld (Protokoll-Filter „Mischen“, Admin-Reiter
+„Mehr“ am Handy); vorher blieb er links stehen und die Schrift verschwand.
+Seit 2026-09-29 (D-075): **Schnitt-Vergleich abschaltbar** — Schalter im
+Admin unter Einrichtung, wirkt sofort auf alle Handys.
+Seit 2026-09-29 (D-074): **Protokoll-Zeilen gefüllt** — Getränke-Pille und
+Bearbeiten/Löschen als Vollflächen, „Doppelt?“ ohne Pille.
+Seit 2026-09-29 (D-073): **Getränke-Protokoll im Admin** — jedes Getränk
+eines Abends einzeln sehen, umhängen (Konto, Sorte, Uhrzeit), löschen mit
+Rückgängig und nachtragen; Zähler ziehen mit, Doppeltipps werden markiert.
+Seit 2026-09-29 (D-072): **Getränke heute mit Vergleich** — ▲/▼ und Abstand
+zum eigenen Schnitt der früheren Abende bis zur gleichen Uhrzeit.
+Seit 2026-09-28 (D-071): **Saison-Akzente** — Oktoberfest (blau-weiße
+Wimpel), Halloween, Winter, Silvester (Countdown, Feuerwerk) und Fasching
+schalten sich nach dem Datum selbst ein; im Admin abschaltbar.
+Seit 2026-09-28 (D-070): **Einheitlich „Tagessieger“** (Chip im Profil,
+Story-Grafik), Archiv-Titel bricht am Handy nicht mehr um (Youngstars),
+Startseite ohne Untertitel.
+Seit 2026-09-28 (D-069): **Tab-Wechsel gleitet** — Zählen/Profil schieben
+sich von ihrer Seite herein, in Richtung des grünen Balkens.
+Seit 2026-09-28 (D-068): **Übergang beim Anmelden** — Namenskreis und Name
+gleiten aus der Anmeldeliste in den Dashboard-Kopf, der Lorbeer wächst
+danach herein; Logos gleiten mit, sonst weiches Überblenden (View
+Transitions, ohne Bibliothek).
+Seit 2026-09-28 (D-067): **Lorbeer im Profil** — ab dem ersten Abendsieg
+steht der Namenskreis im Dashboard-Kopf in einem goldenen Kranz, dazu der
+Chip „n× Abendsieger“; heute erreichte Abzeichen leuchten nicht mehr.
+Seit 2026-09-28: **Entwürfe nach landonorris.com** in
+`docs/INSPIRATION-LANDO.md` (L1 Kringel bei Führungswechsel auf dem TV, L2
+Headline mit Serif-Akzent, L3 Hall of Fame der Abendsieger, L4 Lorbeer im
+Profil, L5 Höhenlinien auf der Startseite) — **noch nicht umgesetzt**,
+wartet auf Auswahl.
+Seit 2026-09-24 (D-066): **Schneller bei vielen Getränken** — die
+Heute-Abfragen lesen nicht mehr das ganze Log, und Broadcasts werden
+gebündelt (eine Runde mit 60 Leuten bei ~3 Jahren Historie: 0,12 s statt
+1,7 s bis zur Bestätigung).
+Seit 2026-09-24 (D-065): **Admin mit Zurück-Link** wie im Abend-Archiv —
+zum Dashboard (mit Gast-Anmeldung) bzw. zur Anmeldung; der Admin bleibt
+angemeldet.
+Seit 2026-09-24 (D-063): **Ausgeblendete Konten** — nur Name, Zähler und
+Gesamt sind gedimmt; ⋯-Menü und Chip bleiben voll deckend.
+Seit 2026-09-24 (D-062): **Eigene Fun-Facts kompakt** — einzeilige Einträge,
+ab etwa sechs Einträgen scrollt die Liste in sich.
+Seit 2026-09-24 (D-061): **Admin im aktuellen Design** nach Entwurf E7 —
+zwei Spalten mit mitlaufender Seitenleiste, `.sec-title`-Abschnitte,
+Namenskreise, runde Stepper, ⋯-Menü, Suche und Filter, TV-Karte mit
+„Gerade auf dem TV“, Danger Zone; unter 1180 px Umschalter
+*Konten | TV | Mehr*, unter 760 px zweizeilige Konto-Karten.
+Seit 2026-09-24 (D-060): **Admin-Namenszeilen ohne Rahmen** — das Panel um
+die Namenszeilen ist weg, die Zeilen stehen frei und fluchten mit den
+Panels darüber.
+Seit 2026-09-24 (D-059): **TV-Kopf umsortiert** — Teilnehmerzahl, Summen
+und Rekordkurs-Pille stehen rechtsbündig direkt links neben der QR-Pille,
+die QR-Pille sitzt ganz rechts (nach D-057/D-058).
+Seit 2026-09-24 (D-056): **TV-Rangliste ohne angeschnittene Zeile** — es sind
+nur ganze Zeilen zu sehen, die letzten beiden blenden auf 55 % und 20 % aus;
+die angeschnittene Zeile darunter ist ausgeblendet und weggeschnitten.
+Seit 2026-09-24 (D-055): **TV-Verlauf robust** — die Rangliste blendet unten
+über die Deckkraft der einzelnen Zeilen aus statt über eine Maske, die auf
+dem Rechner des Nutzers nicht griff; oben hinausrückende Zeilen blenden
+ebenfalls weich aus.
+Seit 2026-09-24 (D-054): **Design-Analyse umgesetzt** — alle Fehler A1–A13
+(Schrift in Formularen, Dialog-Abdunklung und Gold je Bereich, „gleichauf"
+statt „0 Getränke Vorsprung", kein doppeltes „Heute" im Profil, Einzahl in
+Fun-Facts, Links, Admin-Dialoge ohne Farbkante), das **Ranglisten-Blatt mit
+Rangkreisen und „Du"-Pille (E4)** und das **Onboarding passend zur echten
+Oberfläche (E5)**. Offen als Entwurf: E1 (TV-Kopf), E2 (Anmeldung), E3-Rest
+(offene Abzeichen), E6 (Admin).
+Seit 2026-09-24 (D-053): **TV-Rangliste läuft unten weich aus** — rotiert
+die Liste, blendet sie über knapp zwei Zeilen in einem Verlauf aus statt hart
+abzuschneiden; am Listenende steht der letzte Platz voll lesbar über dem
+Verlauf. Dazu eine **Design-Analyse mit Entwürfen** in `docs/DESIGN-REVIEW.md`
+(13 Unstimmigkeiten, sechs Entwürfe E1–E6 mit Vorher/Nachher-Bildern in
+`docs/design-review/`) — **noch nicht umgesetzt**, wartet auf Auswahl.
+Seit 2026-09-21 (D-052): **Onboarding für neue Konten** — nach „Konto
+erstellen & los" kommen drei Willkommens-Seiten (`/<bereich>/onboarding`):
+Getränke tracken, Rangliste auf dem Fernseher, Profil-Tab. Mit Punkten,
+„Weiter" und „Überspringen"; danach geht es ins Dashboard. Beim Anmelden eines
+bestehenden Kontos erscheint sie nicht.
+Seit 2026-09-21 (D-051): **TV-Podest neu** — Namen stehen über dem Podest in
+der Rangfarbe, die Felder sind Vollflächen in Gold/Silber/Bronze mit dunkler
+Schrift (Rangkreis wie gehabt auf der Kante, freigestellt durch einen Ring in
+der Hintergrundfarbe). Die Gesamt-Spalte der Rangliste ist eine gefüllte
+Gold-Pille; Rangliste und Fun-Fact-Band haben keinen äußeren Rahmen und keine
+Füllung mehr (Zeilen behalten ihre Glaskante, QR-Rahmen bleibt). Silber und
+Bronze sind jetzt Tokens in `theme.css`. Neues `logo.png` in Creme (#eee4cd)
+überall im Einsatz.
+Seit 2026-09-18: **Bierpong-Counter als Entwurf** in `docs/BIERPONG.md` —
+zwei Ausbaustufen (Sieg-Zähler, Live-Match-Tracker) mit Mockups und
+Schritt-für-Schritt-Anleitung; **noch nicht umgesetzt**, wartet auf Entscheidung.
+Seit 2026-09-10 (D-050): **Keine Gendersprache** in der Oberfläche —
+„Teilnehmer" statt „Teilnehmer:innen" (Abend-Karten und Story-Bild),
+„Fleißigster heute" statt „Fleißigste:r heute" im Fun-Fact-Band.
+Seit 2026-09-10 (D-049): **Abendrückblick als Story-Bild** — jede Karte im
+Abend-Archiv hat einen Knopf „⬇ Story", der den Abend als PNG 1080 × 1920
+speichert (Datum, Sieger und Plätze 2/3, Bilanz, Verlauf pro Stunde). Für
+alle sichtbar, gezeichnet im Browser auf einem Canvas, Theme und Logos je
+Bereich. Kurvenformel liegt jetzt gemeinsam in `public/js/curve.js`.
+Seit 2026-09-10 (D-044): **Design-Feinschliff** — Abschnittszeilen mit
+Gold-Eyebrow und auslaufender Haarlinie (`.sec`) auf Anmeldung und Profil,
+die Anmeldeliste als eine Glas-Tafel mit Zeilen, im Profil nur noch die
+Ranglisten-Karte als Karte (Statistik und Abzeichen rahmenlos darunter),
+Fun-Fact-Band ohne Gold-Oberkante mit Etikett links, Archiv-Sieger ohne
+Kästchen, TV-Umschalter im Admin mit gleitendem Balken. Farben, Knöpfe,
+Zählen-Ansicht und Bereichsauswahl unverändert.
+Seit 2026-09-10 (D-045): **Rekordkurs** vergleicht ab dem ersten Getränk des
+Abends (statt nach Uhrzeit seit 06:00) und nennt Dauer und Gesamtzahl des
+Rekord-Abends; Admin-Umschalter läuft in Firefox nicht mehr über; Strich im
+Fun-Fact-Band auf Texthöhe.
+Seit 2026-09-10 (D-046): **Stabilität** — WebSocket-Fehler beenden den
+Server nicht mehr, Heartbeat räumt tote Verbindungen weg, Nachrichten sind
+auf 16 KB begrenzt, Zähler und Log werden als eine Transaktion geschrieben,
+die Admin-Liste verwirft keine laufende Eingabe mehr.
+Seit 2026-09-10 (D-047): **Historien-Cache** — Aggregate über vergangene
+Abende werden einmal gelesen und im Speicher gehalten, pro Getränk laufen nur
+noch indizierte Heute-Abfragen; Broadcast, Archiv und Statistik sind damit
+unabhängig von der Log-Größe schnell (95 → 6,5 ms bei 19k Zeilen, 1.040 → 54
+ms bei 180k). Dazu `GET /api/players` für die Anmeldeliste, entprellte
+Statistik im Dashboard und gedrosselte Archiv-Auswahl im Admin.
+Seit 2026-09-09 (D-043): **Fun-Fact-Übersicht im Admin** — ein Fenster zeigt
+alle rotierenden Meldungen, welche gerade auf dem TV läuft (mit Restzeit) und
+erlaubt vor/zurück sowie Sprünge. Dafür rechnen TV und Admin die Liste aus
+demselben Modul `public/js/facts.js`, und der Server gibt als Uhr die Position
+vor (eigene `fact`-Nachricht, Admin-Befehl `setFactIndex`).
+Seit 2026-09-09 (D-041, D-042): **Das zuletzt benutzte Konto steht in der
+Anmeldeliste oben** (ohne Kennzeichnung, Reihenfolge dahinter unverändert) und
+das **Abend-Archiv zeichnet in Blöcken von zwölf** mit „Ältere Abende laden".
+Seit 2026-09-09 (D-040): **Profil-Tab neu geordnet** — eine Ranglisten-Karte
+mit Umschalter Heute/All-Time (und „Ganze Rangliste" als Fußzeile darin) statt
+zwei fast gleicher Karten, ein Kopf mit Namenszeichen und „Dabei seit … ·
+13 Abende" statt des zentrierten Namens, und „Anteil am Haus" als zweiter
+Balken unter der Mischung.
+Seit 2026-09-09 (D-039): **Getränkefelder sind ganzflächige Knöpfe** — jedes
+Getränk liegt komplett in seiner Farbe (Bier amber, Shots brick, Mischen
+violett), die Schrift darauf wie vorher auf dem Knopf, das Plus ohne Kreis in
+der Kontrastfarbe. Die eigene Knopfzeile entfällt; der Zählen-Tab schrumpft von
+890 auf 567 Pixel und passt damit ohne Scrollen aufs Handy.
+Seit 2026-09-08 (D-038): **Oberfläche aufgeräumt** — Erklärtexte auf
+Anmeldung, Dashboard, Admin und Abend-Archiv entfernt, „Gesamt seit Beginn"
+und die Rang-Pille aus dem Zählen-Tab genommen (steht im Profil), Karten ohne
+Farbkante oben, „X Getränke Rückstand", auf dem TV „Mischen" ab zwei und
+gleiches Leuchten auf allen drei Podestzahlen; Zahlen ploppen nur noch beim
+Hochzählen auf, nicht mehr bei jedem Tab-Wechsel.
+Seit 2026-09-04 (D-037): **Ausgeblendete Konten stehen auch nicht mehr in der
+Anmeldeliste** — der Sichtbarkeits-Haken im Admin gilt jetzt für TV-Gesamtansicht
+und Anmeldeseite; bereits angemeldete Handys bleiben angemeldet.
+Seit 2026-09-04 (D-036): **Vier neue Fun-Facts im TV-Band** — *Comeback*
+(wer nach mindestens einem Monat Pause heute wieder dabei ist), *persönliche
+Marke* (volle 50er je Sorte, volle 100er insgesamt, 30 Minuten lang sichtbar),
+*Hausmarke* (volle 500er über alle zusammen) und *Führungswechsel* an der
+Spitze der All-Time-Liste.
+Seit 2026-09-01 (D-034, D-035): **Vollsicherung im Admin** — „⬇ Backup
+herunterladen" speichert den ganzen Bereich als JSON (Nutzer samt PIN-Hash,
+komplettes Getränke-Log, Einstellungen, Fun-Facts), „⬆ Backup einspielen"
+stellt daraus alles wieder her (Lösch-Passwort nötig, eine Transaktion, fremde
+Bereiche werden abgewiesen); und die Erklärtexte bei *Abzeichen*, *TV-Anzeige*
+und *Eigene Fun-Facts* sind entfernt.
+Seit 2026-09-01 (D-028–D-033): **Verlaufsgraph auf jeder Abend-Karte**
+(Getränke pro Stunde als Kurve mit Fläche, alle zusammen, Spitzenstunde
+markiert),
+**Abende benennbar** (Feld im Bearbeiten-Dialog, also nur für Admins; Name
+steht auf der Karte und im TV-Titel), **„Ganze Rangliste ansehen"** im Profil
+(ein Knopf unter der All-Time-Karte öffnet ein Blatt von unten, Heute/All-Time
+darin umschaltbar, eigene Zeile markiert und angesteuert), **Treue-Abzeichen** ab 10 Abenden (10/20/50/100/200, immer nur
+die höchste Stufe) und der grüne Balken im Zählen/Profil-Umschalter **gleitet**
+jetzt, statt zu springen.
+Seit 2026-08-31 (D-025, D-026, D-027): **CSV-Übergabedateien im Abend-Archiv**
+— „⬇ CSV" auf jeder Abend-Karte und „⬇ Alle Abende als CSV" im Kopf, Langformat
+(eine Zeile je Abend und Person) mit Semikolon/BOM für Excel, **nur mit
+Admin-Login** (Knöpfe und Endpunkte, D-027); und das
+**Fun-Fact-Band auf dem TV ist jetzt eine Ranglistenzeile hoch** mit Text in
+Namensgröße, lange Facts skalieren automatisch herunter.
+Seit 2026-08-26 (M8, Feedback aus der einwöchigen Testphase, D-021–D-023):
+**TV-Board skaliert auf jeder Auflösung identisch** (1080p-Design-Bühne,
+Tabelle bekommt allen Restplatz, Rotation robust neu geschrieben inkl.
+Neuberechnung bei Resize), **Abende im Archiv bearbeitbar** (±1 je
+Spieler/Sorte, wirkt auf Log + All-Time), **Archiv-Abend nochmal auf dem TV**
+(Admin-Auswahl + Button auf der Archiv-Karte), **eigene Fun-Facts bearbeitbar**,
+**Profil-Tab** im Dashboard (Platz heute/all-time mit Vorder-/Hintermann und
+Abstand, Ø pro Abend), **Abzeichen mit Zähler über alle Abende** plus neues
+Abzeichen **👑 Tagessieger**, **sechs neue Statistik-Fun-Facts** fürs TV-Band.
+Der D-020-Tiebreak (Uhrzeit statt Alphabet) gilt jetzt auch für Archiv-Sieger
+und Tagessieger. Betrieb läuft künftig voraussichtlich auf einem Laptop statt
+Raspberry Pi (Pi-Dateien bleiben nutzbar).
+Seit 2026-07-15 zusätzlich (D-012): **drittes Getränk „Mischen"** über alle
+Screens (inkl. DB-Migration ohne Datenverlust), **Live-Fun-Facts**
+(Tages-Bestleistungen), TV-Rangliste **scrollt** ab Platz 4 (Reset nach oben
+statt Endlos-Rotation), Podest-Überlappung behoben, Tabellen als großes
+gerundetes Panel mit einzeln gerundeten Zeilen, Wasserzeichen wieder rechts.
+Und (D-013): **Komplett-Reset mit Passwort**, **Nutzer im TV
+ein-/ausblendbar** (Haken im Admin), **TV-Ansicht All-Time/Heute umschaltbar**
+(im Admin, animierter Wechsel), grüner Glas-Rand wieder zurückgenommen,
+durchgängig **Übergänge/Animationen** (Button-Druck, Pop beim Hochzählen,
+Podest-Effekte), Dashboard-Logo größer, Fun-Facts verdecken die Bäume nicht mehr.
+Und (D-014): **Animationen auch in der Rangliste** (Pop/Aufleuchten bei neuem
+Getränk, FLIP bei Platzwechsel), **Fun-Facts mit Tagesrekorden** (schön formuliert),
+**eigenes Lösch-Passwort** (`RESET_PASSWORD`, getrennt vom Admin), **Admin-Liste
+alphabetisch**, Glassmorphism-Kasten um den TV-QR-Code.
+Seit 2026-07-16 (D-015): **TV-Rotationstempo im Admin einstellbar**, **eigene
+Fun-Facts** (Titel + Text, Admin-Pflege, rotieren im TV-Band mit), **„Heute"-
+Ansicht zeigt nur Spieler mit Getränk am laufenden Party-Tag** (Haken gilt nur
+All-Time), **Abend-Archiv `/abende`** (Karten je Party-Tag: Sieger, Teilnehmer,
+Mengen), **persönliche Statistik + Achievement-Badges** im Nutzer-Dashboard,
+**PWA-installierbar** (Manifest + Icons + cache-freier Mini-Service-Worker),
+**Rate-Limit auf beide Logins** (5 Fehlversuche/min → 60 s Sperre).
+Kleinere Politur: Der Zapfen-Hintergrund ist jetzt `position: fixed` und
+bleibt beim Scrollen fest im Viewport (Login, Dashboard, Admin, Abend-Archiv).
+Und (D-016): **Fun-Fact-Wechseltakt im Admin einstellbar** (Regler 30 s – 5 min,
+`funfact_seconds`, TV übernimmt live).
+Und (D-017, nach Security-Review): **Kontoerstellung gedrosselt** (6/min/IP +
+Deckel 200) und **Spieler-Increments pro Spieler gedrosselt** (Token-Bucket
+~1/s, Burst 5; Admins ungedrosselt) – gegen Skript-Spam.
+Und (D-018): **PIN wieder optional pro Nutzer** (ersetzt die Pflicht aus D-002).
+Ohne PIN meldet ein Antippen direkt an; PIN-Konten bleiben geschützt. Admin
+kann PINs setzen/entfernen, PIN-lose Nutzer sind in der Admin-Liste markiert.
+Seit 2026-07-17 (D-019): **zweiter Bereich „Youngstars"** — `/` ist jetzt eine
+Auswahlseite, darunter `/partykeller/*` (unverändert grün) und `/youngstars/*`
+(Navy + Orange/Pink, Youngstars-Neon-Logo neben dem Partykeller-Logo, Navy-
+Zapfen, kein Baum-Footer, Bier in der Auswahl zuunterst). Komplett getrennte
+Daten (eigene SQLite-Datei), bereichsgestempelte Tokens, eigener Admin-Zugang
+(`YOUNGSTARS_ADMIN_PASSWORD`, **neu in der .env nötig!**), gemeinsames
+Lösch-Passwort (Reset löscht nur den eigenen Bereich), eigenes PWA-Manifest
+mit Orange-Icons. Alt-Pfade (`/tv`, `/api`, `/ws`, …) leiten auf den
+Partykeller bzw. dienen ihm als Alias.
+**Offen:** echter Testlauf auf dem Pi mit 2 Handys + TV (M7, letzter Punkt);
+Youngstars-Logo durch die Original-PNG des Nutzers ersetzen, sobald sie im
+Repo liegt (`public/assets/youngstars-logo.png`, Icons dann neu erzeugen).
+
+## M0 — Planung & Projekt-Gerüst ✅
+
+- [x] Design importiert und analysiert (Projekt „Getränke-Counter Partykeller", v3-Serie)
+- [x] Rückfragen geklärt: Node.js / PIN verpflichtend / Admin-PW via .env / kein Minus-Button
+- [x] PLAN.md: Architektur, Datenmodell, API-/WS-Contract, Routen, Ordnerstruktur, Meilensteine
+- [x] DECISIONS.md mit D-001 … D-007 angelegt
+- [x] CLAUDE.md, README.md, PROGRESS.md angelegt
+- [x] Projekt-Gerüst: Ordnerstruktur, package.json, .env.example, .gitignore
+- [x] **Freigabe des Plans durch den Nutzer** (PR #1 gemerged + „Los geht's")
+
+## M1 — Server-Fundament ✅
+
+- [x] `npm install` und Lockfile committen (express, ws, better-sqlite3, dotenv)
+- [x] `server/config.js`: .env laden, PORT/ADMIN_PASSWORD/TOKEN_SECRET/DB_PATH validieren
+- [x] `server/db.js`: Schema (players, drink_log), WAL-Modus, Query-Funktionen
+- [x] `server/index.js`: Express + Statics + `GET /health` + `GET /api/state`
+- [x] `server/ws.js`: WS-Endpoint `/ws`, State-Broadcast bei Connect und nach Mutationen
+- [x] Dev-Seed-Script für Testnutzer (`npm run seed`, PIN 1111)
+
+## M2 — Design-Basis ✅ (mit offenem Asset-Export)
+
+- [x] Zapfen-Wasserzeichen vendored: `zapfen-bg.svg` (um 180° gedreht, D-009)
+- [x] ~~Interims-SVGs für Logo und Wald-Footer (D-008)~~ → ersetzt
+- [x] Finale Assets eingebunden (D-009): `logo.png` (weiß), `footer-woods.png`
+      (echter Wald), `zapfen-bg.svg` (Hintergrund), `cones-flat.png` (Favicon)
+- [x] Ecken leicht abgerundet (Tokens `--radius` / `--radius-lg`, D-009)
+- [x] Fonts Bitter + Work Sans als woff2 nach `public/assets/fonts/` (offline!)
+- [x] `public/css/theme.css`: Design-Tokens aus PLAN.md §8
+- [x] `public/js/ws-client.js`: WS-Client mit Auto-Reconnect + State-Subscription
+- [x] `public/js/api.js`: REST-Aufrufe + Token-Handling (localStorage)
+
+## M3 — Nutzer-Dashboard (erster Screen) ✅
+
+- [x] `public/dashboard.html` nach `User Dashboard v3.dc.html` (Kopfzeile mit Rang-Pill, Heute-Karte, Bier-/Shot-/Mischen-Karten, Abmelden)
+- [x] `increment` über WS (+1 Bier / +1 Shot), Anzeige über State-Broadcast (LAN-Latenz vernachlässigbar)
+- [x] Heute/Gesamt-Werte und Rang live aus dem State
+- [x] Zustand „kein Nutzer ausgewählt" → Link zur Anmeldung
+- [x] Serverseitig: increment-Handler inkl. drink_log + Party-Tag-Logik (06:00)
+- [x] Auth: Nutzer-Login per REST + funktionale Login-Seite (Minimalversion, Feinschliff in M4)
+- [x] End-to-end verifiziert: REST-Tests, WS-Rechte-Checks, Browser-Test mit Screenshots
+
+## M4 — Nutzer-Login ✅
+
+- [x] `public/index.html` nach `User Login v3.dc.html`: Avatar-Liste mit PIN-Zeile, Trenner, Neu-Anmelden-Formular, Admin-Link
+- [x] Pflicht-PIN: Eingabe bei Anlage und Login (Design sagte „PIN (optional)", D-002 macht sie Pflicht), scrypt-Hash serverseitig
+- [x] Token in localStorage, Redirect zum Dashboard, Abmelden-Flow
+
+## M5 — TV-Scoreboard ✅
+
+- [x] `public/tv.html` nach `TV Scoreboard v3.dc.html` (Querformat, Podest 2-1-3, Rangliste ab Platz 4, Kopf mit Teilnehmer-/Gesamt-Zahlen, live über WS)
+- [x] QR-Code zum Beitritt (qrcode-generator vendored in `public/js/vendor/`)
+- [x] QR-Adresse im Admin einstellbar (settings-Tabelle, `setJoinUrl`, D-010); QR-Rahmen nicht abgerundet
+- [x] Podest kompakter; unter dem Podest max. 5 Plätze, bei mehr durchscrollend mit Reset nach oben (D-010/D-012)
+- [x] Fun-Facts-Band jetzt live: Tages-Bestleistungen je Getränk (D-012)
+- [x] Drittes Getränk „Mischen" auch im TV (Podest + Ranglisten-Spalte, D-012)
+
+## M6 — Admin ✅
+
+- [x] Admin-Login nach `Admin Login v3` (`POST /api/admin/login` gegen `ADMIN_PASSWORD`, Token in sessionStorage)
+- [x] `public/admin.html` nach `Admin Dashboard v3`: Nutzer anlegen (mit Pflicht-PIN)/umbenennen/löschen (mit Rückfrage)
+- [x] Zähler jedes Nutzers (Bier/Shots/Mischen): ±1-Stepper (`increment`) und Direkteingabe (`setCounter`), PIN-Reset (`setPin`, D-002)
+- [x] Geschützter Komplett-Reset: Modal mit erneuter Admin-Passwort-Eingabe (D-013)
+- [x] Nutzer im TV ein-/ausblenden (Haken, `setHidden`) und TV-Ansicht All-Time/Heute umschalten (`setBoardMode`, D-013)
+
+## M7 — Betrieb auf dem Pi ✅ (bis auf echten Pi-Testlauf)
+
+- [x] `deploy/partykeller.service` (systemd, Restart=always, EnvironmentFile)
+- [x] `deploy/PI-SETUP.md`: Installation, avahi/mDNS (`partykeller.local`), Chromium-Kiosk-Autostart für `/tv`, Backup, Update
+- [x] README finalisiert (Schnellstart, Screens, Pi-Verweis)
+- [x] Server-Neustart ohne Datenverlust verifiziert (8 Nutzer vor/nach Neustart)
+- [ ] Echter Testlauf auf dem Pi: 2 Handys + TV im WLAN
+      (entschärft: Betrieb läuft voraussichtlich auf einem Laptop)
+
+## M8 — Überarbeitung nach der Testwoche (2026-08-26) ✅
+
+- [x] TV-Board: 1080p-Design-Bühne mit `transform: scale()` — Layout auf jeder
+      Auflösung identisch, Tabelle bekommt allen Restplatz (D-021)
+- [x] TV-Rotation neu: feste Zeilenhöhe, sichtbare Zeilen aus dem Platz
+      berechnet, Neuberechnung bei Resize/Font-Swap, weiches Ausblenden der
+      angeschnittenen Zeile; Tempo-Regler wirkt live
+- [x] Abend-Archiv bearbeitbar: Admin-Modal auf `/abende`, ±1 je
+      Spieler/Sorte/Party-Tag, wirkt transaktional auf Log + All-Time (D-022)
+- [x] Archiv-Abend auf dem TV: Board-Modus `archive` + Tagesauswahl im Admin
+      und „Auf dem TV zeigen" auf den Archiv-Karten (D-022)
+- [x] Eigene Fun-Facts bearbeitbar (updateFact + Inline-Formular im Admin)
+- [x] Dashboard: Profil-Tab (Platz heute/all-time, Vorder-/Hintermann mit
+      Abstand, Ø pro Abend, Verteilung, Abzeichen) — Eingabe-Tab nur noch
+      Zählen (D-023)
+- [x] Abzeichen mit Zähler über alle Abende + neues Abzeichen 👑 Tagessieger
+- [x] Sechs neue Statistik-Fun-Facts (Rekord-Abend, Stammgast, Seriensieger,
+      Frühstart, durstigste Stunde, Gesamtbilanz)
+- [x] Rekordkurs (Bier-Pace) live auf dem TV: glühende Pill + Fun-Fact, wenn
+      der Abend vor dem besten bisherigen Abend liegt (D-024)
+- [x] D-020-Tiebreak auch für Archiv-Sieger/Tagessieger
+- [x] CSV-Übergabedateien im Abend-Archiv: pro Abend und über alle Abende,
+      Langformat mit Semikolon/CRLF/BOM fürs deutsche Excel (D-025)
+- [x] CSV-Export nur mit Admin-Login: Knöpfe erscheinen nur als Admin, die
+      Endpunkte prüfen das Admin-Token im Authorization-Header (D-027)
+- [x] Fun-Fact-Band auf dem TV so hoch wie eine Ranglistenzeile, Text in
+      Namensgröße, lange Facts skalieren automatisch herunter (D-026)
+- [x] Verlaufsgraph (Getränke pro Stunde) auf jeder Abend-Karte (D-029),
+      als Kurve mit Fläche statt Balken (D-032)
+- [x] Abende benennbar im Bearbeiten-Dialog, Name auf Karte + TV-Titel (D-028)
+- [x] „Ganze Rangliste ansehen" im Profil, Heute/All-Time umschaltbar (D-030),
+      ein freistehender Knopf unter der All-Time-Karte (D-033)
+- [x] Treue-Abzeichen nach Anzahl der Abende, nur die höchste Stufe (D-031)
+- [x] Grüner Balken im Zählen/Profil-Umschalter gleitet statt zu springen
+- [x] Vollsicherung: Download (`GET /api/export/backup`) und Import
+      (`POST /api/import/backup`) inkl. Prüfmodul `server/backup.js` (D-034)
+- [x] Admin-Oberfläche: Block „Sicherung" mit beiden Knöpfen und Import-Dialog
+      (Datei + Lösch-Passwort) (D-034)
+- [x] Erklärtexte bei Abzeichen, TV-Anzeige und Eigene Fun-Facts entfernt (D-035)
+- [x] Vier neue Fun-Facts: Comeback, persönliche Marke, Hausmarke,
+      Führungswechsel (`getFunStats` + TV-Band, D-036)
+- [x] Ausgeblendete Konten aus der Anmeldeliste gefiltert (D-037)
+- [x] Feinschliff der Oberfläche: Texte gekürzt, doppelte Zahlen entfernt,
+      Karten ohne Farbkante, TV-Mehrzahl „Mischen", Pop nur bei echter
+      Änderung (D-038)
+- [x] Getränkefelder als ganzflächige Knöpfe in der Getränkefarbe, `.btn-big`
+      entfernt (D-039)
+- [x] Profil: eine Ranglisten-Karte mit Umschalter, Kopf mit „Dabei seit",
+      Anteil am Haus (D-040)
+- [x] Anmeldeliste: zuletzt benutztes Konto zuerst (D-041)
+- [x] Abend-Archiv: zwölf Karten je Block, „Ältere Abende laden" (D-042)
+- [x] Fun-Fact-Übersicht im Admin, gemeinsames Fact-Modul, Fact-Uhr im Server
+      (D-043)
+- [x] Design-Feinschliff: Abschnittszeilen mit Gold-Haarlinie, Anmeldeliste
+      als Tafel, Profil mit einer Karte, Fun-Fact-Etikett, Archiv-Sieger ohne
+      Kasten, Admin-Umschalter (D-044)
+- [x] Rekordkurs ab dem ersten Getränk mit Dauer und Rekord-Gesamtzahl,
+      Admin-Umschalter in Firefox, Band-Strich auf Texthöhe (D-045)
+- [x] Stabilität: WS-Fehler abgefangen, maxPayload, Heartbeat, Getränk als
+      Transaktion, Admin-Liste ohne Eingabeverlust (D-046)
+- [x] Leistung: Historien-Cache mit Invalidierung, Index auf `ts`,
+      `GET /api/players`, entprellte Statistik, gedrosselte Archiv-Auswahl (D-047)
+- [x] Logo auf Anzeigegröße verkleinert (140 → 42 KB); Cache-Header bewusst
+      nicht (D-048)
+- [x] Abendrückblick als Story-Bild (1080 × 1920) aus dem Abend-Archiv, für
+      alle, gezeichnet im Browser; gemeinsame Kurvenformel (D-049)
+- [x] Gendersprache aus der Oberfläche entfernt, Konvention in CLAUDE.md (D-050)
+- [x] TV-Podest in Rangfarben, Board ohne Kästen, neues Logo (D-051)
+- [x] Onboarding für neue Konten (D-052)
+- [x] TV-Rangliste läuft unten in einem Verlauf aus (D-053)
+- [x] TV-Verlauf über Zeilen-Deckkraft statt mask-image (D-055)
+- [x] TV-Rangliste nur mit ganzen Zeilen, Verlauf über die letzten beiden (D-056)
+- [x] TV-Kopf: Teilnehmerzahl linksbündig neben der QR-Pille (D-057)
+- [x] TV-Kopf: Teilnehmerzahl rechtsbündig rechts neben der QR-Pille (D-058)
+- [x] TV-Kopf: Teilnehmerzahl rechtsbündig links neben der QR-Pille (D-059)
+- [x] Admin: Panel um die Namenszeilen entfernt (D-060)
+- [x] Design-Analyse: Fehler A1–A13, Ranglisten-Blatt (E4), Onboarding (E5) (D-054)
+- [x] Admin im aktuellen Design nach Entwurf E7 (D-061)
+- [x] Admin: Liste der eigenen Fun-Facts begrenzt und kompakt (D-062)
+- [x] Admin: ⋯-Menü ausgeblendeter Konten nicht mehr durchsichtig (D-063)
+- [x] Admin: Hinweis „alphabetisch“ bei Konten entfernt (D-064)
+- [x] Admin: Zurück-Link ohne Abmelden (D-065)
+- [x] Lasttest; Heute-Abfragen mit festem Index, Broadcasts gebündelt (D-066)
+- [ ] Design-Analyse: Entwürfe E1, E2, E3-Rest (warten auf Auswahl)
+- [x] Profil: Lorbeer ab dem ersten Abendsieg, Abzeichen ohne Leuchten (D-067, Entwurf L4)
+- [x] Übergang beim Anmelden: Namenskreis gleitet ins Dashboard (D-068)
+- [x] Tab-Wechsel Zählen/Profil gleitet von der Seite des Tabs herein (D-069)
+- [x] Design-Durchsicht: „Tagessieger“ einheitlich, Archiv-Kopf am Handy, Startseite ohne Untertitel (D-070)
+- [x] Saison-Akzente: Oktoberfest, Halloween, Winter, Silvester, Fasching (D-071)
+- [x] Getränke heute mit Vergleich zum eigenen Schnitt bis zur gleichen Uhrzeit (D-072)
+- [x] Getränke-Protokoll im Admin: Einträge einzeln bearbeiten, löschen, nachtragen (D-073)
+- [x] Protokoll-Zeilen: gefüllte Getränke-Pillen und Knöpfe, „Doppelt?“ ohne Pille (D-074)
+- [x] Schnitt-Vergleich im Admin ein-/ausschaltbar (D-075)
+- [x] Abend-Archiv: ±1-Korrektur raus, Sprung ins Protokoll (D-076)
+- [x] Abend-Archiv: Name anklickbar statt Knopf „Benennen“ (D-077)
+- [x] Inspiration landonorris.com: in das Komplett-Redesign D-078 aufgegangen (L1, L2, L3, L5)
+- [x] Komplett-Redesign im Stil von landonorris.com (D-078): Design-System
+  (`theme.css`, `lando.js`, Höhenlinien, Schriften), Start, Anmeldung,
+  Onboarding, Dashboard, TV, Admin, Abend-Archiv mit Hall of Fame,
+  Story-Bild, Saison-Akzente
+- [x] Promo-Video (2026-10-06): code-gesteuerte Pipeline in `promo/`
+  (Demo-Instanz, Screen-Capture, numpy-Soundtrack, Frame-Rendering, ffmpeg)
+  → `promo/out/partykeller-promo.mp4`, siehe [promo/README.md](promo/README.md)
+- [ ] Echter Test auf dem Raspberry Pi (Performance der Höhenlinien-Drift und
+  der Einblendungen im Kiosk-Chromium) und auf einem echten iPhone
+
+## Verifikation (2026-09-30, D-078)
+
+Lokaler Testserver mit Testdaten (je Bereich 10–12 Konten, neun frühere
+Abende plus der laufende). Je Seite ein Umbau, ein unabhängiges Review gegen
+ein vorher erstelltes Inventar aller Features und JS-Hooks (jede ID, jedes
+Template, jeder Zustand) und ein Fix-Durchgang; geprüft im Chromium in beiden
+Bereichen bei 375 px (Handy), 1280 px (Desktop) sowie 1920 × 1080 und
+1440 × 1080 (TV).
+- Start, Anmeldung (mit/ohne PIN, falsche PIN, Registrieren, 409), Onboarding
+  (drei Schritte, Überspringen, Youngstars-Reihenfolge), Vollbild-Menüs.
+- Dashboard: Zählen (+1, Pop, „+1“-Float), Tempo-Vergleich ▲/▼, Profil,
+  Rangliste-Blatt, Abzeichen, Lorbeer, Konto gelöscht, Abmelden.
+- TV: Podest, Liste mit Rotation, Moduswechsel All-Time/Heute/Archiv,
+  Rekordkurs, Führungswechsel mit Kringel, QR, 4:3-Bühne.
+- Admin: Login, Konten-Flows, Suche/Filter, Protokoll (nachtragen,
+  bearbeiten, löschen, rückgängig, Deep-Link), TV-Modus, Fun-Facts, Handy mit
+  vier Reitern. Backup-Download, Backup-Import und Komplett-Reset nur
+  geöffnet, nicht ausgelöst.
+- Archiv: Kennzahlen-Headline, Hall of Fame (Sprung zum Abend), Chronik,
+  Admin-Werkzeuge, Story-PNG 1080 × 1920 im neuen Stil.
+- Saison: alle Anlässe per `?jetzt=` auf Dashboard und TV in beiden
+  Bereichen, Admin-Schalter an/aus.
+- Keine Konsolenfehler, keine horizontale Scrollleiste. Animationen selbst
+  ließen sich im verdeckten Browser-Fenster nur als Endzustände prüfen.
+
+## Verifikation (2026-09-10, D-049)
+
+Testdatenbank mit drei Abenden (voller Samstag mit 12 Personen und Verlauf
+19–02 Uhr, kurzer Abend mit zwei Personen in einer Stunde, ein Abend mit nur
+einer Person). Browser-Tests (Chromium, 430 px Handy-Breite): Story-Knopf ist
+ohne Login sichtbar, der Download heißt `partykeller-abend-2026-09-05.png`
+und liefert 1080 × 1920; das Bild zeigt Sieger, Platz 2 und 3, Bilanz und
+Verlauf mit Spitze 22 Uhr; beim kurzen Abend entfällt der Verlauf und der
+Inhalt bleibt zusammen; beim Solo-Abend bleibt nur die Siegerzeile; ein
+39-stelliger Abendname wird automatisch kleiner gesetzt statt abgeschnitten.
+Youngstars: Navy-Grund, orange Kurve, beide Logos, kein Baum-Footer,
+Dateiname `youngstars-abend-…`. Als Admin stehen Story-Zeile und die drei
+Admin-Knöpfe untereinander, deren Layout ist unverändert. Die Kurve auf den
+Archiv-Karten sieht nach dem Umbau auf `js/curve.js` unverändert aus. Keine
+Konsolenfehler.
+
+## Verifikation (2026-09-10, D-047)
+
+Zwei Testdatenbanken (60 Konten / 40 Abende / 19.000 Zeilen und 120 / 150 /
+180.000). Alter und neuer Code auf Kopien derselben DB: `getState`,
+`getArchive`, `getRecords`, `getExportNights` identisch; ebenso nach einer
+Archiv-Korrektur an einem alten Tag, einem Getränk heute und dem Löschen
+eines Nutzers (Cache-Invalidierung). `getPlayerStats` weicht nur bei
+„Erster Trinker" ab, weil die Testdaten 20 Einträge in derselben
+Millisekunde haben (alt: beliebiger, neu: ältester Eintrag). Zeiten (19k /
+180k): State 95 → 6,5 ms / 1.039 → 54 ms; Archiv 96 → 3,6 / 942 → 40;
+Statistik 47 → 1,3 / 437 → 10. Browser (Chromium): Anmeldeliste über
+`/api/players`, Anmeldung und Dashboard funktionieren, zwei schnelle
+Getränke lösen genau einen Statistik-Aufruf aus, Archiv-Seite zeigt die
+Abende, keine Konsolenfehler.
+
+## Verifikation (2026-09-10, D-046)
+
+Vorher reproduziert: ein WebSocket-Frame mit ungültigem UTF-8 beendete den
+Prozess. Nachher: derselbe Frame und eine 64-KB-Nachricht werden als Warnung
+geloggt, `/health` antwortet weiter. Ein Roh-Socket, der Pings nicht
+beantwortet, wird nach 50 s vom Server beendet. Ein Spieler-Increment über WS
+erhöht `beers` und `beersToday` zusammen. Admin (Chromium): Zählerfeld
+fokussiert und „42" getippt, dann trinkt ein anderer Client — das Feld bleibt
+fokussiert mit „42"; nach Tab wird die Liste nachgezogen (Shots 1, Bier 42).
+
+## Verifikation (2026-09-10, D-045)
+
+Testdatenbank: Rekord-Abend vor 15 Tagen mit 30 Getränken ab 21:00, ein
+kleinerer Abend mit 13, heute 27 Getränke seit 2 Stunden. `funStats.pace`
+liefert `27 : 11 nach 120 min`, Rekord-Abend mit 30 gesamt, `onPace: true`;
+die TV-Pille zeigt „🔥 Auf Rekordkurs! 27 : 11 nach 2 h · Rekord-Abend
+26.08.2026 (30)". Fun-Fact-Band: Trennstrich etwa 28 px hoch, mittig.
+Admin-Umschalter in Chromium 408 px breit mit drei 128-px-Segmenten (Firefox
+ist in der Testumgebung nicht installiert; die Ursache — `flex-basis` zählt
+dort nicht zur Containerbreite — ist durch `width` behoben).
+
+## Verifikation (2026-09-10, D-044)
+
+Browser-Tests (Chromium, Testdatenbank mit acht Konten): Anmeldung zeigt die
+Konten als Zeilen in einer Tafel, das gemerkte Konto oben; die PIN-Zeile
+öffnet sich innerhalb der Tafel unter dem Konto. Profil (Heute und All-Time):
+Abschnittszeile mit Hinweis „Heute"/„All-Time", Nachbarn als Zeilen,
+Beschriftungen „Getränke / von 4 heute / Abende / Bester Abend / Ø pro Abend"
+in gemischter Schreibung, Abzeichen-Zeile „3 von 5 heute". Admin: Umschalter
+All-Time → Heute → Archiv-Abend gleitet, Archiv-Auswahl erscheint daneben in
+einer Zeile. TV: Fun-Fact-Band mit Etikett und senkrechter Haarlinie, Podium
+und Tabelle unverändert. Youngstars-Anmeldung erbt die Abschnittszeile im
+Orange-Gold. Keine Konsolenfehler auf allen Seiten.
+
+## Verifikation (2026-09-09, D-043)
+
+Browser-Tests (Chromium, Testdatenbank mit vier Konten und zwei eigenen
+Meldungen, 16 Facts in der Rotation): Das Fenster zeigt „16 Meldungen · alle
+30 s · ein Durchlauf dauert 8:00 min" und markiert die laufende Zeile. Nach
+*Weiter*, nochmal *Weiter*, *Zurück* und einem Sprung auf Zeile 7 zeigen Admin
+und Fernseher jedes Mal denselben Text; die Positionsanzeige steht auf „7 von
+16" bei aktiver Zeile 7. Ein zweiter, später geöffneter Fernseher steigt beim
+selben Fact ein. Takt auf 45 s gestellt: die Zeile rechnet sofort mit „alle
+45 s · 12:00 min". Automatischer Wechsel geprüft: nach 32 Sekunden ohne Zutun
+steht ein anderer Fact da, der Server hat die Indizes 0 → 1 gesendet. Keine
+Konsolenfehler auf TV und Admin.
+
+## Verifikation (2026-09-09, D-041 und D-042)
+
+Archiv mit 60 Abenden (20 Konten, 6 600 Log-Zeilen): die Seite zeichnet 12
+Karten, der Knopf sagt „12 ältere Abende laden (noch 48)", nach vier Klicks
+stehen alle 60 da und der Knopf verschwindet. Messung dazu: `getArchive()`
+braucht für diese Datenmenge 42 ms und liefert 11 KB — die Bremse ist das
+Zeichnen, nicht der Server.
+
+Anmeldeliste: ohne Erinnerung steht dort die Rangliste (Gast 01, 02, 03 …);
+nach dem Merken von „Gast 10" steht dieser oben und die Reihenfolge dahinter
+ist Zeichen für Zeichen dieselbe, bei gleicher Zeilenzahl. Voller Durchlauf
+Anmelden → Abmelden → Liste: das eben abgemeldete Konto steht oben. Keine
+Konsolenfehler.
+
+## Verifikation (2026-09-09, D-040)
+
+Browser-Tests (Chromium, Testdatenbank über den Sicherungs-Import mit vier
+Konten und 13 Abenden Vorgeschichte): Kopf zeigt „A | Anna | Dabei seit
+16.08.2026 · 13 Abende". Anna hat heute gezählt, ihre Karte startet auf
+**Heute** (5 Getränke, #1 von 3 heute); Dora hat heute nichts gezählt, ihre
+startet auf **All-Time** (3 Getränke, #4 von 4). Umschalten löst kein
+Aufploppen aus (`pk-pop` nicht gesetzt). „Ganze Rangliste ansehen" öffnet das
+Blatt im gewählten Zeitraum — „All-Time Rangliste" bzw. „Rangliste heute".
+Anteil am Haus: 69 von 114 Getränken · 60,5 %, Balken 60,5 % breit; bei Dora
+3 von 114 · 2,6 %. Keine Konsolenfehler.
+
+## Verifikation (2026-09-09, D-039)
+
+Browser-Tests (Chromium, Testdatenbank, Konto mit 7 Bier / 3 Shots / 4
+Mischen): Feldhöhe 128 px statt 233 px, Zählen-Tab 567 px statt 890 px — alle
+drei Getränke plus Tageszähler ohne Scrollen sichtbar. Ein Tipp auf die
+*Zahl* (nicht aufs Plus) zählt Bier von 7 auf 8 und heute auf 1, der
+Tageszähler springt mit. Youngstars zeigt weiterhin Shots, Mischen, Bier in
+dieser Reihenfolge. Keine Konsolenfehler.
+
+## Verifikation (2026-09-08, D-038)
+
+Browser-Tests (Chromium, Testdatenbank mit vier Konten und einem laufenden
+Abend): Anmeldung zeigt „Anmeldung" und „Registrieren" ohne Untertitel;
+Dashboard-Tab *Zählen* ohne Rang-Pille und ohne „Gesamt seit Beginn", alle
+Karten ohne Farbkante oben; Profil zeigt „7 Getränke Rückstand" und keinen
+Aufmunterungssatz mehr; Admin hat *QR-Adresse* und *Sicherung* in einer Zeile;
+Abend-Archiv ohne Untertitel und Hinweistext, Spitzenpunkt ohne Leuchten,
+Bearbeiten-Blatt ohne Kante. TV-Kopfzeile: „16 Bier · 4 Shots · 7 Mischen
+gesamt", Podest-Detail bei einer Mische weiterhin „1 Mische". Pop-Test:
+`#today-total` trägt `pk-pop` direkt nach „+ Bier", nach 900 ms nicht mehr, und
+nach einem Wechsel Profil → Zählen ebenfalls nicht. Keine Konsolenfehler auf
+allen fünf Seiten.
+
+## Verifikation (2026-09-04, D-037)
+
+Browser-Tests (Chromium, Testdatenbanken): Anmeldeseite Partykeller zeigt nur
+noch Anna und Ben, das ausgeblendete Konto „Geist" fehlt; sind alle Konten
+ausgeblendet (Youngstars-Testbereich), erscheint der normale Leertext „Noch
+niemand da – leg unten los."; Anmeldung eines sichtbaren Kontos mit PIN führt
+weiter aufs Dashboard. Ein ausgeblendetes Konto kann sich über
+`POST /api/login` weiterhin anmelden (Server absichtlich unverändert). Keine
+Konsolenfehler.
+
+## Verifikation (2026-09-04, D-036)
+
+Server-Tests gegen frisch aufgebaute Testdatenbanken: Comeback erscheint erst
+ab 30 Tagen Pause und wählt bei mehreren Rückkehrern die längste (200 statt 122
+Tage); persönliche Marke feuert beim 50. Shot und beim 100. Getränk (Gesamtmarke
+schlägt dabei die Sortenmarke) und verschwindet wieder, sobald das Getränk
+länger als 30 Minuten her ist; Hausmarke bei genau 500 Getränken und noch nach
+drei Stunden sichtbar; Führungswechsel meldet „Anna hat Bernd überholt", bleibt
+aber stumm, wenn ein von Hand gesetzter Zähler den sichtbaren Platz 1
+verschiebt; ausgeblendete Personen lösen weder Marke noch Hausmarke aus; ohne
+Ereignis sind alle vier Felder `null`. Browser-Test (Chromium, TV-Seite mit 503
+Getränken über 10 Abende): alle vier Facts laufen im Band durch — „Comeback:
+Clara ist nach 4 Monaten wieder dabei – zuletzt am 07.05.2026.", „Runde Sache:
+Bernd steht jetzt bei 50 Shots insgesamt.", „Hausmarke: Hier wurden insgesamt
+schon 500 Getränke gezählt.", „Neu an der Spitze: Anna hat Bernd in der
+All-Time-Liste überholt." Keine Konsolenfehler. Laufzeit von `getState` mit
+40.000 Log-Einträgen: 196 ms vorher, 215 ms nachher.
+
+## Verifikation (2026-09-01, D-034/D-035)
+
+Server-Tests: Export nur mit Admin-Token des eigenen Bereichs (ohne Token, mit
+Spieler-Token und mit Youngstars-Admin je 403); Import weist falsches und
+bloßes Admin-Passwort (403), fremden Bereich, fremdes Format, falsche Version,
+leere/doppelte Namen (auch nur in der Groß-/Kleinschreibung verschieden),
+kaputten PIN-Hash, Log ohne Nutzer, unbekanntes Getränk, negative Zähler und
+fehlende Abschnitte ab (je 400) — der Bestand bleibt dabei unverändert;
+kaputtes JSON → 400, 21 MB → 413, 5 MB gehen durch. Runde von Hand:
+Datenstand mit Einstellungen, Abend-Name, Fun-Fact und Live-Getränk aufgebaut →
+Sicherung geladen → alles gelöscht und fremde Daten angelegt → Import → State,
+Archiv (inkl. Verlauf und Abend-Name) und persönliche Statistik sind wieder
+Byte für Byte identisch, das alte Handy-Token zählt weiter und der PIN-Login
+funktioniert (falsche PIN weiterhin abgelehnt). Browser-Tests (Chromium):
+Download liefert `partykeller-backup-2026-09-01.json`; Import-Dialog mit
+deutschem Datei-Knopf zeigt Fehler bei fehlender Datei, falschem Passwort,
+kaputter Datei und fremdem Format, spielt die Sicherung dann ein („Eingespielt:
+8 Nutzer, 23 Getränke, 0 Fun-Facts") und der zwischenzeitlich angelegte Nutzer
+ist wieder weg; Youngstars-Admin lehnt die Partykeller-Datei ab (im
+Navy-Theme); die drei Erklärtexte sind auf Admin und Dashboard verschwunden,
+die Abzeichen-Tooltips bleiben. Keine Konsolenfehler.
+
+## Verifikation (2026-09-01, D-028–D-031)
+
+Browser-Tests (Chromium, Testdatenbank mit 16 Abenden): Archiv-Karten zeigen
+den Stundenverlauf als Kurve inkl. Spitzenmarkierung und Achsenbeschriftung
+(auch für den laufenden Abend und für einen Abend mit nur einer Stunde, der
+dann eine einzelne Uhrzeit ausweist); „Bearbeiten" → Name „Saisonabschluss" gespeichert →
+erscheint auf der Karte und nach „Auf dem TV zeigen" im TV-Titel
+(„SAISONABSCHLUSS · 31.08.2026"); Dashboard-Profil: Treue-Abzeichen
+„🎖 Stammgast ×15" mit Tooltip zur nächsten Stufe, „Ganze Rangliste ansehen"
+öffnet das Blatt mit 12 Zeilen (eigene Zeile markiert, „Basti (du)"),
+Umschalten auf Heute zeigt 6 Personen, Escape schließt; der grüne Balken im
+Umschalter wandert gemessen von x=30 über x=200 nach x=213 (gleitet also,
+statt zu springen) und ist exakt so breit wie ein Knopf. Keine Konsolenfehler.
+
+## Verifikation (2026-08-26, M8)
+
+Server-Tests (WS): Archiv-Modus liefert `boardDay` + sortierte
+`archivePlayers` und räumt sie beim Zurückschalten wieder auf; ungültiger Tag
+und Spieler-Token werden abgelehnt; `adjustArchive` ±1 ändert Tages-Log und
+All-Time-Zähler konsistent, „–1 auf leer" wird abgelehnt; `updateFact` ändert
+Titel + Text. Browser-Tests (Chromium, 1920×1080 / 1366×768 / 1280×800 /
+1093×614@125 %): TV-Layout auf allen Auflösungen identisch (7 sichtbare
+Zeilen + Podest), Rotation läuft komplett durch und resettet nach oben,
+Youngstars-TV (Navy) fehlerfrei; Admin: Archiv-Auswahl + Fact-Bearbeitung;
+`/abende` als Admin: Bearbeiten-Modal (+1/−1 live), „Auf dem TV zeigen" →
+TV zeigt „Abend vom 24.08.2026"; Dashboard-Profil: Platz, Nachbarn
+(inkl. „gleichauf"-Fall), Ø pro Abend, Abzeichen-Zähler. Keine Konsolenfehler.
+
+## Verifikation (2026-07-17, D-019)
+
+Server-Tests: Youngstars-Nutzer erscheinen nicht im Partykeller-State (und
+umgekehrt), `/api`+`/ws` == Partykeller; Admin-Passwörter wirken nur im eigenen
+Bereich; Partykeller-Tokens werden am Youngstars-WS abgelehnt (und umgekehrt);
+Reset nullt nur den auslösenden Bereich; Settings unabhängig. Browser-Tests
+(Chromium): Auswahlseite mit beiden Karten; Youngstars-Login in Navy mit beiden
+Logos und ohne Baum-Footer; Dashboard-Reihenfolge Shots/Mischen/Bier; eigener
+Admin (test-Passwort) mit Orange-Theme; TV in Navy ohne Footer; Partykeller-
+Screens unverändert grün. Keine Konsolenfehler.
+
+## Verifikation (2026-07-16, D-015)
+
+Server-Tests: Rate-Limit blockt nach 5 Fehlversuchen beide Logins mit 429 und
+Restzeit; `setScrollSpeed`/`addFact`/`deleteFact` nur als Admin, Wertebereiche
+geprüft; `scroll_seconds`, Facts und Board-Modus überleben den Neustart.
+Browser-Tests (Chromium): Heute-Ansicht zeigt nur die 6 Spieler mit Log heute
+(„6 heute dabei"), Zeilenhöhe bleibt im 5er-Raster; Admin-Regler stellt das
+Tempo live um; eigene Meldung erscheint mit Titel im TV-Band; Dashboard zeigt
+Statistik (3 Abende, bestes Ergebnis 13 am 25.09.2025) und 3 verdiente Badges;
+`/abende` listet 3 Party-Tage mit Siegern; Manifest + `sw.js` liefern 200.
+Keine Konsolenfehler.
+
+## Verifikation (2026-07-14)
+
+Browser-Tests (Chromium): Login mit PIN → Dashboard; „+ Bier" am Handy
+aktualisiert das TV-Podest live; Admin-Login → −1 Bier per Stepper →
+Nutzer anlegen per Modal; Komplett-Reset nullt Zähler und Log, Accounts
+bleiben. Dabei gefundener und gefixter Bug: `[hidden]` gegen
+`display:flex`-Regeln (jetzt global in theme.css gelöst).

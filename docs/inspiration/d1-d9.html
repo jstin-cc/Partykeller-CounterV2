@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design D1–D9</title>
+<link rel="stylesheet" href="../../public/css/theme.css">
+<style>
+  body { padding: 48px clamp(16px, 4vw, 56px) 80px; }
+  .page-head { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 56px; }
+  .idea { padding: 40px 0 56px; border-top: 1px solid var(--line); }
+  .idea-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 28px; }
+  .idea-head .eyebrow { color: var(--accent-text); font-size: 13px; }
+  .stage { display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch; }
+  .frame {
+    position: relative; flex: 1 1 260px; min-width: 0; padding: 22px 22px 46px;
+    border: 1px solid var(--line-strong); border-radius: 18px; background: var(--bg); overflow: hidden;
+  }
+  .frame > .cap { position: absolute; left: 22px; bottom: 16px; font-size: 10.5px; }
+  .frame.live > .cap { color: var(--accent-text); }
+  .phone {
+    position: relative; width: 300px; height: 560px; flex: none; overflow: hidden;
+    border-radius: 34px; border: 1px solid var(--line-strong); background: var(--bg);
+    padding: 50px 18px 20px; display: flex; flex-direction: column; gap: 16px;
+  }
+  .phone::before { content: ''; position: absolute; top: 13px; left: 50%; width: 84px; height: 22px; margin-left: -42px; border-radius: 12px; background: #000; z-index: 5; }
+  .phone-cap { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .phone-cap .eyebrow { font-size: 10.5px; }
+  .live-tag { color: var(--accent-text); }
+
+  /* D1 atmende Schrift */
+  .wd { font-weight: 800; text-transform: uppercase; letter-spacing: -0.03em; line-height: 0.9; font-size: 40px; white-space: nowrap; }
+  .wd-75 { font-stretch: 75%; font-weight: 650; }
+  .wd-100 { font-stretch: 100%; }
+  .wd-125 { font-stretch: 125%; font-weight: 900; }
+  .breathe { animation: breathe 3.6s var(--ease) infinite alternate; }
+  @keyframes breathe { from { font-stretch: 75%; font-weight: 600; } to { font-stretch: 125%; font-weight: 900; } }
+  .tapnum { font-size: 130px; line-height: 0.8; letter-spacing: -0.05em; }
+  .tap-wide { font-stretch: 125%; font-weight: 900; color: var(--accent-text); }
+  .tap-live { animation: tapw 1.6s var(--ease-spring) infinite; }
+  @keyframes tapw { 0%, 55%, 100% { font-stretch: 100%; } 12% { font-stretch: 125%; font-weight: 900; } }
+
+  /* D2 Zählwerk + Fallblatt */
+  .odo { display: inline-flex; font-size: 140px; line-height: 1; letter-spacing: -0.05em; }
+  .odo .col { display: inline-block; height: 1em; overflow: hidden; }
+  .odo .strip { display: flex; flex-direction: column; }
+  .odo .strip span { height: 1em; display: block; }
+  .odo .mid .strip { transform: translateY(-1.45em); }
+  .odo .mid { -webkit-mask: linear-gradient(transparent, #000 22%, #000 78%, transparent); mask: linear-gradient(transparent, #000 22%, #000 78%, transparent); }
+  .odo-live .strip { transition: transform 0.75s var(--ease); }
+  .flaps { display: flex; gap: 6px; }
+  .flap {
+    position: relative; width: 58px; height: 84px; border-radius: 8px; background: var(--surface);
+    display: grid; place-items: center; font-weight: 900; font-size: 56px; text-transform: uppercase; color: var(--ink);
+    overflow: hidden; perspective: 400px;
+  }
+  .flap::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: var(--bg-deep); }
+  .flap.turning .leaf {
+    position: absolute; left: 0; right: 0; top: 0; height: 50%; overflow: hidden; background: var(--surface-2, #232a3a);
+    transform-origin: bottom; transform: rotateX(-62deg); border-radius: 8px 8px 0 0;
+    display: flex; justify-content: center; align-items: flex-start; font-size: 56px; line-height: 84px;
+    box-shadow: 0 6px 10px rgb(0 0 0 / 0.35);
+  }
+  .flaps.small .flap { width: 40px; height: 58px; font-size: 38px; }
+
+  /* D3 Name dockt an */
+  .ph-top { display: flex; justify-content: space-between; align-items: center; min-height: 40px; }
+  .ph-top .wordmark { font-size: 17px; }
+  .ph-burger { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line-strong); }
+  .ph-name { display: flex; align-items: center; gap: 12px; }
+  .ph-name .avatar { width: 54px; height: 54px; font-size: 28px; }
+  .ph-name .big { font-weight: 800; font-size: 64px; line-height: 0.85; letter-spacing: -0.04em; text-transform: uppercase; }
+  .ph-dock { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; background: var(--surface); }
+  .ph-dock .avatar { width: 28px; height: 28px; font-size: 15px; }
+  .ph-dock b { font-weight: 800; font-size: 14px; text-transform: uppercase; }
+  .ph-block { border-radius: 14px; background: var(--surface); }
+  .ph-block.acc { background: var(--accent); }
+
+  /* D4 Rund-Stempel */
+  .stamp { position: relative; width: 220px; height: 220px; flex: none; }
+  .stamp svg { position: absolute; inset: 0; width: 100%; height: 100%; animation: spin 22s linear infinite; }
+  .stamp text { font: 700 15.5px var(--font-sans); letter-spacing: 0.32em; text-transform: uppercase; fill: var(--ink); }
+  .stamp .core {
+    position: absolute; inset: 58px; background: var(--accent);
+    -webkit-mask: url('../../public/assets/logo.png') center / contain no-repeat;
+    mask: url('../../public/assets/logo.png') center / contain no-repeat;
+  }
+  .stamp.small { width: 130px; height: 130px; }
+  .stamp.small .core { inset: 34px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .login-mock { position: relative; flex: 1 1 520px; min-height: 340px; }
+  .login-mock .t-impact { font-size: 92px; }
+  .login-mock .stamp { position: absolute; right: 26px; top: 26px; }
+
+  /* D5 Umriss füllt sich */
+  .menu-list { display: flex; flex-direction: column; gap: 6px; }
+  .mlink {
+    position: relative; width: max-content; cursor: pointer;
+    font-weight: 800; font-size: 64px; line-height: 0.95; text-transform: uppercase; letter-spacing: -0.035em;
+    color: var(--bg); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill;
+    transition: -webkit-text-stroke-color 0.4s var(--ease);
+  }
+  .mlink::after {
+    content: attr(data-t); position: absolute; inset: 0;
+    color: var(--accent); -webkit-text-stroke: 3px var(--accent); paint-order: stroke fill;
+    clip-path: inset(0 100% 0 0); transition: clip-path 0.7s var(--ease);
+  }
+  .mlink.half, .mlink.full, .mlink:hover { -webkit-text-stroke-color: var(--accent); }
+  .mlink.half::after { clip-path: inset(0 52% 0 0); }
+  .mlink.full::after, .mlink:hover::after { clip-path: inset(0 0 0 0); }
+
+  /* D6 Kapitelnummern */
+  .chapter-mock { position: relative; flex: 1 1 100%; min-height: 360px; padding: 34px 36px; border-radius: 18px; overflow: hidden; }
+  .chapter-mock .bignum {
+    position: absolute; right: -40px; top: -60px; font-weight: 900; font-size: 420px; line-height: 0.8; letter-spacing: -0.06em;
+    color: transparent; -webkit-text-stroke: 2px var(--line-strong); pointer-events: none;
+  }
+  .chapter-mock .t-title { position: relative; font-size: 84px; }
+  .chapter-mock .cards { position: relative; display: flex; gap: 14px; margin-top: 34px; }
+  .chapter-mock .cards span { flex: 1; height: 120px; border-radius: 14px; background: var(--bg-hi); border: 1px solid var(--line); }
+
+  /* D7 Knopf-Text rollt */
+  .rbtn { position: relative; overflow: hidden; }
+  .rbtn .lbl { display: inline-grid; overflow: hidden; height: 1.2em; line-height: 1.2em; }
+  .rbtn .lbl > span { grid-area: 1 / 1; transition: transform 0.5s var(--ease); }
+  .rbtn .lbl > span + span { transform: translateY(110%); }
+  .rbtn.mid .lbl > span:first-child { transform: translateY(-78%); }
+  .rbtn.mid .lbl > span + span { transform: translateY(32%); }
+  .rbtn.done .lbl > span:first-child, .rbtn:hover .lbl > span:first-child { transform: translateY(-110%); }
+  .rbtn.done .lbl > span + span, .rbtn:hover .lbl > span + span { transform: none; }
+  .btn-col { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+
+  /* D8 Schräglage */
+  .skew-list { display: flex; flex-direction: column; gap: 12px; }
+  .skew-card { height: 92px; border-radius: 14px; background: var(--surface); padding: 14px 16px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .skew-card .t-h3 { font-size: 20px; }
+  .skew-card .num { font-size: 40px; line-height: 0.9; }
+  .tilted .skew-card { transform: skewY(-4deg) translateY(var(--dy, 0)); }
+  .tilted .skew-card:nth-child(2) { --dy: 6px; }
+  .tilted .skew-card:nth-child(3) { --dy: 12px; }
+  .scroll-demo { height: 300px; overflow-y: auto; scrollbar-width: none; padding-right: 2px; }
+  .scroll-demo::-webkit-scrollbar { display: none; }
+  .scroll-demo .skew-card { transition: transform 0.25s var(--ease-out); will-change: transform; }
+
+  /* D9 Farbstimmung */
+  .mood { flex: 1 1 260px; aspect-ratio: 16 / 10; border-radius: 16px; border: 1px solid var(--line-strong); padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; position: relative; }
+  .mood .time { font-family: var(--font-serif); font-size: 46px; line-height: 1; color: var(--accent-text); }
+  .mood .rows span { display: block; height: 10px; border-radius: 4px; background: var(--line-strong); margin-top: 8px; }
+  .mood .rows span:first-child { background: var(--accent); width: 72%; }
+  .mood .rows span:nth-child(2) { width: 58%; }
+  .mood .rows span:nth-child(3) { width: 44%; }
+  .m20 { background: #0f131c; }
+  .m23 { background: color-mix(in srgb, #0f131c 88%, #5a2a12); }
+  .m01 { background: color-mix(in srgb, #0f131c 78%, #6b2a10); }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+</head>
+<body class="area-pk">
+
+<header class="page-head">
+  <h1 class="t-title">Design <span class="t-serif t-accent">D1–D9</span></h1>
+  <span class="eyebrow">Mockups · Stand 15.10.2026</span>
+</header>
+
+<!-- D1 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">D1</span><h2 class="t-h3">Atmende Schrift</h2></div>
+  <div class="stage">
+    <div class="frame"><div class="wd wd-75">Alle Abende</div><span class="eyebrow cap">Kommt ins Bild · schmal</span></div>
+    <div class="frame"><div class="wd wd-100">Alle Abende</div><span class="eyebrow cap">Unterwegs</span></div>
+    <div class="frame"><div class="wd wd-125">Alle Abende</div><span class="eyebrow cap">Steht · breit und fett</span></div>
+  </div>
+  <div class="stage" style="margin-top:24px">
+    <div class="frame"><div class="num tapnum">7</div><span class="eyebrow cap">Vor dem Tipp</span></div>
+    <div class="frame"><div class="num tapnum tap-wide">8</div><span class="eyebrow cap">+1 · Zahl federt breit auf</span></div>
+    <div class="frame"><div class="num tapnum">8</div><span class="eyebrow cap">Zurück auf Normalbreite</span></div>
+    <div class="frame live"><div class="wd breathe" style="font-size:30px">Alle Abende</div><div class="num tapnum tap-live" style="margin-top:12px">8</div><span class="eyebrow cap">Live</span></div>
+  </div>
+</section>
+
+<!-- D2 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">D2</span><h2 class="t-h3">Rollende Ziffern und Fallblatt</h2></div>
+  <div class="stage">
+    <div class="frame">
+      <div class="odo num"><span class="col"><span class="strip"><span>1</span></span></span><span class="col mid"><span class="strip"><span>1</span><span>2</span><span>3</span></span></span></div>
+      <span class="eyebrow cap">Handy · 12 rollt auf 13</span>
+    </div>
+    <div class="frame live">
+      <div class="odo num odo-live" id="odo"></div>
+      <span class="eyebrow cap">Live</span>
+    </div>
+    <div class="frame" style="flex-basis:520px">
+      <div class="flaps" style="margin-bottom:14px">
+        <span class="flap">B</span><span class="flap">R</span><span class="flap">O</span><span class="flap turning">C<span class="leaf">K</span></span><span class="flap">K</span><span class="flap">Y</span>
+      </div>
+      <div class="flaps small" id="flaps-live"></div>
+      <span class="eyebrow cap">TV · Fallblatt beim Platzwechsel (unten live)</span>
+    </div>
+  </div>
+</section>
+
+<!-- D3 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">D3</span><h2 class="t-h3">Name dockt in der Kopfleiste an</h2></div>
+  <div class="stage">
+    <div class="phone-cap">
+      <div class="phone">
+        <div class="ph-top"><span class="wordmark"><span class="wm-top">Party</span><span class="wm-bottom">Keller</span></span><span class="ph-burger"></span></div>
+        <div class="ph-name"><span class="avatar">B</span><span class="big">Basti</span></div>
+        <div class="ph-block acc" style="height:150px"></div>
+        <div class="ph-block" style="height:150px"></div>
+      </div>
+      <span class="eyebrow">Oben</span>
+    </div>
+    <div class="phone-cap">
+      <div class="phone">
+        <div class="ph-name" style="transform:scale(.62);transform-origin:left;opacity:.55;margin:-6px 0 -18px"><span class="avatar">B</span><span class="big">Basti</span></div>
+        <div class="ph-block acc" style="height:150px"></div>
+        <div class="ph-block" style="height:150px"></div>
+      </div>
+      <span class="eyebrow">Beim Scrollen · schrumpft und wandert</span>
+    </div>
+    <div class="phone-cap">
+      <div class="phone">
+        <div class="ph-top"><span class="wordmark"><span class="wm-top">Party</span><span class="wm-bottom">Keller</span></span><span class="ph-dock"><span class="avatar">B</span><b>Basti</b></span><span class="ph-burger"></span></div>
+        <div class="ph-block" style="height:150px"></div>
+        <div class="ph-block" style="height:150px"></div>
+        <div class="ph-block" style="height:150px"></div>
+      </div>
+      <span class="eyebrow">Angedockt in der Kopfleiste</span>
+    </div>
+  </div>
+</section>
+
+<!-- D4 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">D4</span><h2 class="t-h3">Rotierender Rund-Stempel</h2></div>
+  <div class="stage">
+    <div class="frame login-mock">
+      <span class="eyebrow">Anmeldung</span>
+      <h3 class="t-impact" style="margin-top:14px">Wer bist<br><span class="t-serif t-accent">du?</span></h3>
+      <div class="stamp"><svg viewBox="0 0 220 220" aria-hidden="true"><defs><path id="ring" d="M110 110 m-88 0 a88 88 0 1 1 176 0 a88 88 0 1 1 -176 0"/></defs><text><textPath href="#ring" textLength="548">SV Partykeller · Seit 2025 · Prost · </textPath></text></svg><span class="core"></span></div>
+      <span class="eyebrow cap">Live · dreht sich langsam</span>
+    </div>
+    <div class="frame" style="flex:0 1 360px;display:flex;align-items:center;gap:18px">
+      <div class="stamp small"><svg viewBox="0 0 220 220" aria-hidden="true"><text style="font-size:17px"><textPath href="#ring" textLength="548">Abend-Archiv · 15 Abende · </textPath></text></svg><span class="core"></span></div>
+      <div><div class="eyebrow">Archiv-Kopf / TV-Ecke</div><div class="t-h3" style="margin-top:8px">Kleine Variante</div></div>
+      <span class="eyebrow cap">Text im Kreis frei wählbar</span>
+    </div>
+  </div>
+</section>
+
+<!-- D5 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">D5</span><h2 class="t-h3">Umriss füllt sich</h2></div>
+  <div class="stage">
+    <div class="frame">
+      <div class="menu-list">
+        <span class="mlink" data-t="Anmeldung">Anmeldung</span>
+        <span class="mlink half" data-t="Archiv">Archiv</span>
+        <span class="mlink" data-t="TV">TV</span>
+        <span class="mlink" data-t="Admin">Admin</span>
+      </div>
+      <span class="eyebrow cap">Menü · „Archiv“ füllt sich gerade</span>
+    </div>
+    <div class="frame live">
+      <div class="menu-list">
+        <span class="mlink" data-t="Anmeldung">Anmeldung</span>
+        <span class="mlink full" data-t="Archiv">Archiv</span>
+        <span class="mlink" data-t="TV">TV</span>
+        <span class="mlink" data-t="Admin">Admin</span>
+      </div>
+      <span class="eyebrow cap">Live · mit der Maus darüberfahren</span>
+    </div>
+  </div>
+</section>
+
+<!-- D6 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">D6</span><h2 class="t-h3">Riesige Kapitelnummern</h2></div>
+  <div class="stage">
+    <div class="chapter-mock surface-light" style="background:var(--bg);color:var(--ink)">
+      <span class="bignum" aria-hidden="true">02</span>
+      <span class="eyebrow" style="position:relative">Chronik</span>
+      <h3 class="t-title" style="margin-top:10px">Alle<br><span class="t-serif t-accent">Abende</span></h3>
+      <div class="cards"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- D7 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">D7</span><h2 class="t-h3">Knopf-Text rollt</h2></div>
+  <div class="stage">
+    <div class="frame btn-col">
+      <button class="btn rbtn" type="button"><span class="lbl"><span>Story speichern</span><span>Story speichern</span></span></button>
+      <button class="btn rbtn mid" type="button"><span class="lbl"><span>Story speichern</span><span>Story speichern</span></span></button>
+      <button class="btn rbtn done" type="button"><span class="lbl"><span>Story speichern</span><span>Story speichern</span></span></button>
+      <span class="eyebrow cap">Ruhe · Mitte · fertig</span>
+    </div>
+    <div class="frame btn-col live">
+      <button class="btn rbtn" type="button"><span class="lbl"><span>Zur Anmeldung</span><span>Zur Anmeldung</span></span></button>
+      <button class="btn btn--ghost rbtn" type="button"><span class="lbl"><span>Alle Abende als CSV</span><span>Alle Abende als CSV</span></span></button>
+      <span class="eyebrow cap">Live · mit der Maus darüberfahren</span>
+    </div>
+  </div>
+</section>
+
+<!-- D8 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">D8</span><h2 class="t-h3">Schräglage beim Scrollen</h2></div>
+  <div class="stage">
+    <div class="frame">
+      <div class="skew-list">
+        <div class="skew-card"><span class="t-h3">Mittwoch</span><span class="num">62</span></div>
+        <div class="skew-card"><span class="t-h3">Freitag</span><span class="num">48</span></div>
+        <div class="skew-card"><span class="t-h3">Samstag</span><span class="num">35</span></div>
+      </div>
+      <span class="eyebrow cap">Stillstand</span>
+    </div>
+    <div class="frame">
+      <div class="skew-list tilted">
+        <div class="skew-card"><span class="t-h3">Mittwoch</span><span class="num">62</span></div>
+        <div class="skew-card"><span class="t-h3">Freitag</span><span class="num">48</span></div>
+        <div class="skew-card"><span class="t-h3">Samstag</span><span class="num">35</span></div>
+      </div>
+      <span class="eyebrow cap">Schnell gescrollt · kippt, zieht nach</span>
+    </div>
+    <div class="frame live">
+      <div class="scroll-demo" id="skew-demo"></div>
+      <span class="eyebrow cap">Live · im Kasten scrollen</span>
+    </div>
+  </div>
+</section>
+
+<!-- D9 -->
+<section class="idea">
+  <div class="idea-head"><span class="eyebrow">D9</span><h2 class="t-h3">Farbstimmung über den Abend</h2></div>
+  <div class="stage">
+    <div class="mood m20"><span class="eyebrow">TV · Rangliste</span><div class="rows"><span></span><span></span><span></span></div><span class="time">20 Uhr</span></div>
+    <div class="mood m23"><span class="eyebrow">TV · Rangliste</span><div class="rows"><span></span><span></span><span></span></div><span class="time">23 Uhr</span></div>
+    <div class="mood m01"><span class="eyebrow">TV · Rangliste</span><div class="rows"><span></span><span></span><span></span></div><span class="time">1 Uhr</span></div>
+  </div>
+</section>
+
+<script>
+// D2: Zählwerk
+const odo = document.getElementById('odo');
+let n = 12;
+function setOdo(v) {
+  const digits = String(v).split('');
+  while (odo.children.length < digits.length) {
+    const col = document.createElement('span');
+    col.className = 'col';
+    const strip = document.createElement('span');
+    strip.className = 'strip';
+    for (let d = 0; d <= 9; d++) { const s = document.createElement('span'); s.textContent = d; strip.append(s); }
+    col.append(strip);
+    odo.prepend(col);
+  }
+  [...odo.children].forEach((col, i) => { col.firstChild.style.transform = `translateY(-${digits[i]}em)`; });
+}
+setOdo(n);
+setInterval(() => { n = n >= 19 ? 8 : n + 1; setOdo(n); }, 1400);
+
+// D2: Fallblatt
+const names = ['BROCKY', 'JUSTIN', 'LUKI  ', 'PAULI '];
+const live = document.getElementById('flaps-live');
+const cells = Array.from({ length: 6 }, () => { const c = document.createElement('span'); c.className = 'flap'; live.append(c); return c; });
+let ni = 0;
+const ABC = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+function flipTo(word) {
+  cells.forEach((c, i) => {
+    const target = word[i] ?? ' ';
+    let steps = 0;
+    const tick = () => {
+      const cur = c.textContent || ' ';
+      if (cur === target || steps++ > 8) { c.textContent = target; return; }
+      c.textContent = ABC[(ABC.indexOf(cur) + 1 + Math.floor(Math.random() * 3)) % ABC.length];
+      setTimeout(tick, 70);
+    };
+    setTimeout(tick, i * 60);
+  });
+}
+flipTo(names[0]);
+setInterval(() => { ni = (ni + 1) % names.length; flipTo(names[ni]); }, 2600);
+
+// D8: Schräglage nach Scrolltempo
+const box = document.getElementById('skew-demo');
+const data = [['Mittwoch', 62], ['Freitag', 48], ['Samstag', 35], ['Donnerstag', 33], ['Mittwoch', 29], ['Dienstag', 21], ['Freitag', 19], ['Samstag', 14]];
+box.innerHTML = '<div class="skew-list">' + data.map(([d, v]) => `<div class="skew-card"><span class="t-h3">${d}</span><span class="num">${v}</span></div>`).join('') + '</div>';
+let last = 0, lastT = performance.now(), settle;
+box.addEventListener('scroll', () => {
+  const now = performance.now();
+  const v = (box.scrollTop - last) / Math.max(1, now - lastT);
+  last = box.scrollTop; lastT = now;
+  const deg = Math.max(-6, Math.min(6, -v * 4));
+  box.querySelectorAll('.skew-card').forEach((c) => { c.style.transform = `skewY(${deg}deg)`; });
+  clearTimeout(settle);
+  settle = setTimeout(() => box.querySelectorAll('.skew-card').forEach((c) => { c.style.transform = ''; }), 120);
+});
+</script>
+</body>
+</html>

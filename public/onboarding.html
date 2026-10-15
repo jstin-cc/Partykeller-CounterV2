@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SV Partykeller – Willkommen</title>
+<script>document.documentElement.classList.add('js-motion');
+// Seitenwechsel (D-085/D-087): Morph-Schlüssel vor dem ersten Bild setzen
+// (die Seite benennt daraufhin ihr Gegenstück), nach dem Übergang lösen.
+try {
+  var h = document.documentElement, ss = sessionStorage;
+  var m = ss.getItem('pk-morph');
+  ss.removeItem('pk-morph'); ss.removeItem('pk-curtain');   // pk-curtain: Rest des alten Vorhangs (D-084)
+  var vt = 'CSSViewTransitionRule' in window, flip = null;
+  try { flip = JSON.parse(ss.getItem('pk-flip')); } catch (e) {}
+  // Firefox (keine seitenübergreifenden View Transitions): Morph per Skript
+  // (D-087) — unsichtbar starten, lando.js legt die Elemente an ihre alte Stelle
+  var flipOn = !vt && !!flip && Date.now() - flip.t < 10000 && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!flipOn) ss.removeItem('pk-flip');
+  if (flipOn) { h.dataset.flip = '1'; setTimeout(function () { delete h.dataset.flip; }, 1500); }
+  // Kaltstart-Bild (D-093): nur beim ersten Öffnen in diesem Tab (PWA-Start,
+  // neuer Tab), nie bei Seitenwechseln in der App. Fläche in Akzentfarbe mit
+  // der Wortmarke, die nach dem Laden an ihren Platz in der Kopfleiste fliegt
+  // (frühestens 0,8 s, spätestens 1,4 s); Einblendungen starten erst dann
+  // (h.pkBootDone, lando.js initBoot).
+  if (!ss.getItem('pk-booted') && !m && !flipOn && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    h.classList.add('pk-boot');
+    var t0 = Date.now();
+    h.pkBootDone = new Promise(function (res) {
+      var out = function () {
+        if (h.classList.contains('pk-boot-out')) return;
+        h.classList.add('pk-boot-out');
+        res();
+        setTimeout(function () { h.classList.remove('pk-boot', 'pk-boot-out'); }, 1800);   // Rückfall, falls lando.js fehlt
+      };
+      addEventListener('load', function () { setTimeout(out, Math.max(0, 800 - (Date.now() - t0))); });
+      setTimeout(out, 1400);
+    });
+  }
+  ss.setItem('pk-booted', '1');
+  if (m && (vt || flipOn)) {
+    h.dataset.morph = m;
+    h.pkMorphDone = new Promise(function (res) {
+      var done = function () { delete h.dataset.morph; res(); };
+      h.pkMorphEnd = done;
+      setTimeout(done, 2000);
+      if (vt) addEventListener('pagereveal', function (e) {
+        if (e.viewTransition) { e.viewTransition.ready.catch(function () {}); e.viewTransition.finished.then(done, done); } else done();
+      }, { once: true });
+    });
+  }
+} catch (e) {}</script>
+<link rel="icon" href="assets/cones-flat.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f131c">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="css/theme.css">
+<style>
+  /* Willkommens-Seiten im Lando-Stil (D-078): drei große Statement-Seiten,
+     Fortschritt wie Landos Slider („01 / 03" + drei Balken), Schaubilder im
+     neuen Look der Getränke-Kerbenkarten und des TV-Podests. Jeder Schritt
+     blendet beim Wechsel neu ein (data-reveal greift, sobald er sichtbar wird). */
+  .ob {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: max(14px, env(safe-area-inset-top)) 20px 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Kopf: Embleme links (gleiten von der Anmeldung herüber), Überspringen rechts */
+  .ob-emblems { display: flex; align-items: center; gap: 12px; }
+  .pk-logo {
+    display: block;
+    flex: none;
+    width: 52px;
+    aspect-ratio: 1181 / 1000;
+    background: var(--ink);
+    -webkit-mask: url('assets/logo.png') center / contain no-repeat;
+    mask: url('assets/logo.png') center / contain no-repeat;
+  }
+
+  .skip {
+    position: relative;
+    background: none;
+    border: 0;
+    padding: 12px 2px;
+    color: var(--ink-muted);
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.3s ease;
+  }
+  .skip::after {
+    content: '';
+    position: absolute; left: 2px; right: 2px; bottom: 8px;
+    height: 1px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.45s var(--ease);
+  }
+  .skip:hover { color: var(--ink); }
+  .skip:hover::after { transform: scaleX(1); transform-origin: left; }
+
+  /* --- Schritte --- */
+  .ob-stage { flex: 1; display: flex; flex-direction: column; padding: 26px 0 8px; }
+  .step { display: flex; flex-direction: column; gap: 28px; }
+  .step-text { display: flex; flex-direction: column; gap: 16px; }
+  .step-eyebrow { margin: 0; display: flex; align-items: center; gap: 10px; color: var(--accent-text); }
+  .step-eyebrow::before { content: ''; width: 22px; height: 1px; background: var(--accent); flex: none; }
+  .step-title { font-size: clamp(54px, 15.5vw, 132px); line-height: 0.86; }
+  .step-title .t-serif { font-size: 1.1em; line-height: 0.8; }
+  /* Die Serif-Wörter sind größer und stehen enger als die Maske — ohne
+     längeren Weg lugten Umlaut-Punkte („zählen") vor dem Einblenden hervor */
+  @media (prefers-reduced-motion: no-preference) {
+    .js-motion .step-title:not(.is-in) .t-serif .rw-i { transform: translateY(185%); }
+  }
+  .step-title .scribbled > .scribble--underline { --scribble-width: 4; bottom: -0.02em; height: 0.2em; }
+  /* Das Serif-Wort steht immer in einer eigenen Zeile, mit etwas Luft darüber:
+     Umlaut-Punkte („zählen") stießen sonst an die Grundlinie der Versalzeile,
+     und der Kringel um „live" liefe durch deren Fuß. Als eigener Block, weil
+     die Wort-Masken (.rw) oben ausgerichtet sind – ein Rand in derselben
+     Zeile würde das Wort nach unten verschieben. */
+  .step-title .scribbled { display: block; width: fit-content; margin-top: 0.26em; }
+  .step-title .scribbled > .scribble--circle { --scribble-width: 3.5; left: -20%; top: -17%; width: 142%; height: 132%; }
+  .step-lead { margin: 0; max-width: 36ch; font-size: 15.5px; line-height: 1.5; color: var(--ink-2); }
+  .hint { margin: 0; font-size: 13px; line-height: 1.45; color: var(--ink-muted); max-width: 40ch; }
+  /* Riesige Schritt-Nummer als Wasserzeichen in der Serif */
+  .step-no {
+    position: absolute;
+    right: -6px;
+    top: -18px;
+    z-index: -1;
+    font-family: var(--font-serif);
+    font-size: clamp(150px, 42vw, 300px);
+    line-height: 0.8;
+    color: var(--topo-line);
+    pointer-events: none;
+    user-select: none;
+  }
+  .step-text { position: relative; isolation: isolate; }
+  /* Die Nummer steigt bei jedem Schrittwechsel neu aus der Tiefe auf (die
+     Animation startet neu, sobald der Schritt sein hidden verliert) */
+  @media (prefers-reduced-motion: no-preference) {
+    .step:not([hidden]) .step-no { animation: no-in 1.2s var(--ease) 0.1s both; }
+  }
+  @keyframes no-in { from { opacity: 0; transform: translateY(18%) rotate(-4deg); } }
+
+  /* --- Schritt 1: Getränke-Kerbenkarten wie im Dashboard, zum Ausprobieren --- */
+  .drink-demos { display: flex; flex-direction: column; gap: 10px; }
+  .drink-demo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 126px;
+    padding: 14px 16px 12px 18px;
+    border: 0;
+    background: none;
+    color: var(--on);
+    --notch-fill: var(--fill);
+    --notch-tag-ink: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: transform 0.16s var(--ease-out), translate 0.5s var(--ease);
+  }
+  .drink-demo:active { transform: scale(0.97); }
+  /* Einblenden über „translate" (wie im Dashboard) — „transform" bleibt frei
+     für die Druck-Reaktion; startet neu, sobald Schritt 1 sichtbar wird */
+  @media (prefers-reduced-motion: no-preference) {
+    .drink-demo { animation: drink-in 0.9s var(--ease) backwards; }
+    .drink-demo:nth-child(1) { animation-delay: 0.3s; }
+    .drink-demo:nth-child(2) { animation-delay: 0.38s; }
+    .drink-demo:nth-child(3) { animation-delay: 0.46s; }
+  }
+  @keyframes drink-in { from { opacity: 0; translate: 0 30px; } }
+  /* Höhenlinien in der Karte, ganz leise in der Schriftfarbe (wie im Dashboard) */
+  .drink-topo {
+    z-index: 0;
+    background: color-mix(in srgb, var(--on) 9%, transparent);
+    -webkit-mask-image: url('assets/topo.svg');
+    mask-image: url('assets/topo.svg');
+    transition: transform 1.2s var(--ease);
+  }
+  .drink-head, .drink-today { position: relative; z-index: 1; }
+  .drink-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .drink-name { padding-top: 4px; font-size: 25px; font-weight: 800; line-height: 0.9; letter-spacing: -0.03em; text-transform: uppercase; }
+  .drink-plus {
+    position: relative;
+    flex: none;
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    transition: transform 0.45s var(--ease), background-color 0.2s ease, color 0.2s ease;
+  }
+  .drink-plus::before, .drink-plus::after {
+    content: '';
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 16px; height: 2px;
+    margin: -1px 0 0 -8px;
+    background: currentColor;
+    border-radius: 1px;
+  }
+  .drink-plus::after { transform: rotate(90deg); }
+  .drink-demo:active .drink-plus { transform: rotate(90deg); background: var(--on); color: var(--fill); }
+  .drink-today { display: flex; align-items: baseline; gap: 8px; padding-right: calc(var(--notch-w, 124px) + 8px); }
+  .drink-count { font-size: 64px; line-height: 0.78; letter-spacing: -0.05em; }
+  .drink-unit { font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.7; }
+  .drink-demo .notch-tag { font-size: 10.5px; font-weight: 700; gap: 7px; padding-right: 6px; }
+  .drink-demo .notch-tag .hl { color: var(--fill); font-size: 17px; letter-spacing: -0.02em; }
+  @media (hover: hover) and (pointer: fine) {
+    .drink-demo:hover { translate: 0 -3px; }
+    .drink-demo:hover .drink-topo { transform: scale(1.06); }
+    .drink-demo:hover .drink-plus { transform: rotate(90deg); }
+  }
+  .try-hint { display: flex; align-items: center; gap: 8px; margin: -4px 0 0; }
+  .try-hint .scribble { width: 34px; height: 20px; rotate: 60deg; }
+
+  /* --- Schritt 2: der Fernseher als Mini-Bühne --- */
+  .tv-demo {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 14px 14px 12px;
+    border-radius: var(--radius-lg);
+    background: var(--bg-deep);
+    border: 1px solid var(--line);
+  }
+  .tv-demo > .topo { z-index: -1; -webkit-mask-image: url('assets/topo.svg'); mask-image: url('assets/topo.svg'); }
+  .tv-head { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
+  .tv-live { display: inline-flex; align-items: center; gap: 7px; }
+  .tv-live::before {
+    content: '';
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.2s ease-in-out infinite alternate;
+  }
+  @keyframes pulse { to { opacity: 0.3; } }
+  .pod { display: grid; grid-template-columns: 1fr 1.15fr 1fr; align-items: end; gap: 8px; }
+  .pod-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 9px 10px 8px;
+    --notch-fill: var(--rank);
+    --notch-tag-ink: var(--ink-2);
+    color: var(--rank-ink);
+  }
+  .pod-card.p1 { height: 136px; }
+  .pod-card.p2 { height: 110px; }
+  .pod-card.p3 { height: 94px; }
+  .pod-name {
+    font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.01em;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  /* Schmale Kerbe (tabW 30) und etwas kleinere Zahlen, damit die Ziffern
+     nicht in die Schräge der Kerbe laufen */
+  .pod-val { font-size: 30px; line-height: 0.8; }
+  .pod-card.p1 .pod-val { font-size: 42px; }
+  .pod-card .notch-tag { font-size: 10px; font-weight: 800; padding: 0 3px 0 6px; }
+  .tv-rows { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid var(--line); }
+  .tv-rows li { display: flex; align-items: center; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .tv-rows .rank { width: 22px; color: var(--ink-faint); font-size: 12px; }
+  .tv-rows .who { flex: 1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.01em; }
+  .tv-rows .total { font-size: 17px; }
+  .band { margin-top: 12px; display: flex; align-items: center; gap: 10px; }
+  .band-tag {
+    flex: none;
+    padding: 4px 7px; border-radius: 4px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 9.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .band .marquee { flex: 1; min-width: 0; }
+  .band .marquee-track { gap: 28px; padding-right: 28px; }
+  .band .marquee-track > span { font-family: var(--font-serif); font-size: 17px; line-height: 1.2; white-space: nowrap; color: var(--ink-2); }
+  .band .marquee-track > span::before { content: '✦'; margin-right: 28px; font-family: var(--font-sans); font-size: 10px; color: var(--accent-text); vertical-align: 2px; }
+
+  /* --- Schritt 3: Profil --- */
+  .prof { display: flex; flex-direction: column; gap: 22px; }
+  .prof-card { position: relative; padding: 16px 16px 52px; --notch-fill: var(--surface); }
+  .prof-card .sec { margin-bottom: 14px; }
+  .prof-card .value { font-size: 44px; }
+  .prof-card .value--accent { color: var(--accent-text); }
+  .prof-card .notch-tag .hl { color: var(--accent-text); }
+  .prof-stats { display: flex; flex-direction: column; gap: 14px; padding: 0 2px; }
+  .prof-stats .value { font-size: 30px; }
+
+  /* --- Fuß: Fortschritt + Weiter (klebt unten am Handy) --- */
+  .ob-foot {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0 -20px;
+    padding: 26px 20px max(18px, env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--bg) 72%, transparent);
+  }
+  /* „Konto anlegen" der Anmeldung gleitet in diesen Knopf (D-085) */
+  html[data-morph="cta"] #next { view-transition-name: morph-cta; }
+  .ob-progress { display: flex; align-items: center; gap: 16px; }
+  .ob-count { font-size: 13px; letter-spacing: 0; color: var(--ink-muted); white-space: nowrap; }
+  .ob-count b { color: var(--ink); font-weight: 800; }
+  .dots { flex: 1; display: flex; gap: 6px; }
+  .dots i {
+    position: relative;
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--line-strong);
+    overflow: hidden;
+  }
+  .dots i::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.8s var(--ease);
+  }
+  .dots i.on::after { transform: none; }
+  .dots i:has(~ i.on)::after { transform: none; background: var(--ink-muted); }
+
+  /* --- Desktop: Text links, Schaubild rechts, Fuß als Zeile --- */
+  @media (min-width: 900px) {
+    .ob { padding-left: clamp(28px, 3vw, 48px); padding-right: clamp(28px, 3vw, 48px); }
+    .ob-stage { justify-content: center; padding: 40px 0 20px; }
+    .step { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: clamp(40px, 6vw, 110px); align-items: center; }
+    .step-title { font-size: clamp(84px, 8vw, 132px); }
+    .step-lead { font-size: 17px; }
+    .step-no { font-size: 300px; top: -60px; right: 4%; }
+    .drink-demo { min-height: 128px; }
+    .ob-foot {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0;
+      padding: 28px 0 max(28px, env(safe-area-inset-bottom));
+      border-top: 1px solid var(--line);
+      background: none;
+      position: static;
+    }
+    .ob-progress { width: min(420px, 45%); }
+    .ob-foot .btn { width: auto; min-width: 240px; }
+  }
+</style>
+</head>
+<body>
+<div class="topo" aria-hidden="true"></div>
+<div class="topo-spot" aria-hidden="true"></div>
+
+<div class="ob">
+  <header class="topbar">
+    <div class="ob-emblems">
+      <span class="pk-logo" role="img" aria-label="SV Partykeller" style="view-transition-name:area-logo"></span>
+    </div>
+    <button id="skip" class="skip" type="button">Überspringen</button>
+  </header>
+
+  <main class="ob-stage">
+    <!-- Schritt 1: zählen -->
+    <section id="step-1" class="step" aria-labelledby="t1">
+      <div class="step-text">
+        <span class="step-no" aria-hidden="true">01</span>
+        <p id="welcome" class="eyebrow step-eyebrow" data-reveal="up">Willkommen</p>
+        <h1 id="t1" class="t-impact step-title" data-reveal="words">Getränke <span class="scribbled"><span class="t-serif t-accent">zählen</span><svg class="scribble scribble--underline" data-draw="650" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1"/></svg></span></h1>
+        <p class="step-lead" data-reveal="up" data-delay="250">Tipp auf ein Getränkefeld, und es zählt eins dazu. Heute steht groß, alles zusammen unten im Etikett.</p>
+      </div>
+      <div class="drink-demos-wrap">
+        <div id="drink-demos" class="drink-demos">
+          <button type="button" id="demo-beer" class="drink-demo" style="--fill:var(--beer);--on:var(--beer-ink);" data-notch="tabW:124;tabH:36;r:14;slant:18">
+            <span class="topo topo--abs notch-clip drink-topo" aria-hidden="true"></span>
+            <span class="drink-head"><span class="drink-name">Bier</span><span class="drink-plus" aria-hidden="true"></span></span>
+            <span class="drink-today"><span class="num drink-count">3</span><span class="drink-unit">Heute</span></span>
+            <span class="notch-tag">Gesamt <span class="hl num drink-total">128</span></span>
+          </button>
+          <button type="button" class="drink-demo" style="--fill:var(--shot);--on:var(--shot-ink);" data-notch="tabW:124;tabH:36;r:14;slant:18">
+            <span class="topo topo--abs notch-clip drink-topo" aria-hidden="true"></span>
+            <span class="drink-head"><span class="drink-name">Shots</span><span class="drink-plus" aria-hidden="true"></span></span>
+            <span class="drink-today"><span class="num drink-count">1</span><span class="drink-unit">Heute</span></span>
+            <span class="notch-tag">Gesamt <span class="hl num drink-total">44</span></span>
+          </button>
+          <button type="button" id="demo-mix" class="drink-demo" style="--fill:var(--mixc);--on:var(--mixc-ink);" data-notch="tabW:124;tabH:36;r:14;slant:18">
+            <span class="topo topo--abs notch-clip drink-topo" aria-hidden="true"></span>
+            <span class="drink-head"><span class="drink-name">Mischen</span><span class="drink-plus" aria-hidden="true"></span></span>
+            <span class="drink-today"><span class="num drink-count">0</span><span class="drink-unit">Heute</span></span>
+            <span class="notch-tag">Gesamt <span class="hl num drink-total">12</span></span>
+          </button>
+        </div>
+        <p class="eyebrow try-hint" data-reveal="fade" data-delay="700"><svg class="scribble scribble--arrow is-drawn is-static" viewBox="0 0 140 80" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M8 70C28 34 64 14 116 22M100 8l18 15-16 18" pathLength="1"/></svg>Probier’s aus – hier zählt noch nichts</p>
+      </div>
+    </section>
+
+    <!-- Schritt 2: der Fernseher -->
+    <section id="step-2" class="step" aria-labelledby="t2" hidden>
+      <div class="step-text">
+        <span class="step-no" aria-hidden="true">02</span>
+        <p class="eyebrow step-eyebrow" data-reveal="up">Im Keller</p>
+        <h1 id="t2" class="t-impact step-title" data-reveal="words">Rangliste <span class="scribbled"><span class="t-serif t-accent">live</span><svg class="scribble scribble--circle" data-draw="700" viewBox="0 0 260 130" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M176 14C128 1 58 6 24 34-4 58 12 104 88 118c64 12 150 0 164-40 11-32-26-64-92-72-40-5-80 1-104 12" pathLength="1"/></svg></span></h1>
+        <p class="step-lead" data-reveal="up" data-delay="250">Auf dem Fernseher steht die Rangliste, Podest oben, alle anderen darunter. Sie wechselt zwischen Heute und All-Time.</p>
+      </div>
+      <div class="tv-wrap" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="tv-demo" data-reveal="up" data-delay="300">
+          <span class="topo topo--abs" aria-hidden="true"></span>
+          <div class="tv-head"><span class="eyebrow tv-live">Live im Keller</span><span class="eyebrow">Heute</span></div>
+          <div class="pod">
+            <div class="pod-card p2" style="--rank:var(--rank-2);--rank-ink:var(--accent-2-ink);" data-notch="tabW:30;tabH:20;r:10;slant:8"><span class="pod-name">Lena</span><span class="num pod-val" data-count="41">41</span><span class="notch-tag num">02</span></div>
+            <div class="pod-card p1" style="--rank:var(--rank-1);--rank-ink:var(--accent-ink);" data-notch="tabW:30;tabH:20;r:10;slant:8"><span class="pod-name" id="pod-me">Du</span><span class="num pod-val" data-count="58">58</span><span class="notch-tag num">01</span></div>
+            <div class="pod-card p3" style="--rank:var(--rank-3);--rank-ink:var(--mixc-ink);" data-notch="tabW:30;tabH:20;r:10;slant:8"><span class="pod-name">Tim</span><span class="num pod-val" data-count="33">33</span><span class="notch-tag num">03</span></div>
+          </div>
+          <ol class="tv-rows">
+            <li><span class="num rank">04</span><span class="who">Marie</span><span class="num total" data-count="29">29</span></li>
+            <li><span class="num rank">05</span><span class="who">Jonas</span><span class="num total" data-count="24">24</span></li>
+          </ol>
+          <div class="band">
+            <span class="band-tag">Fun Fact</span>
+            <div class="marquee" data-marquee>
+              <div class="marquee-track"><span>Heute sind zwölf Leute dabei.</span><span>Lena knackt ihren Tagesbestwert.</span><span>Comeback nach drei Wochen: Jonas.</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="hint" data-reveal="up" data-delay="450">Unten im Band laufen Fun-Facts durch — Tagesbestwerte, Comebacks, Jubiläen.</p>
+      </div>
+    </section>
+
+    <!-- Schritt 3: das Profil. Wie im echten Profil (D-040, D-044, D-054):
+         nur die Rangliste ist eine Karte, Statistik und Abzeichen stehen
+         rahmenlos darunter. -->
+    <section id="step-3" class="step" aria-labelledby="t3" hidden>
+      <div class="step-text">
+        <span class="step-no" aria-hidden="true">03</span>
+        <p class="eyebrow step-eyebrow" data-reveal="up">Profil-Tab</p>
+        <h1 id="t3" class="t-impact step-title" data-reveal="words">Dein <span class="scribbled"><span class="t-serif t-accent">Profil</span><svg class="scribble scribble--underline" data-draw="650" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1"/></svg></span></h1>
+        <p class="step-lead" data-reveal="up" data-delay="250">Im Profil stehen dein Platz heute und all-time, deine Mischung und die Abzeichen, die du über die Abende sammelst.</p>
+      </div>
+      <div class="prof">
+        <div class="prof-card" data-notch="tabW:150;tabH:34;r:14;slant:20" data-reveal="up" data-delay="300">
+          <div class="sec"><span class="sec-title">Rangliste</span></div>
+          <div class="split">
+            <div class="cell"><div class="num value" data-count="5">5</div><div class="label label--plain">Getränke</div></div>
+            <div class="sep"></div>
+            <div class="cell"><div class="num value value--accent">#1</div><div class="label label--plain">von 12 heute</div></div>
+          </div>
+          <span class="notch-tag">All-Time <span class="hl num">#4</span></span>
+        </div>
+        <div class="prof-stats" data-reveal="up" data-delay="420">
+          <div class="sec"><span class="sec-title">Deine Statistik</span></div>
+          <div class="split">
+            <div class="cell"><div class="num value" data-count="13">13</div><div class="label label--plain">Abende</div></div>
+            <div class="cell"><div class="num value value--gold" data-count="11">11</div><div class="label label--plain">Bester Abend</div></div>
+            <div class="cell"><div class="num value">4,5</div><div class="label label--plain">Ø pro Abend</div></div>
+          </div>
+          <div class="badges">
+            <div class="badge is-won" data-notch="tabW:58;tabH:28;r:12;slant:14;stroke">
+              <svg class="badge-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M11 3l4.5 9.5M21 3l-4.5 9.5"/><circle cx="16" cy="20.5" r="8"/><circle cx="16" cy="20.5" r="3.5"/></svg>
+              <span class="badge-name">Stammgast</span>
+              <span class="notch-tag badge-count num">×13</span>
+            </div>
+            <div class="badge is-won is-today" data-notch="tabW:58;tabH:28;r:12;slant:14;stroke">
+              <svg class="badge-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 24 6.5 9 12 15 16 7l4 8 5.5-6L27 24Z"/><path d="M5 28.5h22"/></svg>
+              <span class="badge-name">Tagessieger</span>
+              <span class="notch-tag badge-count num">×3</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="ob-foot">
+    <div class="ob-progress">
+      <span class="num ob-count"><b id="step-num">01</b> / 03</span>
+      <div id="dots" class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+    </div>
+    <button id="next" class="btn btn--lg btn--block" type="button" data-magnetic="0.1"><span id="next-label">Weiter</span><span class="i-arrow"></span></button>
+  </footer>
+</div>
+
+<script type="module">
+import { getSession, fetchPlayers } from './js/api.js';
+import { initLando, countUp, swapView, go } from './js/lando.js';
+
+const $ = (id) => document.getElementById(id);
+const STEPS = 3;
+let step = 1;
+
+// Ohne Anmeldung gibt es hier nichts zu sehen (die Seite wird direkt nach dem
+// Anlegen eines Kontos aufgerufen).
+if (!getSession().token) location.replace('./');
+
+function show(n) {
+  step = n;
+  for (let i = 1; i <= STEPS; i++) $('step-' + i).hidden = i !== n;
+  [...$('dots').children].forEach((d, i) => d.classList.toggle('on', i === n - 1));
+  $('next-label').textContent = n === STEPS ? 'Los geht’s' : 'Weiter';
+  $('skip').hidden = n === STEPS;   // auf der letzten Seite führt der Knopf sowieso weiter
+  // Rein optisch (D-078): Zähler „01 / 03", Zahlen im Schaubild zählen hoch,
+  // jeder neue Schritt beginnt oben
+  $('step-num').textContent = String(n).padStart(2, '0');
+  if (n > 1) {
+    scrollTo({ top: 0 });
+    $('step-' + n).querySelectorAll('[data-count]').forEach((el) => countUp(el, Number(el.dataset.count), { dur: 1000 }));
+  }
+}
+
+// Der alte Schritt gleitet nach links hinaus, der neue von rechts herein
+// (wie Landos Slider); Kopf und Fortschritt bleiben stehen
+const stepEl = () => $('step-' + step);
+$('next').addEventListener('click', () => {
+  if (step < STEPS) swapView(() => show(step + 1), { dir: 'next', from: stepEl, to: stepEl });
+  else toDashboard();
+});
+$('skip').addEventListener('click', toDashboard);
+
+// Ins Dashboard (D-085): Von Schritt 1 aus gleiten die Probier-Karten an den
+// Platz der echten Getränkekarten und der Name aus der Begrüßung in den
+// Dashboard-Kopf; das Logo gleitet immer mit.
+function toDashboard() {
+  let morph = '';
+  if (step === 1) {
+    const kinds = ['beer', 'shot', 'mix'];
+    document.querySelectorAll('#drink-demos > .drink-demo').forEach((c, i) => { c.style.viewTransitionName = `morph-drink-${kinds[i]}`; });
+    const nm = document.getElementById('welcome-name');
+    if (nm) nm.style.viewTransitionName = 'me-name';
+    morph = 'drinks';
+  }
+  go('dashboard', { replace: true, morph });
+}
+
+// Schaubild zum Ausprobieren: Ein Tipp zählt nur hier auf der Seite hoch —
+// keine Verbindung zum Server, es wird nichts gespeichert.
+document.querySelectorAll('.drink-demo').forEach((card) => card.addEventListener('click', () => {
+  const today = card.querySelector('.drink-count');
+  const total = card.querySelector('.drink-total');
+  today.textContent = Number(today.textContent) + 1;
+  total.textContent = Number(total.textContent) + 1;
+  today.classList.remove('pk-pop');
+  void today.offsetWidth;
+  today.classList.add('pk-pop');
+}));
+
+// Name des frisch angelegten Kontos: in der Begrüßung und auf dem Podest des
+// Schaubilds. Klappt der Abruf nicht, bleiben „Willkommen“ und „Du“ stehen.
+const { playerId } = getSession();
+fetchPlayers()
+  .then(({ players }) => {
+    const me = players.find((p) => String(p.id) === String(playerId));
+    if (!me) return;
+    const nm = document.createElement('span');
+    nm.id = 'welcome-name';
+    nm.style.display = 'inline-block';
+    nm.textContent = me.name;
+    $('welcome').replaceChildren('Willkommen, ', nm);
+    $('pod-me').textContent = me.name;
+  })
+  .catch(() => {});
+
+show(1);
+initLando();
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+</body>
+</html>

@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SV Partykeller – Dein Zähler</title>
+<script>document.documentElement.classList.add('js-motion');
+// Seitenwechsel (D-085/D-087): Morph-Schlüssel vor dem ersten Bild setzen
+// (die Seite benennt daraufhin ihr Gegenstück), nach dem Übergang lösen.
+try {
+  var h = document.documentElement, ss = sessionStorage;
+  var m = ss.getItem('pk-morph');
+  ss.removeItem('pk-morph'); ss.removeItem('pk-curtain');   // pk-curtain: Rest des alten Vorhangs (D-084)
+  var vt = 'CSSViewTransitionRule' in window, flip = null;
+  try { flip = JSON.parse(ss.getItem('pk-flip')); } catch (e) {}
+  // Firefox (keine seitenübergreifenden View Transitions): Morph per Skript
+  // (D-087) — unsichtbar starten, lando.js legt die Elemente an ihre alte Stelle
+  var flipOn = !vt && !!flip && Date.now() - flip.t < 10000 && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!flipOn) ss.removeItem('pk-flip');
+  if (flipOn) { h.dataset.flip = '1'; setTimeout(function () { delete h.dataset.flip; }, 1500); }
+  // Kaltstart-Bild (D-093): nur beim ersten Öffnen in diesem Tab (PWA-Start,
+  // neuer Tab), nie bei Seitenwechseln in der App. Fläche in Akzentfarbe mit
+  // der Wortmarke, die nach dem Laden an ihren Platz in der Kopfleiste fliegt
+  // (frühestens 0,8 s, spätestens 1,4 s); Einblendungen starten erst dann
+  // (h.pkBootDone, lando.js initBoot).
+  if (!ss.getItem('pk-booted') && !m && !flipOn && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    h.classList.add('pk-boot');
+    var t0 = Date.now();
+    h.pkBootDone = new Promise(function (res) {
+      var out = function () {
+        if (h.classList.contains('pk-boot-out')) return;
+        h.classList.add('pk-boot-out');
+        res();
+        setTimeout(function () { h.classList.remove('pk-boot', 'pk-boot-out'); }, 1800);   // Rückfall, falls lando.js fehlt
+      };
+      addEventListener('load', function () { setTimeout(out, Math.max(0, 800 - (Date.now() - t0))); });
+      setTimeout(out, 1400);
+    });
+  }
+  ss.setItem('pk-booted', '1');
+  if (m && (vt || flipOn)) {
+    h.dataset.morph = m;
+    h.pkMorphDone = new Promise(function (res) {
+      var done = function () { delete h.dataset.morph; res(); };
+      h.pkMorphEnd = done;
+      setTimeout(done, 2000);
+      if (vt) addEventListener('pagereveal', function (e) {
+        if (e.viewTransition) { e.viewTransition.ready.catch(function () {}); e.viewTransition.finished.then(done, done); } else done();
+      }, { once: true });
+    });
+  }
+} catch (e) {}</script>
+<link rel="icon" href="assets/cones-flat.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f131c">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="css/theme.css">
+<!-- Erstes Bild erst, wenn der Kopf mit Namen steht — sonst hat der Übergang
+     von der Anmeldung kein Ziel (D-068) -->
+<link rel="expect" href="#main-tabs" blocking="render">
+<style>
+  /* ==========================================================================
+     Dashboard im Lando-Stil (D-078): Wortmarke + Menü, riesiger Name, riesige
+     Tageszahl, drei Getränke als Kerben-Karten (Orange/Lime/Creme), Profil mit
+     Rang, Statistik, Abzeichen und Lando-Fußkarte. Abzeichen (.badge*) und
+     .split/.label--plain stehen in theme.css (geteilt mit dem Onboarding).
+     ========================================================================== */
+  .dash .screen-inner {
+    max-width: 560px;
+    padding: max(12px, env(safe-area-inset-top)) 18px 20px;
+    gap: 18px;
+  }
+
+  /* --- Kopfleiste: Wortmarke links, Logo + Menü rechts. Die Mitte bleibt
+     frei (Fasching: Luftschlangen). --- */
+  .dash-top { min-height: 48px; }
+  .dash-top .wordmark { font-size: 20px; }
+  .dash-top .topbar-actions { gap: 12px; }
+  .dash-top .pk-logo {
+    display: block;
+    width: 52px;
+    aspect-ratio: 1200 / 1000;
+    background: var(--ink);
+    -webkit-mask: url('assets/logo.png') center / contain no-repeat;
+    mask: url('assets/logo.png') center / contain no-repeat;
+  }
+
+  /* --- Identität: Namenskreis im Lorbeer (D-067), Eyebrow, riesiger Name --- */
+  .ident {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+    column-gap: 16px;
+    padding-top: 6px;
+  }
+  .ident-emblem {
+    position: relative;
+    width: 64px; height: 64px;
+    display: grid; place-items: center;
+  }
+  .ident .avatar {
+    width: 58px; height: 58px; font-size: 32px;
+    background: var(--surface-2);
+    border-color: var(--line-strong);
+    view-transition-name: me-avatar;
+    transition: border-color 0.4s ease;
+  }
+  /* Lorbeer als Akzent-Linie per Maske (assets/laurel.svg) — erst ab dem
+     ersten Abendsieg; er wächst herein, sobald der Kreis angekommen ist */
+  .ident-emblem.won::before {
+    content: ''; position: absolute; inset: -13px;
+    background: var(--accent);
+    -webkit-mask: url('assets/laurel.svg') center / contain no-repeat;
+    mask: url('assets/laurel.svg') center / contain no-repeat;
+    animation: laurel-in 0.7s var(--ease) 0.3s both;
+    pointer-events: none;
+  }
+  /* Der Lorbeer ragt 13 px über den Kreis: so weit einrücken, dass er nicht
+     am Bildschirmrand klebt und dem Namen nicht zu nahe kommt */
+  .ident-emblem.won { margin: 0 6px 0 11px; }
+  .ident-emblem.won .avatar { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+  @keyframes laurel-in { from { opacity: 0; transform: scale(0.8) rotate(-10deg); } }
+
+  .ident-main { min-width: 0; container-type: inline-size; }
+  .ident-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-height: 12px; margin-bottom: 9px; }
+  /* Silvester-Countdown: feste Mindestbreite, damit der Chip beim Ticken
+     (Proportionalziffern) nicht springt */
+  #season-chip { min-width: 13.8em; justify-content: center; }
+  /* Name so groß wie möglich, eine Zeile: --chars (Länge, per JS) teilt die
+     verfügbare Breite */
+  .ident-name {
+    view-transition-name: me-name;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0;
+    font-family: var(--font-sans);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.035em;
+    line-height: 0.84;
+    font-size: clamp(30px, calc(100cqi / (var(--chars, 7) * 0.7)), 60px);
+    overflow-wrap: anywhere;
+    color: var(--ink);
+  }
+
+  /* --- Name dockt an (D3, D-097/D-098): die Kopfleiste klebt oben. Beim
+     Scrollen fliegen Initiale und Name stufenlos in die Pille in ihrer Mitte
+     (Transforms aus JS) und werden dort deckungsgleich übergeben. Fläche und
+     Kapsel blenden mit ein, deckend in Grundfarbe — kein backdrop-filter. --- */
+  .dash-top {
+    position: sticky; top: 0; z-index: 60;
+    margin: calc(-1 * max(6px, env(safe-area-inset-top))) -18px -6px;
+    padding: max(6px, env(safe-area-inset-top)) 18px 6px;
+  }
+  .dash-top::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: var(--bg); border-bottom: 1px solid var(--line);
+    opacity: var(--bar-a, 0);
+    transition: background-color var(--dur) var(--ease);
+  }
+  .dock-pill {
+    position: absolute; left: 50%; top: 50%; translate: -50% -50%;
+    display: inline-flex; align-items: center; gap: 8px; max-width: 44vw;
+    padding: 5px 14px 5px 5px; border: 0; border-radius: 999px;
+    background: none; color: var(--ink); font: inherit; cursor: pointer;
+    pointer-events: none;
+  }
+  .dock-pill::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    background: var(--surface); opacity: var(--pill-a, 0);
+  }
+  .dock-pill > * { position: relative; visibility: hidden; }
+  .dash-top.is-docked .dock-pill { pointer-events: auto; }
+  .dash-top.is-docked .dock-pill > * { visibility: visible; }
+  /* Kreis und Schrift wie im Kopf, nur kleiner: so liegen sie beim Übergeben
+     genau aufeinander */
+  .dock-pill .avatar { width: 30px; height: 30px; font-size: 16.5px; flex: none; border-color: var(--line-strong); }
+  .dock-pill .dock-name {
+    font-weight: 800; font-size: 15px; line-height: 0.84; letter-spacing: -0.035em; text-transform: uppercase;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .ident { position: relative; z-index: 61; }
+  .ident.is-flying { pointer-events: none; }
+  .ident.is-flying .ident-meta { opacity: var(--meta-a, 1); }
+  .ident.is-flying .ident-emblem::before { opacity: var(--meta-a, 1); }
+  .ident.is-docked #player-initial, .ident.is-docked #player-name { visibility: hidden; }
+  #player-name { transform-origin: 0 0; }
+  @media (min-width: 960px) {
+    .dash-top { margin-left: -40px; margin-right: -40px; padding-left: 40px; padding-right: 40px; }
+  }
+
+  /* --- Tab-Wechsel Zählen/Profil (D-069): der neue Inhalt gleitet von der
+     Seite herein, auf der sein Tab liegt --- */
+  #tab-count, #tab-profile { display: flex; flex-direction: column; gap: 12px; }
+  #tab-profile { gap: 34px; }
+  .tab-in-right { animation: tab-in-right 0.55s var(--ease); }
+  .tab-in-left { animation: tab-in-left 0.55s var(--ease); }
+  @keyframes tab-in-right { from { transform: translateX(40px); opacity: 0; } }
+  @keyframes tab-in-left { from { transform: translateX(-40px); opacity: 0; } }
+
+  /* --- Getränke heute mit Tempo-Vergleich (D-072) --- */
+  .today { display: flex; flex-direction: column; gap: 4px; padding-top: 2px; margin-bottom: 4px; }
+  .today-head {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--line);
+  }
+  .today-head .eyebrow:first-child { color: var(--ink); }
+  .today-row { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
+  #today-total {
+    font-size: clamp(92px, 30vw, 132px);
+    line-height: 0.8;
+    letter-spacing: -0.055em;
+    margin: 12px 0 0 -0.04em;
+    color: var(--ink);
+  }
+  .today-row > #today-total.pk-pop { transform-origin: 20% 85%; }
+  .pace {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+    padding-bottom: 4px; max-width: 52%;
+    text-align: right; font-size: 12px; line-height: 1.25; color: var(--ink-muted);
+    white-space: pre-line;
+  }
+  .pace-diff { display: flex; align-items: center; gap: 7px; color: var(--ink); }
+  .pace-diff .num { font-size: 30px; line-height: 0.9; }
+  .pace-tri { display: block; width: 14px; height: 12px; fill: currentColor; }
+  .pace[data-dir="up"] .pace-diff { color: var(--accent); }
+  .pace[data-dir="down"] .pace-diff { color: var(--ink-muted); }
+  .pace[data-dir="down"] .pace-tri { transform: rotate(180deg); }
+  .pace[data-dir="even"] .pace-tri { display: none; }
+  .pace[data-dir="none"] .pace-diff { display: none; }
+
+  /* --- Getränke-Karten (D-039): die ganze Kerben-Karte ist der Knopf, die
+     Gesamtzahl steht im Etikett auf dem Seitengrund. Füllung --notch-fill,
+     Schrift --drink-ink. --- */
+  .drink {
+    position: relative;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+    width: 100%; min-height: 124px;
+    padding: 15px 16px 13px 18px;
+    border: 0; border-radius: var(--radius-lg);
+    background: var(--notch-fill);
+    color: var(--drink-ink);
+    font-family: inherit; text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    --notch-tag-ink: var(--ink);
+    transition: transform 0.16s var(--ease-out);
+    animation: drink-in 0.9s var(--ease) backwards;
+  }
+  /* Einblenden über „translate" — „transform" bleibt frei für die Druck-Reaktion */
+  #tab-count > .drink:nth-of-type(1) { animation-delay: 0.08s; }
+  #tab-count > .drink:nth-of-type(2) { animation-delay: 0.15s; }
+  #tab-count > .drink:nth-of-type(3) { animation-delay: 0.22s; }
+  @keyframes drink-in { from { opacity: 0; translate: 0 30px; } }
+  /* Aus dem Onboarding (Schritt 1): die Probier-Karten gleiten an den Platz
+     der echten Getränkekarten (D-085), die dafür nicht erst hereinfliegen */
+  html[data-morph="drinks"] #add-beer { view-transition-name: morph-drink-beer; }
+  html[data-morph="drinks"] #add-shot { view-transition-name: morph-drink-shot; }
+  html[data-morph="drinks"] #add-mix { view-transition-name: morph-drink-mix; }
+  html[data-morph="drinks"] #tab-count > .drink { animation: none; }
+  .drink:not(:disabled):active { transform: scale(0.97); }
+  .drink:focus-visible { outline-offset: 3px; }
+  .drink-topo {
+    z-index: 0;
+    background: color-mix(in srgb, var(--drink-ink) 9%, transparent);
+    -webkit-mask-image: url('assets/topo.svg');
+    mask-image: url('assets/topo.svg');
+    transition: transform 1.2s var(--ease);
+  }
+  .drink-head, .drink-count { position: relative; z-index: 1; }
+  .drink-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .drink-name {
+    font-weight: 800; font-size: 25px; line-height: 0.9;
+    text-transform: uppercase; letter-spacing: -0.03em;
+    padding-top: 4px;
+  }
+  /* Großes Plus als Kreis-Kontur; beim Drücken dreht es sich */
+  .drink-plus {
+    position: relative; flex: none;
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 1.5px solid currentColor;
+    transition: transform 0.45s var(--ease), background-color 0.2s ease, color 0.2s ease;
+  }
+  .drink-plus::before, .drink-plus::after {
+    content: ''; position: absolute; left: 50%; top: 50%;
+    width: 16px; height: 2px; margin: -1px 0 0 -8px;
+    background: currentColor; border-radius: 1px;
+  }
+  .drink-plus::after { transform: rotate(90deg); }
+  .drink:active .drink-plus { transform: rotate(90deg); background: var(--drink-ink); color: var(--notch-fill); }
+  .drink-count { display: flex; align-items: baseline; gap: 8px; padding-right: calc(var(--notch-w, 120px) + 8px); }
+  .drink-count .num { font-size: 64px; line-height: 0.78; letter-spacing: -0.05em; }
+  .drink-unit { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.7; }
+  .drink .notch-tag { font-size: 10.5px; font-weight: 700; gap: 7px; padding-right: 6px; }
+  .drink .notch-tag .hl { color: var(--notch-fill); font-size: 17px; letter-spacing: -0.02em; }
+  @media (hover: hover) and (pointer: fine) {
+    .drink:hover .drink-topo { transform: scale(1.06); }
+    .drink:hover .drink-plus { transform: rotate(90deg); }
+  }
+  /* Echo-Zahl (L20, D-095): der alte Stand hallt als Umriss nach — er wächst
+     hinter der neuen Zahl auf und verblasst; bei schnellem Tippen laufen
+     mehrere Echos ineinander. (Nach unten wegrutschen ging nicht: die Zahl
+     sitzt dicht an der Kartenkante, das Echo wurde abgeschnitten.) */
+  .drink-count > .num:not(.drink-echo) { position: relative; z-index: 1; }
+  .drink-count .drink-echo {
+    position: absolute; left: var(--ex, 0); top: var(--ey, 0);
+    color: transparent; -webkit-text-stroke: 2px var(--drink-ink);
+    transform-origin: 30% 60%;
+    pointer-events: none;
+    animation: echo-out 0.9s var(--ease-out) forwards;
+  }
+  @keyframes echo-out {
+    from { opacity: 0.9; transform: scale(1); }
+    to { opacity: 0; transform: translate(6%, -4%) scale(1.8); }
+  }
+
+  /* All-Time-Stapel im Profil (L20): der Stand jetzt, darunter der Stand
+     nach den letzten Abenden, jede Zeile blasser */
+  .alltime-stack { display: flex; flex-direction: column; margin: 2px 0 26px; }
+  .as-line { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .as-line .num { font-size: clamp(72px, 25vw, 120px); line-height: 0.84; letter-spacing: -0.055em; }
+  .as-line:nth-child(2) .num { opacity: 0.5; }
+  .as-line:nth-child(3) .num { opacity: 0.28; }
+  .as-line:nth-child(4) .num { opacity: 0.14; }
+  .as-line:first-child .eyebrow { color: var(--accent-text); }
+
+  /* --- Jahresrückblick (L23, D-095): Akzentkarte im Profil öffnet Story-
+     Seiten im Vollbild. Tippen rechts = weiter, links = zurück, Halten =
+     Pause; die Striche oben laufen mit. --- */
+  .review-card {
+    position: relative; display: flex; flex-direction: column; gap: 10px; align-items: flex-start;
+    width: 100%; padding: 18px 18px 56px; border: 0; text-align: left; cursor: pointer;
+    color: var(--accent-ink); --notch-fill: var(--accent); --notch-tag-ink: var(--ink);
+    font: inherit;
+  }
+  .review-card .eyebrow { color: var(--accent-ink); }
+  .review-card-title { font-size: clamp(38px, 11vw, 56px); }
+  .review-card-title .t-serif { -webkit-text-stroke: 0.022em currentColor; }
+
+  .review {
+    position: fixed; inset: 0; z-index: 90; overflow: hidden;
+    display: flex; flex-direction: column;
+    padding: max(14px, env(safe-area-inset-top)) 20px max(22px, env(safe-area-inset-bottom));
+    background: var(--bg); color: var(--ink);
+    -webkit-user-select: none; user-select: none; touch-action: manipulation;
+  }
+  .review > :not(.topo) { position: relative; z-index: 1; }
+  .review-segs { display: flex; gap: 4px; }
+  .review-segs i { position: relative; flex: 1; height: 3px; border-radius: 2px; overflow: hidden; background: var(--line-strong); }
+  .review-segs i::after { content: ''; position: absolute; inset: 0; background: var(--ink); transform-origin: left; transform: scaleX(0); }
+  .review-segs i.done::after { transform: none; }
+  .review-segs i.on::after { animation: seg-fill var(--slide-ms) linear forwards; }
+  .review.is-paused .review-segs i.on::after { animation-play-state: paused; }
+  @keyframes seg-fill { to { transform: none; } }
+  .review-top { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+  .review-close { position: relative; width: 40px; height: 40px; border: 1px solid var(--line-strong); border-radius: 50%; background: none; color: var(--ink); cursor: pointer; }
+  .review-close::before, .review-close::after { content: ''; position: absolute; left: 50%; top: 50%; width: 16px; height: 2px; margin: -1px 0 0 -8px; background: currentColor; transform: rotate(45deg); }
+  .review-close::after { transform: rotate(-45deg); }
+  .review-slides { position: relative; flex: 1; margin-top: 22px; }
+  .rv-slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 18px; padding-bottom: 8vh; }
+  .rv-slide[hidden] { display: none; }
+  .rv-slide.is-in > * { animation: rv-in 0.7s var(--ease) both; animation-delay: calc(var(--k, 0) * 90ms); }
+  @keyframes rv-in { from { opacity: 0; transform: translateY(26px); } }
+  .rv-title { font-size: clamp(48px, 14vw, 76px); }
+  .rv-big { font-size: clamp(120px, 42vw, 210px); line-height: 0.82; letter-spacing: -0.055em; }
+  .rv-big-row { display: flex; align-items: baseline; gap: 10px; }
+  .rv-unit { font-weight: 800; font-size: 26px; text-transform: uppercase; letter-spacing: -0.01em; }
+  .rv-sub { display: flex; flex-direction: column; gap: 4px; }
+  .rv-sub .t-h3 { font-size: 24px; }
+  .rv-sub .num { font-size: 22px; color: var(--ink-faint); }
+  .rv-curve svg { width: 100%; height: 76px; display: block; overflow: visible; }
+  .rv-curve .area { fill: var(--ink); opacity: 0.07; }
+  .rv-curve .line { fill: none; stroke: var(--ink); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+  .rv-curve .band { fill: var(--accent); opacity: 0.85; }
+  .rv-curve .base { stroke: var(--line-strong); vector-effect: non-scaling-stroke; }
+  .rv-vs { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; text-align: center; margin-top: 14px; }
+  .rv-vs .avatar { width: 76px; height: 76px; font-size: 40px; margin: 0 auto 10px; }
+  .rv-vs .avatar.me { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  .rv-vs .t-h3 { font-size: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rv-vs .num { font-size: 44px; }
+  .rv-vs .them .num { color: var(--ink-faint); }
+  .rv-vs .vs { font-family: var(--font-serif); font-size: 36px; color: var(--accent-text); }
+  .rv-center { text-align: center; }
+  .rv-cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .rv-cells .num { display: block; font-size: 40px; line-height: 0.9; }
+  .rv-actions { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+  .rv-actions .btn { width: 100%; justify-content: center; min-height: 52px; }
+  .rv-actions .i-arrow { transform: rotate(135deg); }
+  @media (prefers-reduced-motion: reduce) {
+    .rv-slide.is-in > * { animation: none; }
+  }
+
+  /* „+1" steigt beim Antippen auf (rein optisch, pointerdown) */
+  .drink-float {
+    position: absolute; z-index: 3;
+    left: var(--x, 80%); top: var(--y, 30%);
+    padding: 3px 8px; border-radius: 6px;
+    background: var(--drink-ink); color: var(--notch-fill);
+    font-weight: 800; font-size: 15px; line-height: 1.1; letter-spacing: -0.01em;
+    pointer-events: none;
+    animation: float-up 0.8s var(--ease-out) forwards;
+  }
+  @keyframes float-up {
+    0% { opacity: 0; transform: translate(-50%, -40%) scale(0.6); }
+    18% { opacity: 1; transform: translate(-50%, -110%) scale(1.05); }
+    100% { opacity: 0; transform: translate(-50%, -300%) scale(1); }
+  }
+
+  /* --- Ranglisten-Karte (D-040): Kerbe unten rechts, darin der Knopf zur
+     ganzen Liste --- */
+  .rank-card {
+    position: relative;
+    display: flex; flex-direction: column; gap: 14px;
+    padding: 18px 18px 60px;
+    border-radius: var(--radius-lg);
+    background: var(--notch-fill);
+    --notch-tag-ink: var(--ink);
+  }
+  .rank-card > :not(.notch-bg):not(.topo):not(.notch-tag) { position: relative; z-index: 1; }
+  .rank-topo { -webkit-mask-image: url('assets/topo.svg'); mask-image: url('assets/topo.svg'); }
+  .rank-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-top: 4px; }
+  .rank-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .rank-word { font-size: 28px; line-height: 0.9; }
+  .rank-num { font-size: clamp(84px, 27vw, 128px); line-height: 0.78; letter-spacing: -0.055em; margin-left: -0.03em; }
+  .rank-side {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 7px;
+    padding-left: 16px; border-left: 1px solid var(--line); text-align: right;
+  }
+  #prof-total { font-size: 46px; line-height: 0.82; }
+  .rivals { display: flex; flex-direction: column; }
+  .rival {
+    display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+    padding: 11px 0; border-top: 1px solid var(--line);
+  }
+  .rival .icon { font-size: 11px; color: var(--accent); text-align: center; line-height: 1; }
+  .rival .who {
+    font-weight: 750; font-size: 14px; text-transform: uppercase; letter-spacing: -0.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .rival .gap {
+    font-size: 10.5px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--ink-muted); white-space: nowrap;
+  }
+  /* Handy: der Abstand bricht rechts um, damit der Name nicht abgeschnitten wird */
+  @media (max-width: 480px) {
+    .rival .gap { white-space: normal; text-align: right; max-width: 8.5em; line-height: 1.25; }
+  }
+  .board-tag {
+    border: 0; background: none; cursor: pointer;
+    font-family: inherit; font-size: 11px; font-weight: 700;
+    transition: color 0.3s ease;
+  }
+  .board-tag:hover { color: var(--accent-text); }
+
+  /* --- Abschnittstitel (Statistik, Abzeichen): Versal-Titel mit Serif-Wort --- */
+  .block { display: flex; flex-direction: column; gap: 18px; }
+  .block-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  .block-title { font-size: clamp(34px, 10vw, 52px); }
+  .block-head .eyebrow { padding-bottom: 4px; text-align: right; }
+
+  /* --- Statistik: große Zahlen mit Eyebrows zwischen Haarlinien --- */
+  .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .stat-cell { display: flex; flex-direction: column; justify-content: space-between; gap: 14px; padding: 12px 10px 14px 14px; border-left: 1px solid var(--line); }
+  .stat-cell:first-child { border-left: 0; padding-left: 0; }
+  .stat-cell .num { font-size: clamp(38px, 11vw, 52px); line-height: 0.82; }
+  #stat-best { color: var(--accent-text); }
+
+  .meter { display: flex; flex-direction: column; gap: 10px; }
+  .meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .meter-head .eyebrow:first-child { color: var(--ink); }
+  .dist-bar {
+    display: flex; height: 12px; overflow: hidden;
+    border-radius: 3px; background: var(--surface-2);
+  }
+  .dist-bar > div { height: 100%; transition: width 0.9s var(--ease); }
+  .dist-legend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .leg { display: flex; flex-direction: column; gap: 6px; }
+  .leg .eyebrow { display: flex; align-items: center; gap: 6px; }
+  .leg i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; }
+  .leg .num { font-size: 24px; line-height: 0.9; }
+  #share-note { font-size: 12.5px; color: var(--ink-muted); }
+
+
+  /* --- Lando-Fußkarte: dunkle Kerben-Karte mit Unterschrift --- */
+  .farewell {
+    position: relative;
+    display: flex; flex-direction: column; gap: 22px;
+    padding: 22px 20px 112px;
+    border-radius: var(--radius-lg);
+    background: var(--notch-fill);
+    --notch-tag-ink: var(--ink);
+    overflow: visible;
+  }
+  .farewell > :not(.notch-bg):not(.topo):not(.notch-tag):not(.farewell-sign) { position: relative; z-index: 1; }
+  .farewell-topo { -webkit-mask-image: url('assets/topo.svg'); mask-image: url('assets/topo.svg'); }
+  .farewell-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .farewell-title { font-size: clamp(38px, 11.5vw, 64px); line-height: 0.88; }
+  /* Die Umlaut-Punkte der Instrument Serif stehen ~0,9 em über der Grundlinie –
+     höher als der enge Zeilenabstand. Etwas Luft über der Serif-Zeile, damit
+     die Ä-Punkte nicht in „BIS ZUM" ragen. */
+  .farewell-title .t-serif { display: inline-block; font-size: 1.06em; margin-top: 0.2em; }
+  .farewell-sign {
+    position: absolute; left: 12px; bottom: 6px; z-index: 1;
+    width: 200px; height: 105px;
+    --scribble-color: var(--accent-text);
+    --scribble-width: 2.4;
+    --draw-dur: 2.2s;
+  }
+  .farewell-tag {
+    border: 0; background: none; cursor: pointer;
+    font-family: inherit; font-size: 11px; font-weight: 700;
+    transition: color 0.3s ease;
+  }
+  .farewell-tag:hover { color: var(--accent-text); }
+
+  /* --- Fußzeile der Seite: nur Abmelden (Archiv steht im Menü, D-090) --- */
+  .dash-foot {
+    margin-top: auto;
+    display: flex; flex-direction: column; gap: 14px;
+    padding-top: 18px;
+  }
+  .foot-links { display: flex; flex-wrap: wrap; gap: 8px; }
+  .foot-links a { flex: 1 1 auto; }
+  .dash-foot > .eyebrow { color: var(--ink-faint); }
+
+  /* Saison-Streifen am Seitenende (Kürbisse, Schneewehe) */
+  .deco-foot { height: 14px; flex: none; }
+
+  /* --- Fehlerzeile: schwebt unten, damit sie nach einem Tipp im Bild ist --- */
+  #ws-error {
+    position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom));
+    z-index: 70;
+    transform: translateX(-50%);
+    width: max-content; max-width: calc(100vw - 36px);
+    padding: 11px 16px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-deep);
+    border: 1px solid color-mix(in srgb, var(--danger) 55%, transparent);
+    font-size: 13px; font-weight: 600; text-align: center;
+    animation: toast-in 0.5s var(--ease) both;
+    pointer-events: none;
+  }
+  #ws-error:empty { display: none; }
+  @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 16px); } }
+
+  /* --- Ohne Sitzung --- */
+  .nouser { display: flex; flex-direction: column; align-items: flex-start; gap: 22px; margin-top: 8vh; }
+  .nouser .t-impact { font-size: clamp(36px, 11vw, 96px); overflow-wrap: anywhere; }
+
+  /* --- Menü: Zählen/Profil riesig, die übrigen Ziele eine Stufe kleiner
+     (so passt „Abend-Archiv" in eine Zeile) --- */
+  .dash-menu .menu-link { font-size: clamp(40px, 12vw, 84px); }
+  .dash-menu .menu-link--sm { font-size: clamp(26px, 7.4vw, 48px); line-height: 1.02; padding: 8px 0; min-height: 44px; }
+  .dash-menu .menu-eyebrow { margin: 14px 0 6px; }
+  .dash-menu .menu-eyebrow:first-child { margin-top: 0; }
+  .dash-menu .menu-me { text-align: right; }
+  .dash-menu .menu-me b { color: var(--ink); font-weight: 700; }
+
+  /* --- Ganze Rangliste: Blatt von unten (D-030), Zeilen wie auf dem TV --- */
+  .board-modal {
+    position: fixed; inset: 0; z-index: 85;
+    background: var(--scrim);
+    display: flex; align-items: flex-end; justify-content: center;
+    animation: scrim-in 0.35s ease both;
+  }
+  @keyframes scrim-in { from { opacity: 0; } }
+  .board-sheet {
+    position: relative;
+    width: 100%; max-width: 560px;
+    max-height: 86vh; max-height: 86dvh;
+    display: flex; flex-direction: column; gap: 14px;
+    padding: 10px 18px calc(18px + env(safe-area-inset-bottom));
+    background: var(--bg-deep);
+    border: 1px solid var(--line); border-bottom: 0;
+    border-radius: 22px 22px 0 0;
+    overflow: hidden;
+    animation: sheet-up 0.65s var(--ease) both;
+  }
+  @keyframes sheet-up { from { transform: translateY(100%); } }
+  /* Schließen: Blatt fährt nach unten weg, die Abdunklung blendet aus */
+  @media (prefers-reduced-motion: no-preference) {
+    .board-modal.is-leaving { animation: leave-fade 0.45s ease 0.1s both; }
+    .board-modal.is-leaving .board-sheet { animation: leave-down 0.5s var(--ease) both; }
+    #ws-error.is-leaving { animation: leave-sink 0.4s var(--ease) both; }
+  }
+  .board-sheet > .topo { opacity: 0.8; }
+  .board-sheet > :not(.topo) { position: relative; z-index: 1; }
+  .board-sheet .sheet-grip { margin-bottom: 4px; }
+  .board-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  .board-head > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .board-title { margin: 0; font-size: clamp(28px, 8.4vw, 40px); }
+  #board-list {
+    flex: 1; min-height: 0;
+    overflow-y: auto; overscroll-behavior: contain;
+    border-top: 1px solid var(--line);
+    margin: 0 -6px; padding: 0 6px 4px;
+  }
+  .board-row {
+    display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+    padding: 10px 8px; border-bottom: 1px solid var(--line);
+  }
+  .board-row .rank {
+    width: 30px; height: 30px; display: grid; place-items: center;
+    border: 1px solid var(--line-strong); border-radius: 6px;
+    font-weight: 800; font-size: 13px; color: var(--ink-muted);
+  }
+  .board-row[data-rank="1"] .rank { background: var(--rank-1); border-color: transparent; color: var(--accent-ink); }
+  .board-row[data-rank="2"] .rank { background: var(--rank-2); border-color: transparent; color: var(--accent-2-ink); }
+  .board-row[data-rank="3"] .rank { background: var(--rank-3); border-color: transparent; color: var(--mixc-ink); }
+  .board-row .who {
+    font-weight: 750; font-size: 15px; text-transform: uppercase; letter-spacing: -0.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .board-row .total { font-weight: 800; font-size: 21px; letter-spacing: -0.03em; text-align: right; }
+  /* Eigene Zeile: Akzentfläche — sie wird beim Öffnen in die Mitte gescrollt */
+  .board-row.me { background: var(--accent); color: var(--accent-ink); border-radius: var(--radius-sm); border-bottom-color: transparent; }
+  .board-row.me .rank { border-color: color-mix(in srgb, var(--accent-ink) 35%, transparent); color: var(--accent-ink); }
+  .board-row.me[data-rank="1"] .rank { background: var(--accent-ink); color: var(--accent); }
+  .me-pill {
+    display: inline-block; margin-left: 8px; padding: 2px 6px; vertical-align: 2px;
+    border-radius: 4px; background: var(--accent-ink); color: var(--accent);
+    font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em;
+  }
+  .board-empty { padding: 26px 0; text-align: center; color: var(--ink-muted); font-size: 14px; }
+
+  /* ==========================================================================
+     Desktop: zwei Spalten — links die Zahl (klebt), rechts die Karten
+     ========================================================================== */
+  @media (min-width: 960px) {
+    .dash .screen-inner { max-width: 1180px; padding-left: 40px; padding-right: 40px; gap: 26px; }
+    .dash-top .wordmark { font-size: 24px; }
+    .ident-emblem { width: 88px; height: 88px; }
+    .ident .avatar { width: 80px; height: 80px; font-size: 44px; }
+    .ident-emblem.won::before { inset: -16px; }
+    .ident-name { font-size: clamp(40px, calc(100cqi / (var(--chars, 7) * 0.7)), 118px); }
+    #main-tabs { width: 380px; }
+    #tab-count {
+      display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      gap: 14px 48px; align-items: start;
+    }
+    #tab-count > .today { grid-column: 1; grid-row: 1 / span 3; position: sticky; top: 24px; }
+    #tab-count > .drink { grid-column: 2; min-height: 150px; }
+    #today-total { font-size: 240px; }
+    .pace { font-size: 13px; }
+    .pace-diff .num { font-size: 42px; }
+    .drink-count .num { font-size: 80px; }
+    #tab-profile {
+      display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 48px 48px; align-items: start;
+    }
+    #tab-profile > .rank-card { grid-column: 1; grid-row: 1 / span 2; }
+    #tab-profile > .stats, #tab-profile > .badges-block { grid-column: 2; }
+    #tab-profile > .farewell { grid-column: 1 / -1; }
+    .farewell { padding: 36px 36px 80px; }
+    .farewell { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+    .farewell-top { grid-column: 2; grid-row: 1; flex-direction: column; align-items: flex-end; gap: 18px; }
+    .farewell-title { grid-column: 1; grid-row: 1; font-size: clamp(56px, 6.4vw, 96px); }
+    .farewell-sign { left: auto; right: 250px; bottom: 16px; width: 240px; height: 126px; }
+    .dash-foot { flex-direction: row; align-items: center; justify-content: space-between; }
+    .foot-links a { flex: none; }
+  }
+</style>
+</head>
+<body>
+<div class="topo" aria-hidden="true"></div>
+<div class="topo-spot" aria-hidden="true"></div>
+
+<div class="screen dash" data-deco-top="phone">
+  <div class="screen-inner">
+    <header class="topbar dash-top">
+      <span class="wordmark" aria-label="SV Partykeller">
+        <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
+      </span>
+      <!-- Ziel des Namensflugs (D3, D-097/D-098) -->
+      <button id="dock-pill" class="dock-pill" type="button" aria-label="Nach oben" tabindex="-1">
+        <span id="dock-initial" class="avatar" aria-hidden="true"></span>
+        <span class="dock-name" data-me-name></span>
+      </button>
+      <div class="topbar-actions">
+        <span class="pk-logo" role="img" aria-label="SV Partykeller Logo" style="view-transition-name:area-logo"></span>
+        <button class="btn btn--ghost btn--icon" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="Menü"><span class="i-menu"></span></button>
+      </div>
+    </header>
+
+    <div id="user-view" hidden style="display:flex;flex-direction:column;gap:18px;">
+      <div class="ident">
+        <div id="ident-emblem" class="ident-emblem">
+          <div id="player-initial" class="avatar" aria-hidden="true"></div>
+        </div>
+        <div class="ident-main">
+          <div class="ident-meta">
+            <span id="win-chip" class="chip chip--accent" hidden></span>
+            <span id="season-chip" class="chip chip--accent" hidden></span>
+            <span id="player-since" class="eyebrow"></span>
+          </div>
+          <h1 id="player-name" class="ident-name"></h1>
+        </div>
+      </div>
+      <script>
+        // Kopf sofort füllen, noch bevor Module und WebSocket da sind: Der
+        // Namenskreis muss im ersten Bild stehen, damit er von der Anmeldung
+        // herübergleiten kann (D-068). Den Rest übernimmt das Modul unten.
+        (() => {
+          const name = localStorage.getItem('pk_player_name');
+          if (!localStorage.getItem('pk_token') || !name) return;
+          document.getElementById('user-view').hidden = false;
+          document.getElementById('player-name').textContent = name;
+          document.getElementById('player-name').style.setProperty('--chars', Math.max(4, name.length));
+          document.getElementById('player-initial').textContent = name.charAt(0).toUpperCase();
+        })();
+      </script>
+
+      <!-- Umschalter: Zählen (Eingabe) / Profil (Statistik & Abzeichen) -->
+      <div id="main-tabs" class="tabs" role="tablist" data-pos="0">
+        <div class="tab-indicator"></div>
+        <button id="tab-btn-count" class="tab-btn active" type="button">Zählen</button>
+        <button id="tab-btn-profile" class="tab-btn" type="button">Profil</button>
+      </div>
+
+      <div id="tab-count">
+        <!-- Rechts neben der Zahl: Vergleich mit dem eigenen Schnitt bis zur
+             gleichen Uhrzeit (D-072) -->
+        <section class="today" data-reveal="up">
+          <div class="today-head">
+            <span class="eyebrow">Getränke heute</span>
+            <span id="today-date" class="eyebrow"></span>
+          </div>
+          <div class="today-row">
+            <div id="today-total" class="num">0</div>
+            <div id="pace" class="pace" data-dir="none" hidden>
+              <div class="pace-diff">
+                <svg class="pace-tri" viewBox="0 0 14 12" aria-hidden="true"><path d="M7 0 L14 12 L0 12 Z"/></svg>
+                <span id="pace-diff" class="num"></span>
+              </div>
+              <span id="pace-cap"></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Getränke als Kerben-Karten -->
+        <button id="add-beer" class="drink" type="button" aria-label="Bier hinzufügen" data-notch="tabW:124;tabH:36;r:14;slant:18" style="--notch-fill:var(--beer);--drink-ink:var(--beer-ink);">
+          <span class="topo topo--abs notch-clip drink-topo" aria-hidden="true"></span>
+          <span class="drink-head">
+            <span class="drink-name">Bier</span>
+            <span class="drink-plus" aria-hidden="true"></span>
+          </span>
+          <span class="drink-count"><span id="beers-today" class="num">0</span><span class="drink-unit">heute</span></span>
+          <span class="notch-tag">Gesamt <span id="beers-total" class="num hl">0</span></span>
+        </button>
+
+        <button id="add-shot" class="drink" type="button" aria-label="Shot hinzufügen" data-notch="tabW:124;tabH:36;r:14;slant:18" style="--notch-fill:var(--shot);--drink-ink:var(--shot-ink);">
+          <span class="topo topo--abs notch-clip drink-topo" aria-hidden="true"></span>
+          <span class="drink-head">
+            <span class="drink-name">Shots</span>
+            <span class="drink-plus" aria-hidden="true"></span>
+          </span>
+          <span class="drink-count"><span id="shots-today" class="num">0</span><span class="drink-unit">heute</span></span>
+          <span class="notch-tag">Gesamt <span id="shots-total" class="num hl">0</span></span>
+        </button>
+
+        <button id="add-mix" class="drink" type="button" aria-label="Mische hinzufügen" data-notch="tabW:124;tabH:36;r:14;slant:18" style="--notch-fill:var(--mixc);--drink-ink:var(--mixc-ink);">
+          <span class="topo topo--abs notch-clip drink-topo" aria-hidden="true"></span>
+          <span class="drink-head">
+            <span class="drink-name">Mischen</span>
+            <span class="drink-plus" aria-hidden="true"></span>
+          </span>
+          <span class="drink-count"><span id="mixes-today" class="num">0</span><span class="drink-unit">heute</span></span>
+          <span class="notch-tag">Gesamt <span id="mixes-total" class="num hl">0</span></span>
+        </button>
+      </div><!-- /#tab-count -->
+
+      <!-- Profil: Ranglisten-Umfeld, Statistik und Abzeichen -->
+      <div id="tab-profile" hidden>
+
+        <!-- Eine Karte für beide Zeiträume (D-040): oben umschaltbar, darunter
+             Platz und Nachbarn, in der Kerbe die ganze Liste im selben Zeitraum -->
+        <section class="rank-card" data-notch="tabW:232;tabH:42;r:14;slant:22" style="--notch-fill:var(--surface);" data-reveal="up">
+          <span class="topo topo--abs notch-clip rank-topo" aria-hidden="true"></span>
+          <div class="sec"><span class="sec-title">Rangliste</span></div>
+          <div id="prof-tabs" class="tabs" role="tablist" data-pos="0">
+            <div class="tab-indicator"></div>
+            <button id="prof-tab-today" class="tab-btn active" type="button">Heute</button>
+            <button id="prof-tab-alltime" class="tab-btn" type="button">All-Time</button>
+          </div>
+          <div class="rank-hero">
+            <div class="rank-main">
+              <span class="rank-word t-serif t-accent">Dein Platz</span>
+              <span id="prof-rank" class="num rank-num">–</span>
+              <span id="prof-rank-label" class="eyebrow">Platz</span>
+            </div>
+            <div class="rank-side">
+              <span id="prof-total" class="num">0</span>
+              <span class="eyebrow">Getränke</span>
+            </div>
+          </div>
+          <div id="prof-rivals" class="rivals"></div>
+          <button id="show-board" class="notch-tag board-tag" type="button">Ganze Rangliste ansehen <span class="i-arrow"></span></button>
+        </section>
+
+        <!-- Jahresrückblick (L23, D-095): Story-Seiten zum Durchtippen -->
+        <button id="review-open" class="review-card" type="button" hidden data-notch="tabW:150;tabH:40;r:14;slant:20" data-reveal="up">
+          <span class="eyebrow">Rückblick</span>
+          <span class="t-title review-card-title">Dein Jahr <span class="t-serif" id="review-year"></span></span>
+          <span class="notch-tag">Ansehen <span class="i-arrow"></span></span>
+        </button>
+
+        <!-- Persönliche Statistik: Abende, bestes Ergebnis, Schnitt, Verteilung -->
+        <section class="block stats">
+          <div class="block-head">
+            <h2 class="t-title block-title" data-reveal="words">Deine <span class="t-serif t-accent">Statistik</span></h2>
+          </div>
+          <div id="alltime-stack" class="alltime-stack" data-reveal="up"></div>
+          <div class="stat-grid" data-reveal="up">
+            <div class="stat-cell">
+              <span class="eyebrow">Abende</span>
+              <span id="stat-days" class="num">0</span>
+            </div>
+            <div class="stat-cell">
+              <span class="eyebrow">Bester Abend</span>
+              <span id="stat-best" class="num">–</span>
+            </div>
+            <div class="stat-cell">
+              <span class="eyebrow">Ø pro Abend</span>
+              <span id="stat-avg" class="num">–</span>
+            </div>
+          </div>
+          <div class="meter" data-reveal="up" data-delay="80">
+            <div class="meter-head"><span class="eyebrow">Deine Mischung</span><span class="eyebrow">All-Time</span></div>
+            <div class="dist-bar">
+              <div id="dist-beer" style="background:var(--beer);width:0;"></div>
+              <div id="dist-shot" style="background:var(--shot);width:0;"></div>
+              <div id="dist-mix" style="background:var(--mixc);width:0;"></div>
+            </div>
+            <div class="dist-legend">
+              <span class="leg"><span class="eyebrow"><i style="background:var(--beer);"></i>Bier</span><span id="pct-beer" class="num">0%</span></span>
+              <span class="leg"><span class="eyebrow"><i style="background:var(--shot);"></i>Shots</span><span id="pct-shot" class="num">0%</span></span>
+              <span class="leg"><span class="eyebrow"><i style="background:var(--mixc);"></i>Mischen</span><span id="pct-mix" class="num">0%</span></span>
+            </div>
+          </div>
+          <!-- Anteil am Haus (D-040): dieselbe Spur wie die Mischung -->
+          <div class="meter" data-reveal="up" data-delay="140">
+            <div class="meter-head"><span class="eyebrow">Anteil am Haus</span></div>
+            <div class="dist-bar">
+              <div id="share-bar" style="background:var(--accent);width:0;"></div>
+            </div>
+            <div id="share-note">–</div>
+          </div>
+        </section>
+
+        <!-- Abzeichen als Umriss-Kerbenkarten (D-093): gefüllt = heute erreicht,
+             Akzent-Linie = schon erreicht, grau = noch nie; die Kerbe zählt alle Abende -->
+        <section class="block badges-block">
+          <div class="block-head">
+            <h2 class="t-title block-title" data-reveal="words">Deine <span class="t-serif t-accent">Abzeichen</span></h2>
+            <span id="badge-hint" class="eyebrow"></span>
+          </div>
+          <div class="badges" data-reveal="up">
+            <div id="badge-visits" class="badge is-won" hidden data-notch="tabW:58;tabH:28;r:12;slant:14;stroke">
+              <svg class="badge-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M11 3l4.5 9.5M21 3l-4.5 9.5"/><circle cx="16" cy="20.5" r="8"/><circle cx="16" cy="20.5" r="3.5"/></svg>
+              <span class="badge-name" id="badge-visits-label">Stammgast</span>
+              <span class="notch-tag badge-count num">×0</span>
+            </div>
+            <div id="badge-winner" class="badge" title="Gesamt-Tagessieger des Abends" data-notch="tabW:58;tabH:28;r:12;slant:14;stroke">
+              <svg class="badge-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 24 6.5 9 12 15 16 7l4 8 5.5-6L27 24Z"/><path d="M5 28.5h22"/></svg>
+              <span class="badge-name">Tagessieger</span>
+              <span class="notch-tag badge-count num">×0</span>
+            </div>
+            <div id="badge-first" class="badge" title="Das erste Getränk des Abends kam von dir" data-notch="tabW:58;tabH:28;r:12;slant:14;stroke">
+              <svg class="badge-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 8h14v20H7Z"/><path d="M21 12h4.5v10H21"/><path d="M12.5 14 15 11.5V24"/></svg>
+              <span class="badge-name">Erster Trinker</span>
+              <span class="notch-tag badge-count num">×0</span>
+            </div>
+            <div id="badge-midnight" class="badge" title="Ein Bier zwischen 0 und 1 Uhr" data-notch="tabW:58;tabH:28;r:12;slant:14;stroke">
+              <svg class="badge-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M19 4.5A12 12 0 1 0 27.5 21 9.5 9.5 0 0 1 19 4.5Z"/></svg>
+              <span class="badge-name">Mitternachtsbier</span>
+              <span class="notch-tag badge-count num">×0</span>
+            </div>
+            <div id="badge-hour" class="badge" title="Drei Getränke innerhalb einer Stunde" data-notch="tabW:58;tabH:28;r:12;slant:14;stroke">
+              <svg class="badge-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M18.5 3 8 18h7.5L13 29l11-16h-7.5Z"/></svg>
+              <span class="badge-name">Drei in einer Stunde</span>
+              <span class="notch-tag badge-count num">×0</span>
+            </div>
+            <div id="badge-mix" class="badge" title="Mindestens drei Mischgetränke an einem Abend" data-notch="tabW:58;tabH:28;r:12;slant:14;stroke">
+              <svg class="badge-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 7h22L16 19Z"/><path d="M16 19v8.5M10.5 27.5h11"/><circle cx="24.5" cy="5" r="3"/></svg>
+              <span class="badge-name">Mischmeister</span>
+              <span class="notch-tag badge-count num">×0</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Lando-Fußkarte (rein dekorativ): Gruß mit Unterschrift -->
+        <aside class="farewell surface-black" data-notch="tabW:172;tabH:40;r:14;slant:22" style="--notch-fill:var(--bg);" data-reveal="up">
+          <span class="topo topo--abs notch-clip farewell-topo" aria-hidden="true"></span>
+          <div class="farewell-top">
+            <span class="eyebrow">Stand heute Abend</span>
+            <span class="eyebrow">SV Partykeller</span>
+          </div>
+          <p class="t-title farewell-title" data-reveal="words">Prost,<br>bis zum<br><span class="t-serif t-accent">nächsten Mal.</span></p>
+          <svg class="scribble scribble--signature farewell-sign" data-draw="500" viewBox="0 0 268 141" fill="none" aria-hidden="true"><path d="M 33.3 80.9 C 38.1 91.8 58.4 82.1 58.9 68.3 C 59.3 57.7 39.8 64.2 47.2 46.1 C 53 32.1 69 25.5 74.1 32.7 C 70.4 50.1 68.3 65.4 66.4 80 C 76.8 58.9 88.6 37 102.8 17.1 C 89.2 53 72.5 97 57.4 136.9 C 71.5 96.5 89.3 50.5 104.1 18.7 C 141.6 -4.7 149.1 23.2 118.2 42.9 C 108.1 49.1 101.2 46.6 99 39.2 C 102.6 46.3 106.9 52.3 107.3 55.9 C 105.1 53.8 99 62.7 99.7 69.8 C 99.9 73.2 103.3 69.1 107 57.2 C 106.6 63.7 103.1 71.4 107.5 69.7 C 108.4 65.4 110.5 57.9 112.4 55.7 C 112.3 58.9 114.5 56.8 116.4 54.3 C 115.2 60.5 114.2 65.6 115.9 67.9 C 116.7 63 122.7 47.5 128.1 31.9 C 123.2 48.5 118 63.3 120.4 66.7 C 121.9 64.7 122.9 57.2 125.6 53.8 C 122.4 62.3 123.6 65.8 125.6 63.8 C 127.7 60.9 129.7 54.9 131 51.3 C 125.8 69.3 122.7 81.9 118.7 82.9 C 116 86.2 119.3 77 124.6 71.4 C 126.5 69.8 129.1 66 130.4 64.9 C 135.4 53.9 140.1 38.1 146 19.3 C 140.5 38.4 134.9 55 131.4 65.8 C 135.9 55.6 140.5 48.9 141.1 51.3 C 141.2 56.2 136.7 58.8 135 57.1 C 136.5 60.6 137.5 65.2 139.9 65.1 C 142.2 62.3 146.3 54.7 145.7 50.7 C 146.9 46.8 141.7 53.5 141.5 57.6 C 139.7 65.9 142.4 64.9 146.3 60.9 C 149.7 52.2 154.7 37.6 157.2 28.6 C 157.2 24.2 155.5 24.6 152.1 38.8 C 147.7 52.2 145.5 64.1 148 63.4 C 153.5 52.6 157.5 41 160.2 32.4 C 160 27.4 157.5 29 154.5 40.4 C 150.9 53.2 150.4 63.3 151.8 62.6 C 154.8 60 158.3 54.4 157.9 50.9 C 158.7 48.3 154.7 54.6 154.2 56.6 C 153.5 63.3 156.1 61 158.3 57.2 C 159.5 55.2 161.3 51.1 161.3 50.6 C 162.1 52.1 163.9 50.7 166.8 46.8 C 163.9 51.5 164.5 56.5 165.4 55.2 C 197.5 50.7 231.7 29.1 252.8 11.1 C 260.2 4.9 258.7 1.4 251.7 6.4 C 204 38.4 116.6 88.6 12.2 126.2 C 1.5 130 1.2 135.6 11.5 131.3 C 70.3 112.9 152.6 82.8 210.6 58.3 C 236.3 47.6 252.6 39.7 264 33.4 M 120.8 48.7 C 128.7 44.8 137.8 40.7 149.5 33.1" pathLength="1"/></svg>
+          <button class="notch-tag farewell-tag" type="button" data-to-count>Weiter zählen <span class="i-arrow"></span></button>
+        </aside>
+
+      </div><!-- /#tab-profile -->
+
+      <div id="ws-error" class="error-msg" role="status"></div>
+    </div>
+
+    <section id="no-user-view" class="nouser" hidden>
+      <span class="eyebrow">Nicht angemeldet</span>
+      <h1 class="t-impact">Kein <span class="t-serif t-accent">Nutzer</span> ausgewählt.</h1>
+      <a class="btn btn--lg" href="./">Zur Anmeldung <span class="i-arrow"></span></a>
+    </section>
+
+    <footer class="dash-foot">
+      <nav class="foot-links" aria-label="Konto">
+        <a class="btn btn--ghost btn--sm" href="#" id="logout"><span class="i-arrow i-arrow--back"></span>Abmelden</a>
+      </nav>
+      <span class="eyebrow">© SV Partykeller</span>
+    </footer>
+  </div>
+
+  <!-- Saison-Streifen unten (Kürbisse, Schneewehe, D-071) -->
+  <div class="deco-foot" data-deco-foot="phone" aria-hidden="true"></div>
+</div>
+
+<!-- Vollbild-Menü (lando.js initMenu) -->
+<nav id="site-menu" class="site-menu dash-menu" aria-hidden="true" aria-label="Menü">
+  <div class="topo topo--abs" aria-hidden="true"></div>
+  <div class="topbar">
+    <span class="wordmark">
+      <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
+    </span>
+    <button class="btn btn--ghost btn--icon" type="button" data-menu-toggle aria-label="Menü schließen"><span class="i-menu"></span></button>
+  </div>
+  <div class="menu-nav">
+    <span class="eyebrow menu-eyebrow">Dein Abend</span>
+    <button class="menu-link is-current" type="button" style="--i:0" data-menu-close data-go-tab="count">Zählen<svg class="scribble scribble--strike" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 18c26-8 44 6 70-2s46-9 74-2 52 5 88-6" pathLength="1"/></svg></button>
+    <button class="menu-link" type="button" style="--i:1" data-menu-close data-go-tab="profile">Profil<svg class="scribble scribble--strike" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 18c26-8 44 6 70-2s46-9 74-2 52 5 88-6" pathLength="1"/></svg></button>
+    <span class="eyebrow menu-eyebrow">Mehr</span>
+    <a class="menu-link menu-link--sm" style="--i:2" href="abende">Abend-Archiv</a>
+    <button class="menu-link menu-link--sm" type="button" style="--i:3" data-menu-close data-logout>Abmelden</button>
+  </div>
+  <div class="menu-foot">
+    <div class="emblem"><span class="laurel"></span><span class="eyebrow">SV Partykeller</span></div>
+    <span class="eyebrow menu-me" data-me-line hidden>Angemeldet als<br><b data-me-name></b></span>
+  </div>
+</nav>
+
+<!-- Ganze Rangliste (D-030): dasselbe Blatt für „heute" und „all-time",
+     oben umschaltbar, die eigene Zeile ist markiert und wird angesteuert. -->
+<div id="review" class="review area-pk" role="dialog" aria-modal="true" aria-label="Jahresrückblick" hidden>
+  <div class="topo topo--abs" aria-hidden="true"></div>
+  <div id="review-segs" class="review-segs" aria-hidden="true"></div>
+  <div class="review-top">
+    <span id="review-kicker" class="eyebrow"></span>
+    <button id="review-close" class="review-close" type="button" aria-label="Rückblick schließen"></button>
+  </div>
+  <div id="review-slides" class="review-slides" aria-live="polite"></div>
+</div>
+
+<div id="board-modal" class="board-modal" hidden>
+  <div class="board-sheet" role="dialog" aria-modal="true" aria-labelledby="board-title">
+    <div class="topo topo--abs" aria-hidden="true"></div>
+    <div class="sheet-grip"></div>
+    <div class="board-head">
+      <div>
+        <span id="board-count" class="eyebrow"></span>
+        <h2 id="board-title" class="t-title board-title">Rangliste</h2>
+      </div>
+      <button id="board-close" class="btn btn--ghost btn--sm" type="button">Schließen</button>
+    </div>
+    <div id="board-tabs" class="tabs" role="tablist" data-pos="0">
+      <div class="tab-indicator"></div>
+      <button id="board-tab-today" class="tab-btn active" type="button">Heute</button>
+      <button id="board-tab-alltime" class="tab-btn" type="button">All-Time</button>
+    </div>
+    <div id="board-list"></div>
+  </div>
+</div>
+
+<script type="module">
+import { AREA } from './js/area.js';
+import { getSession, clearSession, rememberName } from './js/api.js';
+import { connectState } from './js/ws-client.js';
+import { onSeason, setSeasonEnabled, newYear, mmss, now as seasonNow } from './js/season.js';
+import { initLando, drawScribble, reducedMotion, leave, enter, replay, go } from './js/lando.js';
+import { buildCurve } from './js/curve.js';
+
+const { token, playerId } = getSession();
+const $ = (id) => document.getElementById(id);
+
+// Lando-Bewegung (D-078): Einblenden, Kerben, Kringel, Menü, Spotlight
+initLando();
+
+// Menü: Zählen/Profil klicken die vorhandenen Tab-Knöpfe, Abmelden den
+// Abmelde-Link — gleiche Logik wie auf der Seite
+document.querySelectorAll('[data-go-tab]').forEach((b) => b.addEventListener('click', () => {
+  $(b.dataset.goTab === 'profile' ? 'tab-btn-profile' : 'tab-btn-count').click();
+  scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' });
+}));
+document.querySelector('[data-logout]').addEventListener('click', () => $('logout').click());
+// Fußkarte: „Weiter zählen" springt zurück auf den Zählen-Tab
+document.querySelector('[data-to-count]').addEventListener('click', () => {
+  $('tab-btn-count').click();
+  scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' });
+});
+
+// Aktiver Menüpunkt folgt dem Tab; der Kringel zeichnet sich beim Öffnen neu
+function syncMenu(profile) {
+  document.querySelectorAll('[data-go-tab]').forEach((b) => {
+    const cur = (b.dataset.goTab === 'profile') === profile;
+    b.classList.toggle('is-current', cur);
+    if (!cur) b.querySelector('.scribble')?.classList.remove('is-drawn');
+  });
+}
+
+// --- Name dockt an (D3, D-097/D-098) ---
+// Fortschritt p: 0 = oben, 1 = Name wäre hinter der Kopfleiste verschwunden.
+// Auf kurzen Seiten (Zählen-Tab) reicht schon das maximale Scrollen. Je Bild
+// werden Kreis und Name ohne Transform gemessen, dann mit Transform auf ihren
+// Platz in der Pille gezogen (Weg und Größe mit p, weich beschleunigt). Bei
+// p = 1 liegen sie deckungsgleich auf der Pille und werden übergeben.
+const ident = document.querySelector('.ident');
+const topbar = document.querySelector('.dash-top');
+const flyAvatar = $('player-initial');
+const flyName = $('player-name');
+let dockFrame = 0;
+let docked = false;
+const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
+function updateDock() {
+  dockFrame = 0;
+  if ($('user-view').hidden) return;
+  flyAvatar.style.transform = '';
+  flyName.style.transform = '';
+  const a = flyAvatar.getBoundingClientRect();
+  const n = flyName.getBoundingClientRect();
+  const ta = $('dock-initial').getBoundingClientRect();
+  const tn = topbar.querySelector('.dock-name').getBoundingClientRect();
+  const bar = topbar.getBoundingClientRect();
+  const maxScroll = document.documentElement.scrollHeight - innerHeight;
+  const dist = Math.max(40, Math.min(scrollY + n.top + n.height * 0.5 - bar.bottom, maxScroll - 2));
+  const p = Math.min(1, Math.max(0, scrollY / dist));
+  const e = reducedMotion() ? (p >= 1 ? 1 : 0) : ease(p);
+  const clamp01 = (v) => Math.min(1, Math.max(0, v));
+
+  topbar.style.setProperty('--bar-a', clamp01((p - 0.35) / 0.5).toFixed(3));
+  topbar.style.setProperty('--pill-a', clamp01((p - 0.7) / 0.3).toFixed(3));
+  ident.style.setProperty('--meta-a', clamp01(1 - p * 2.5).toFixed(3));
+  ident.classList.toggle('is-flying', p > 0);
+
+  if (e > 0 && e < 1) {
+    const sa = 1 + (ta.width / a.width - 1) * e;
+    flyAvatar.style.transform = `translate(${((ta.left + ta.width / 2 - (a.left + a.width / 2)) * e).toFixed(2)}px, ${((ta.top + ta.height / 2 - (a.top + a.height / 2)) * e).toFixed(2)}px) scale(${sa.toFixed(4)})`;
+    const ratio = parseFloat(getComputedStyle(topbar.querySelector('.dock-name')).fontSize) / parseFloat(getComputedStyle(flyName).fontSize);
+    const sn = 1 + (ratio - 1) * e;
+    flyName.style.transform = `translate(${((tn.left - n.left) * e).toFixed(2)}px, ${((tn.top - n.top) * e).toFixed(2)}px) scale(${sn.toFixed(4)})`;
+  }
+  const next = p >= 1;
+  if (next !== docked) {
+    docked = next;
+    topbar.classList.toggle('is-docked', docked);
+    ident.classList.toggle('is-docked', docked);
+    $('dock-pill').tabIndex = docked ? 0 : -1;
+  }
+}
+addEventListener('scroll', () => { if (!dockFrame) dockFrame = requestAnimationFrame(updateDock); }, { passive: true });
+addEventListener('resize', () => { if (!dockFrame) dockFrame = requestAnimationFrame(updateDock); });
+$('dock-pill').addEventListener('click', () => scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' }));
+
+// Name: Länge steuert die Schriftgröße (eine Zeile, so groß wie möglich)
+
+function setName(name) {
+  $('player-name').textContent = name;
+  $('player-name').style.setProperty('--chars', Math.max(4, name.length));
+  $('player-initial').textContent = name.charAt(0).toUpperCase();
+  $('dock-initial').textContent = name.charAt(0).toUpperCase();
+  document.querySelectorAll('[data-me-name]').forEach((el) => { el.textContent = name; });
+  document.querySelector('[data-me-line]').hidden = false;
+}
+
+// „Di 29.09." neben „Getränke heute" (ein Abend zählt bis 6 Uhr zum Vortag)
+function renderDate() {
+  const d = new Date(seasonNow().getTime() - 6 * 3600e3);
+  const wd = d.toLocaleDateString('de-DE', { weekday: 'short' }).replace('.', '');
+  $('today-date').textContent = `${wd} ${d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`;
+}
+renderDate();
+
+if (!token || !playerId) {
+  $('no-user-view').hidden = false;
+} else {
+  $('user-view').hidden = false;
+
+  // Umschalter Zählen/Profil (bleibt über Reloads hinweg auf Zählen)
+  function showTab(profile) {
+    const incoming = $(profile ? 'tab-profile' : 'tab-count');
+    if (!incoming.hidden) return;   // schon offen: nichts springt, nichts gleitet
+    $('tab-count').hidden = profile;
+    $('tab-profile').hidden = !profile;
+    // Inhalt gleitet von der Seite des Tabs herein (D-069): Profil von rechts,
+    // Zählen von links — in dieselbe Richtung wie der Akzent-Balken
+    incoming.classList.remove('tab-in-left', 'tab-in-right');
+    void incoming.offsetWidth;   // Reflow, damit die Animation neu startet
+    incoming.classList.add(profile ? 'tab-in-right' : 'tab-in-left');
+    $('tab-btn-count').classList.toggle('active', !profile);
+    $('tab-btn-profile').classList.toggle('active', profile);
+    $('main-tabs').dataset.pos = profile ? '1' : '0';   // Balken gleitet
+    syncMenu(profile);
+  }
+  // Einmal registriert (nicht je Wechsel): nach dem Hereingleiten die Klasse entfernen
+  for (const tab of [$('tab-count'), $('tab-profile')]) {
+    tab.addEventListener('animationend', (e) => {
+      if (e.target === tab) tab.classList.remove('tab-in-left', 'tab-in-right');
+    });
+  }
+  $('tab-btn-count').addEventListener('click', () => showTab(false));
+  $('tab-btn-profile').addEventListener('click', () => showTab(true));
+
+  const errEl = $('ws-error');
+  let errTimer;
+  function showError(message) {
+    errEl.textContent = message;
+    enter(errEl);
+    clearTimeout(errTimer);
+    errTimer = setTimeout(() => leave(errEl, () => { errEl.textContent = ''; }), 4000);
+  }
+
+  function popEl(el) {
+    el.classList.remove('pk-pop');
+    void el.offsetWidth;   // Reflow erzwingen, damit die Animation neu startet
+    el.classList.add('pk-pop');
+    // Klasse nach dem Lauf entfernen: sonst spielt die Animation erneut,
+    // sobald der Tab-Wechsel das Element wieder sichtbar macht.
+    el.addEventListener('animationend', () => el.classList.remove('pk-pop'), { once: true });
+  }
+
+  // Zahl setzen und bei Anstieg kurz „aufploppen" lassen. `key` trennt Werte,
+  // die sich dasselbe Element teilen (Rangliste heute/all-time, D-040).
+  const prev = {};
+  const ECHO = new Set(['beers-today', 'shots-today', 'mixes-today']);
+  function bump(id, value, key = id) {
+    const el = $(id);
+    const had = key in prev;
+    el.textContent = value;
+    if (had && value > prev[key]) {
+      popEl(el);
+      if (ECHO.has(id)) echo(el, prev[key]);
+    }
+    prev[key] = value;
+  }
+
+  // Echo-Zahl (L20): Kopie des alten Stands, rein dekorativ
+  function echo(el, old) {
+    if (reducedMotion() || document.hidden) return;
+    const e = document.createElement('span');
+    e.className = 'num drink-echo';
+    e.setAttribute('aria-hidden', 'true');
+    e.textContent = old;
+    e.style.setProperty('--ex', `${el.offsetLeft}px`);
+    e.style.setProperty('--ey', `${el.offsetTop}px`);
+    el.before(e);
+    e.addEventListener('animationend', () => e.remove(), { once: true });
+    setTimeout(() => e.remove(), 1400);   // falls animationend ausbleibt
+  }
+
+  // --- Jahresrückblick (L23, D-095) ---
+  // Daten vom Server (/review), daraus sechs Story-Seiten. Jede Seite steht
+  // sieben Sekunden, die letzte bleibt stehen. Tippen links = zurück,
+  // rechts = weiter, Halten = Pause, Escape schließt.
+  let review = null;
+  let reviewName = '';
+  async function loadReview() {
+    try {
+      const res = await fetch(`${AREA.base}/api/players/${encodeURIComponent(playerId)}/review`);
+      if (!res.ok) return;
+      review = await res.json();
+    } catch { return; }
+    $('review-open').hidden = !review.total;
+    $('review-year').textContent = review.year;
+  }
+
+  const RV_MS = 7000;
+  const DRINK_NAME = { beer: 'Bier', shot: 'Shots', mix: 'Mischen' };
+  const WEEKDAY = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+  const el = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  };
+  // Überschrift mit Serif-Wort: ['Dein', '|Jahr|', '2026'] — |…| = Serif-Akzent
+  const rvTitle = (...lines) => {
+    const t = el('h2', 't-title rv-title');
+    lines.forEach((line, i) => {
+      if (i) t.append(document.createElement('br'));
+      const m = /^\|(.*)\|$/.exec(line);
+      t.append(m ? el('span', 't-serif t-accent', m[1]) : line);
+    });
+    return t;
+  };
+  const bigNum = (value, unit) => {
+    const row = el('div', 'rv-big-row');
+    row.append(el('span', 'num rv-big', String(value)));
+    if (unit) row.append(el('span', 'rv-unit', unit));
+    return row;
+  };
+  function rvCurve(tl) {
+    if (!(tl?.counts?.length > 1)) return null;
+    const NS = 'http://www.w3.org/2000/svg';
+    const W = 100, H = 40;
+    const { max, peak, xAt, d } = buildCurve(tl.counts, W, H, 4);
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('aria-hidden', 'true');
+    const step = W / (tl.counts.length - 1);
+    const bw = Math.min(W, Math.max(6, step * 0.55));
+    const bx = Math.min(W - bw, Math.max(0, xAt(peak) - bw / 2));
+    svg.innerHTML = `<rect class="band" x="${bx}" y="0" width="${bw}" height="${H}"/>`
+      + `<path class="area" d="${d} L${W} ${H} L0 ${H} Z"/><line class="base" x1="0" y1="${H}" x2="${W}" y2="${H}"/><path class="line" d="${d}"/>`;
+    const box = el('div', 'rv-curve');
+    box.append(svg, el('div', 'eyebrow', `Spitze ${(tl.startHour + peak) % 24} Uhr · ${max}`));
+    return box;
+  }
+
+  function reviewSlides(r) {
+    const slides = [];
+    const add = (...children) => {
+      const sl = el('section', 'rv-slide');
+      children.filter(Boolean).forEach((c, k) => { c.style.setProperty('--k', k); sl.append(c); });
+      slides.push(sl);
+    };
+    const nights = `an ${r.nights} ${r.nights === 1 ? 'Abend' : 'Abenden'}`;
+    add(rvTitle('Dein', `|Jahr ${r.year}|`), bigNum(r.total), el('span', 'eyebrow', `Getränke ${nights}`));
+
+    const fav = Object.keys(r.drinks).sort((a, b) => r.drinks[b] - r.drinks[a])[0];
+    const bar = el('div', 'dist-bar');
+    const legend = el('div', 'dist-legend');
+    for (const [k, col] of [['beer', 'var(--beer)'], ['shot', 'var(--shot)'], ['mix', 'var(--mixc)']]) {
+      const part = el('div');
+      part.style.cssText = `background:${col};width:${(r.drinks[k] / r.total) * 100}%`;
+      bar.append(part);
+      const leg = el('span', 'leg');
+      const lab = el('span', 'eyebrow');
+      const sw = el('i');
+      sw.style.background = col;
+      lab.append(sw, DRINK_NAME[k]);
+      leg.append(lab, el('span', 'num', String(r.drinks[k])));
+      legend.append(leg);
+    }
+    add(rvTitle('Dein', 'Getränk:', `|${DRINK_NAME[fav]}.|`), bigNum(Math.round((r.drinks[fav] / r.total) * 100), '%'), bar, legend);
+
+    if (r.best) {
+      const [y, m, d] = r.best.day.split('-').map(Number);
+      const sub = el('div', 'rv-sub');
+      sub.append(el('span', 't-h3', WEEKDAY[new Date(y, m - 1, d).getDay()]), el('span', 'num', `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`));
+      add(rvTitle('Dein', '|bester|', 'Abend'), bigNum(r.best.total), sub, rvCurve(r.best.timeline));
+    }
+
+    if (r.topHour) {
+      add(rvTitle('Deine', '|Stunde|'), bigNum(r.topHour.hour, 'Uhr'),
+        el('span', 'eyebrow', `${r.topHour.n} ${r.topHour.n === 1 ? 'Getränk' : 'Getränke'} · ${Math.round((r.topHour.n / r.total) * 100)} % von allen`));
+    }
+
+    if (r.rank) {
+      const parts = [rvTitle('Dein', r.rival ? '|Rivale|' : '|Platz|')];
+      if (r.rival) {
+        const vs = el('div', 'rv-vs');
+        const side = (name, total, me) => {
+          const box = el('div', me ? '' : 'them');
+          box.append(el('span', `avatar${me ? ' me' : ''}`, [...name.trim()][0] ?? '?'), el('div', 't-h3', name), el('div', 'num', String(total)));
+          return box;
+        };
+        vs.append(side(reviewName, r.total, true), el('span', 'vs', 'vs'), side(r.rival.name, r.rival.total, false));
+        const diff = Math.abs(r.rival.total - r.total);
+        parts.push(vs, el('div', 'eyebrow rv-center', r.rival.ahead ? `${diff} Getränke Rückstand` : `${diff} Getränke Vorsprung`));
+      }
+      parts.push(el('div', 'eyebrow rv-center', `Platz ${r.rank} von ${r.of} im Jahr ${r.year}`));
+      add(...parts);
+    }
+
+    const cells = el('div', 'rv-cells');
+    for (const [label, value] of [['Abende', r.nights], ['Abendsiege', r.wins], ['Bester Abend', r.best?.total ?? '–']]) {
+      const c = el('div');
+      c.append(el('span', 'num', String(value)), el('span', 'eyebrow', label));
+      cells.append(c);
+    }
+    const actions = el('div', 'rv-actions');
+    const save = el('button', 'btn', 'Story speichern ');
+    save.type = 'button';
+    save.append(el('span', 'i-arrow i-arrow--down'));
+    save.addEventListener('click', async () => {
+      const label = save.innerHTML;
+      save.disabled = true;
+      save.textContent = 'Bild wird erstellt …';
+      try {
+        const { downloadReviewStory } = await import('./js/story.js');
+        await downloadReviewStory(r, reviewName);
+      } catch (err) {
+        showError(err.message || 'Story konnte nicht erstellt werden.');
+      } finally {
+        save.disabled = false;
+        save.innerHTML = label;
+      }
+    });
+    const again = el('button', 'btn btn--ghost', 'Nochmal');
+    again.type = 'button';
+    again.addEventListener('click', () => showSlide(0));
+    actions.append(save, again);
+    add(rvTitle('Prost auf', `|${r.year + 1}.|`), cells, actions);
+    return slides;
+  }
+
+  let rvSlides = [];
+  let rvIdx = 0;
+  let rvTimer = null;
+  let rvStart = 0;
+  let rvLeft = RV_MS;
+  function showSlide(i) {
+    rvIdx = Math.max(0, Math.min(rvSlides.length - 1, i));
+    rvSlides.forEach((sl, k) => {
+      sl.hidden = k !== rvIdx;
+      sl.classList.remove('is-in');
+    });
+    void rvSlides[rvIdx].offsetWidth;   // Einblendung neu starten
+    rvSlides[rvIdx].classList.add('is-in');
+    const segs = $('review-segs');
+    segs.textContent = '';
+    rvSlides.forEach((_, k) => segs.append(el('i', k < rvIdx ? 'done' : k === rvIdx ? 'on' : '')));
+    $('review').classList.remove('is-paused');
+    $('review').style.setProperty('--slide-ms', `${RV_MS}ms`);
+    rvLeft = RV_MS;
+    runSlide();
+  }
+  function runSlide() {
+    clearTimeout(rvTimer);
+    rvStart = Date.now();
+    if (rvIdx < rvSlides.length - 1) rvTimer = setTimeout(() => showSlide(rvIdx + 1), rvLeft);
+    else $('review-segs').lastChild?.classList.replace('on', 'done');
+  }
+  function openReview() {
+    if (!review?.total) return;
+    rvSlides = reviewSlides(review);
+    $('review-slides').replaceChildren(...rvSlides);
+    $('review-kicker').textContent = `Rückblick · ${reviewName}`;
+    document.documentElement.style.overflow = 'hidden';
+    enter($('review'));
+    showSlide(0);
+  }
+  function closeReview() {
+    clearTimeout(rvTimer);
+    document.documentElement.style.overflow = '';
+    leave($('review'));
+  }
+  $('review-open').addEventListener('click', openReview);
+  $('review-close').addEventListener('click', closeReview);
+  // Tippen und Halten: kurz = blättern, ab 250 ms = Pause bis zum Loslassen
+  let rvDown = null;
+  $('review').addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button')) return;
+    rvDown = { t: Date.now(), x: e.clientX };
+    clearTimeout(rvTimer);
+    rvLeft = Math.max(0, rvLeft - (Date.now() - rvStart));
+    $('review').classList.add('is-paused');
+  });
+  $('review').addEventListener('pointerup', (e) => {
+    if (!rvDown) return;
+    const held = Date.now() - rvDown.t;
+    rvDown = null;
+    $('review').classList.remove('is-paused');
+    if (held < 250) showSlide(e.clientX < innerWidth * 0.3 ? rvIdx - 1 : rvIdx + 1);
+    else runSlide();
+  });
+  $('review').addEventListener('pointercancel', () => { rvDown = null; $('review').classList.remove('is-paused'); runSlide(); });
+  document.addEventListener('keydown', (e) => {
+    if ($('review').hidden) return;
+    if (e.key === 'Escape') closeReview();
+    if (e.key === 'ArrowRight') showSlide(rvIdx + 1);
+    if (e.key === 'ArrowLeft') showSlide(rvIdx - 1);
+  });
+
+  // All-Time-Stapel im Profil (L20): aus dem aktuellen Stand und den letzten
+  // Abenden zurückgerechnet. Der Abend, der gerade läuft, steht als „Heute"
+  // oben; ohne heutige Getränke trägt die erste Zeile das Datum des letzten Abends.
+  let recentNights = [];
+  let meTotal = null;
+  function renderStack() {
+    if (meTotal === null) return;
+    const t = seasonNow();
+    if (t.getHours() < 6) t.setDate(t.getDate() - 1);
+    const p2 = (n) => String(n).padStart(2, '0');
+    const today = `${t.getFullYear()}-${p2(t.getMonth() + 1)}-${p2(t.getDate())}`;
+    const short = (day) => `${day.slice(8, 10)}.${day.slice(5, 7)}.`;
+    const nights = recentNights.slice();
+    const lines = [];
+    let c = meTotal;
+    if (nights[0]?.day === today) { lines.push([c, 'Heute']); c -= nights.shift().total; }
+    for (const r of nights) {
+      if (lines.length >= 4 || c <= 0) break;
+      lines.push([c, short(r.day)]);
+      c -= r.total;
+    }
+    if (!lines.length) lines.push([meTotal, 'All-Time']);
+    const box = $('alltime-stack');
+    box.textContent = '';
+    for (const [v, label] of lines) {
+      const row = document.createElement('div');
+      row.className = 'as-line';
+      const n = document.createElement('span');
+      n.className = 'num';
+      n.textContent = v;
+      const l = document.createElement('span');
+      l.className = 'eyebrow';
+      l.textContent = label;
+      row.append(n, l);
+      box.append(row);
+    }
+    box.setAttribute('aria-label', `${meTotal} Getränke All-Time`);
+  }
+
+  // --- Tempo-Vergleich (D-072) ---
+  // Der Server liefert je Viertelstunde ab 06:00, wie viele Getränke der
+  // Spieler an früheren Abenden im Schnitt bis dahin hatte. Hier wird der Wert
+  // für jetzt abgelesen (innerhalb der Viertelstunde linear) und mit heute
+  // verglichen. Er wandert mit der Uhr, daher auch ohne neues Getränk jede Minute.
+  let paceCurve = null;
+  let paceOn = true;
+  let todayCount = 0;
+  const SLOT = 15 * 60 * 1000;
+  const fmt1 = (n) => n.toLocaleString('de-DE', { maximumFractionDigits: 1 });
+  function paceNow() {
+    const t = seasonNow();   // ?jetzt= stellt zum Ausprobieren auch diese Uhr
+    const start = new Date(t);
+    if (start.getHours() < 6) start.setDate(start.getDate() - 1);
+    start.setHours(6, 0, 0, 0);
+    const offset = t - start;
+    const i = Math.min(95, Math.floor(offset / SLOT));
+    const before = i > 0 ? paceCurve.slots[i - 1] : 0;
+    return before + (paceCurve.slots[i] - before) * ((offset - i * SLOT) / SLOT);
+  }
+  function renderPace() {
+    const el = $('pace');
+    if (!paceOn || !paceCurve) { el.hidden = true; return; }
+    let dir = 'none', diff = '', cap = '', title = '';
+    if (!paceCurve.nights) {
+      cap = 'erster Abend';
+    } else {
+      const avg = Math.round(paceNow() * 10) / 10;
+      const d = Math.round((todayCount - avg) * 10) / 10;
+      title = `An deinen bisherigen Abenden hattest du um diese Zeit im Schnitt ${fmt1(avg)} Getränke.`;
+      if (todayCount === 0) {
+        // Kein ▼ zum Start des Abends; vor dem ersten Getränk nur der Schnitt
+        if (avg < 0.5) { el.hidden = true; return; }
+        cap = `Ø ${fmt1(avg)}\num diese Zeit`;
+      } else if (Math.abs(d) < 0.5) {
+        dir = 'even'; diff = '±0'; cap = `genau im Ø ${fmt1(avg)}\num diese Zeit`;
+      } else {
+        dir = d > 0 ? 'up' : 'down'; diff = fmt1(Math.abs(d));
+        cap = `${d > 0 ? 'über' : 'unter'} Ø ${fmt1(avg)}\num diese Zeit`;
+      }
+    }
+    el.dataset.dir = dir;
+    $('pace-diff').textContent = diff;
+    $('pace-cap').textContent = cap;
+    el.title = title;
+    el.hidden = false;
+  }
+  setInterval(() => { renderPace(); renderDate(); }, 60 * 1000);
+
+  // --- Persönliche Statistik + Achievements (REST, aktualisiert bei eigener Änderung) ---
+  // '2026-09-25' -> '25.09.2026'
+  const fmtDay = (iso) => { const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; };
+
+  async function loadStats() {
+    try {
+      const res = await fetch(`${AREA.base}/api/players/${encodeURIComponent(playerId)}/stats`);
+      if (!res.ok) return;
+      const { days, best, avgPerNight, achievements, visitBadge, pace, recentNights: rn } = await res.json();
+      recentNights = rn ?? [];
+      renderStack();
+      loadReview();
+      paceCurve = pace ?? null;
+      renderPace();
+      statDays = days;
+      renderSince();
+      bump('stat-days', days);
+      if (best) {
+        // Datum nur im Tooltip: in der Beschriftung bräche es die Zelle auf
+        // zwei Zeilen um und die drei Werte stünden nicht mehr auf einer Linie
+        $('stat-best').textContent = best.total;
+        $('stat-best').parentElement.title = `Bester Abend am ${fmtDay(best.day)}`;
+      }
+      $('stat-avg').textContent = days
+        ? avgPerNight.toLocaleString('de-DE', { maximumFractionDigits: 1 })
+        : '–';
+      // Treue-Abzeichen (D-031): nur die höchste erreichte Stufe, und gar keins,
+      // solange die erste Schwelle (10 Abende) nicht erreicht ist.
+      $('badge-visits').hidden = !visitBadge;
+      if (visitBadge) {
+        $('badge-visits-label').textContent = visitBadge.label;
+        $('badge-visits').querySelector('.badge-count').textContent = `×${visitBadge.days}`;
+        $('badge-visits').title = visitBadge.next
+          ? `${visitBadge.days} Abende dabei – nächste Stufe bei ${visitBadge.next}.`
+          : `${visitBadge.days} Abende dabei – höchste Stufe erreicht.`;
+      }
+
+      // Abzeichen (D-093): gefüllt bei „heute geschafft", Akzent-Linie, sobald
+      // es je geschafft wurde; die Kerbe zählt alle Abende, die Abschnittszeile
+      // nennt, wie viele heute schon gefüllt sind
+      let earnedToday = 0;
+      for (const [id, key] of [
+        ['badge-winner', 'dayWinner'],
+        ['badge-first', 'firstDrinker'],
+        ['badge-midnight', 'midnightBeer'],
+        ['badge-hour', 'threeInHour'],
+        ['badge-mix', 'mixMaster'],
+      ]) {
+        const a = achievements[key] ?? { count: 0, today: false };
+        $(id).classList.toggle('is-today', a.today);
+        $(id).classList.toggle('is-won', a.count > 0);
+        $(id).querySelector('.badge-count').textContent = `×${a.count}`;
+        if (a.today) earnedToday += 1;
+      }
+      $('badge-hint').textContent = earnedToday ? `${earnedToday} von 5 heute` : '';
+
+      // Lorbeer + Chip im Kopf (D-067): erst ab dem ersten Abendsieg
+      const wins = achievements.dayWinner?.count ?? 0;
+      $('ident-emblem').classList.toggle('won', wins > 0);
+      $('win-chip').hidden = wins === 0;
+      $('win-chip').textContent = `${wins}× Tagessieger`;   // wie das Abzeichen (D-070)
+    } catch { /* Offline-Moment: nächster State-Broadcast versucht es erneut */ }
+  }
+
+  // --- Profil: Platz heute/all-time und wer direkt vor bzw. hinter mir liegt ---
+  const todayTotal = (p) => p.beersToday + p.shotsToday + p.mixesToday;
+
+  function rivalRow(icon, label, gapText) {
+    const row = document.createElement('div');
+    row.className = 'rival';
+    const ic = document.createElement('span');
+    ic.className = 'icon';
+    ic.textContent = icon;
+    const who = document.createElement('span');
+    who.className = 'who';
+    who.textContent = label;
+    const gap = document.createElement('span');
+    gap.className = 'gap';
+    gap.textContent = gapText;
+    row.append(ic, who, gap);
+    return row;
+  }
+
+  const fmtDrinks = (n) => (n === 1 ? '1 Getränk' : `${n} Getränke`);
+
+  // ranking: absteigend sortierte Liste [{name,total}]; füllt Platz + Nachbarn
+  function renderRanking(ranking, meIdx, labelSuffix) {
+    const box = $('prof-rivals');
+    box.textContent = '';
+    if (meIdx < 0) {
+      $('prof-rank').textContent = '–';
+      $('prof-rank-label').textContent = labelSuffix === 'heute' ? 'Heute noch nichts' : 'Platz';
+      return;
+    }
+    $('prof-rank').textContent = `#${meIdx + 1}`;
+    $('prof-rank-label').textContent = `von ${ranking.length} ${labelSuffix}`;
+    const ahead = ranking[meIdx - 1];
+    const behind = ranking[meIdx + 1];
+    const me = ranking[meIdx];
+    // Bei Gleichstand entscheidet die Uhrzeit (D-020) – als „gleichauf" anzeigen
+    const gapUp = (n) => (n === 0 ? 'gleichauf' : `${fmtDrinks(n)} vor dir`);
+    const gapDown = (n) => (n === 0 ? 'gleichauf' : `${fmtDrinks(n)} Rückstand`);
+    if (!ahead) {
+      const lead = behind ? me.total - behind.total : null;
+      box.appendChild(rivalRow('👑', 'Du führst!',
+        lead === null ? '' : lead === 0 ? `gleichauf mit ${behind.name}` : `${fmtDrinks(lead)} Vorsprung`));
+    } else {
+      box.appendChild(rivalRow('▲', `Vor dir: ${ahead.name}`, gapUp(ahead.total - me.total)));
+    }
+    if (behind) {
+      box.appendChild(rivalRow('▼', `Hinter dir: ${behind.name}`, gapDown(me.total - behind.total)));
+    }
+  }
+
+  // --- Ganze Rangliste (D-030) ---------------------------------------------
+  // Zeigt dieselbe Liste, aus der oben Platz und Nachbarn stammen — damit die
+  // Zahlen in Karte und Blatt nicht auseinanderlaufen. Läuft live weiter,
+  // solange das Blatt offen ist.
+  let lastPlayers = [];
+  let boardScope = 'today';
+
+  function boardEntries(scope) {
+    if (scope === 'today') {
+      return lastPlayers
+        .filter((p) => todayTotal(p) > 0)
+        .map((p) => ({ id: p.id, name: p.name, total: todayTotal(p), ts: p.lastDrinkTsToday }))
+        .sort((a, b) => b.total - a.total || (a.ts ?? Infinity) - (b.ts ?? Infinity) || a.name.localeCompare(b.name, 'de'));
+    }
+    // All-Time kommt vom Server fertig sortiert (inkl. Tiebreak D-020)
+    return lastPlayers.map((p) => ({ id: p.id, name: p.name, total: p.total }));
+  }
+
+  function renderBoard(scrollToMe = false) {
+    const entries = boardEntries(boardScope);
+    $('board-title').textContent = boardScope === 'today' ? 'Rangliste heute' : 'All-Time Rangliste';
+    // Gleiche Wörter wie auf dem TV-Board (D-054)
+    $('board-count').textContent = boardScope === 'today'
+      ? `${entries.length} heute dabei`
+      : `${entries.length} Teilnehmer`;
+
+    const list = $('board-list');
+    list.textContent = '';
+    if (!entries.length) {
+      const empty = document.createElement('div');
+      empty.className = 'board-empty';
+      empty.textContent = 'Heute Abend hat noch niemand etwas gezählt.';
+      list.appendChild(empty);
+      return;
+    }
+
+    let myRow = null;
+    entries.forEach((e, i) => {
+      const row = document.createElement('div');
+      row.className = 'board-row';
+      row.dataset.rank = i + 1;
+      const rank = document.createElement('span');
+      rank.className = 'rank';
+      rank.textContent = i + 1;
+      const who = document.createElement('span');
+      who.className = 'who';
+      who.textContent = e.name;
+      if (e.id === playerId) {
+        row.classList.add('me');
+        myRow = row;
+        const pill = document.createElement('span');
+        pill.className = 'me-pill';
+        pill.textContent = 'Du';
+        who.appendChild(pill);
+      }
+      const total = document.createElement('span');
+      total.className = 'total';
+      total.textContent = e.total;
+      row.append(rank, who, total);
+      list.appendChild(row);
+    });
+    // Beim Öffnen zur eigenen Zeile springen – bei 40 Leuten sucht sonst jeder
+    if (scrollToMe && myRow) {
+      requestAnimationFrame(() => myRow.scrollIntoView({ block: 'center' }));
+    }
+  }
+
+  function setBoardScope(scope, scrollToMe = false) {
+    // Beim Umschalten gleitet die Liste von der Seite des Balkens herein
+    if (scope !== boardScope && !$('board-modal').hidden) replay($('board-list'), scope === 'today' ? 'swap-in-l' : 'swap-in-r');
+    boardScope = scope;
+    $('board-tabs').dataset.pos = scope === 'today' ? '0' : '1';
+    $('board-tab-today').classList.toggle('active', scope === 'today');
+    $('board-tab-alltime').classList.toggle('active', scope !== 'today');
+    renderBoard(scrollToMe);
+  }
+
+  function openBoard(scope) {
+    enter($('board-modal'));
+    setBoardScope(scope, true);
+  }
+
+  const closeBoard = () => leave($('board-modal'));
+
+  $('show-board').addEventListener('click', () => openBoard(profScope));
+  $('board-tab-today').addEventListener('click', () => setBoardScope('today', true));
+  $('board-tab-alltime').addEventListener('click', () => setBoardScope('alltime', true));
+  $('board-close').addEventListener('click', closeBoard);
+  // Klick auf den abgedunkelten Hintergrund schließt ebenfalls
+  $('board-modal').addEventListener('click', (e) => { if (e.target === $('board-modal')) closeBoard(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeBoard(); });
+
+  // Rangliste im Profil (D-040): eine Karte, oben umschaltbar. Solange niemand
+  // den Schalter angefasst hat, zeigt sie „Heute", sobald heute etwas von einem
+  // selbst geloggt ist — sonst stünden an einem normalen Dienstag zwei Striche.
+  let profScope = 'alltime';
+  let profScopeManual = false;
+  let profMe = null;
+  const profLists = { today: [], alltime: [] };
+
+  function setProfScope(scope, manual = false) {
+    if (manual && scope !== profScope) {
+      for (const el of [document.querySelector('.rank-hero'), $('prof-rivals')]) replay(el, scope === 'today' ? 'swap-in-l' : 'swap-in-r');
+    }
+    profScope = scope;
+    if (manual) profScopeManual = true;
+    $('prof-tabs').dataset.pos = scope === 'today' ? '0' : '1';
+    $('prof-tab-today').classList.toggle('active', scope === 'today');
+    $('prof-tab-alltime').classList.toggle('active', scope !== 'today');
+    renderProfile(!manual);
+  }
+
+  function renderProfile(animate) {
+    if (!profMe) return;
+    const today = profScope === 'today';
+    const list = profLists[profScope];
+    const total = today ? todayTotal(profMe) : profMe.total;
+    const el = $('prof-total');
+    el.style.color = today ? 'var(--green)' : 'var(--gold)';
+    // Beim Umschalten nicht aufploppen: der Wert ist nicht gestiegen,
+    // es steht nur ein anderer Zeitraum da.
+    if (animate) bump('prof-total', total, `prof-total-${profScope}`);
+    else { el.textContent = total; prev[`prof-total-${profScope}`] = total; }
+    renderRanking(list, list.findIndex((p) => p.id === profMe.id), today ? 'heute' : 'insgesamt');
+  }
+
+  function updateProfile(players, me) {
+    profMe = me;
+    // Heute: nur wer heute geloggt hat, Tiebreak wie auf dem TV (D-020)
+    profLists.today = players
+      .filter((p) => todayTotal(p) > 0)
+      .map((p) => ({ id: p.id, name: p.name, total: todayTotal(p), ts: p.lastDrinkTsToday }))
+      .sort((a, b) => b.total - a.total || (a.ts ?? Infinity) - (b.ts ?? Infinity) || a.name.localeCompare(b.name, 'de'));
+    // All-Time: Reihenfolge kommt fertig sortiert vom Server (inkl. Tiebreak)
+    profLists.alltime = players.map((p) => ({ id: p.id, name: p.name, total: p.total }));
+
+    if (!profScopeManual) setProfScope(todayTotal(me) > 0 ? 'today' : 'alltime');
+    else renderProfile(true);
+  }
+
+  $('prof-tab-today').addEventListener('click', () => setProfScope('today', true));
+  $('prof-tab-alltime').addEventListener('click', () => setProfScope('alltime', true));
+
+  // Anteil am Haus (D-040): eigener Stand gegen die Summe aller — dieselbe
+  // Spielerliste, aus der direkt darüber auch der All-Time-Platz kommt.
+  function updateShare(players, me) {
+    const house = players.reduce((n, p) => n + p.total, 0);
+    if (!house) {
+      $('share-bar').style.width = '0';
+      $('share-note').textContent = 'Hier wurde noch nichts gezählt.';
+      return;
+    }
+    const share = (me.total / house) * 100;
+    $('share-bar').style.width = `${share}%`;
+    const pct = share.toLocaleString('de-DE', { maximumFractionDigits: 1 });
+    $('share-note').textContent = `${me.total} von ${house} Getränken · ${pct} %`;
+  }
+
+  // Kopfzeile: „Dabei seit …" kommt aus dem Zustand, die Abende aus der Statistik
+  let statDays = null;
+  let joinedAt = null;
+  function renderSince() {
+    const parts = [];
+    if (joinedAt) parts.push(`Dabei seit ${joinedAt}`);
+    if (statDays) parts.push(statDays === 1 ? '1 Abend' : `${statDays} Abende`);
+    $('player-since').textContent = parts.join(' · ');
+  }
+
+  // Verteilungsbalken aus den All-Time-Zählern
+  function updateDistribution(me) {
+    const total = me.beers + me.shots + me.mixes;
+    const pct = (n) => (total > 0 ? Math.round((n / total) * 100) : 0);
+    $('dist-beer').style.width = total ? `${(me.beers / total) * 100}%` : '0';
+    $('dist-shot').style.width = total ? `${(me.shots / total) * 100}%` : '0';
+    $('dist-mix').style.width = total ? `${(me.mixes / total) * 100}%` : '0';
+    $('pct-beer').textContent = `${pct(me.beers)}%`;
+    $('pct-shot').textContent = `${pct(me.shots)}%`;
+    $('pct-mix').textContent = `${pct(me.mixes)}%`;
+  }
+
+  let lastLogSum = null; // Getränke-Summe des Abends aller Spieler (für „Erster Trinker")
+  let statsTimer = null;
+
+  const ws = connectState({
+    onState({ players, seasonal, paceCompare }) {
+      setSeasonEnabled(seasonal);   // Saison-Akzente (D-071), im Admin abschaltbar
+      paceOn = paceCompare !== false;   // Schnitt-Vergleich (D-075), ebenso
+      const me = players.find((p) => p.id === playerId);
+      if (!me) {
+        // Account wurde (vom Admin) gelöscht
+        clearSession();
+        go('./');
+        return;
+      }
+      setName(me.name);
+      reviewName = me.name;
+      rememberName(me.name);   // Umbenennung im Admin fürs nächste erste Bild
+      // created_at steht als 'YYYY-MM-DD HH:MM:SS' im Zustand (D-006)
+      const joined = /^\d{4}-\d{2}-\d{2}/.exec(me.createdAt ?? '');
+      const joinedDay = joined ? fmtDay(joined[0]) : null;
+      if (joinedDay !== joinedAt) { joinedAt = joinedDay; renderSince(); }
+      bump('today-total', me.beersToday + me.shotsToday + me.mixesToday);
+      todayCount = me.beersToday + me.shotsToday + me.mixesToday;
+      renderPace();
+      bump('beers-today', me.beersToday);
+      bump('beers-total', me.beers);
+      bump('shots-today', me.shotsToday);
+      bump('shots-total', me.shots);
+      bump('mixes-today', me.mixesToday);
+      bump('mixes-total', me.mixes);
+      if (me.total !== meTotal) { meTotal = me.total; renderStack(); }
+      updateDistribution(me);
+      updateShare(players, me);
+      updateProfile(players, me);
+      lastPlayers = players;
+      if (!$('board-modal').hidden) renderBoard();
+      document.title = `SV Partykeller – ${me.name}`;
+
+      // Statistik nachladen, wenn heute irgendwo etwas dazukam (Achievements
+      // wie „Erster Trinker" hängen auch von den anderen ab) oder beim Start.
+      const logSum = players.reduce((s, p) => s + p.beersToday + p.shotsToday + p.mixesToday, 0);
+      if (logSum !== lastLogSum) {
+        // Beim Start sofort; danach entprellt und leicht gestreut, damit nicht
+        // alle Handys im selben Moment nach jedem Getränk beim Server anklopfen
+        // (D-047). Kommen mehrere Getränke kurz hintereinander, reicht ein Aufruf.
+        const first = lastLogSum === null;
+        lastLogSum = logSum;
+        clearTimeout(statsTimer);
+        if (first) loadStats();
+        else statsTimer = setTimeout(loadStats, 800 + Math.random() * 1200);
+      }
+    },
+    onError: showError,
+  });
+
+  const send = (drink) => ws.send({ type: 'increment', token, playerId, drink, delta: 1 });
+  $('add-beer').addEventListener('click', () => send('beer'));
+  $('add-shot').addEventListener('click', () => send('shot'));
+  $('add-mix').addEventListener('click', () => send('mix'));
+
+  // Rein optisch (D-078): an der Tippstelle steigt kurz ein „+1" auf. Die
+  // Zählung selbst kommt weiterhin nur über den nächsten State-Broadcast.
+  for (const id of ['add-beer', 'add-shot', 'add-mix']) {
+    $(id).addEventListener('pointerdown', (e) => {
+      if (reducedMotion() || e.button > 0) return;
+      const btn = e.currentTarget;
+      const r = btn.getBoundingClientRect();
+      const f = document.createElement('span');
+      f.className = 'drink-float';
+      f.setAttribute('aria-hidden', 'true');
+      f.textContent = '+1';
+      f.style.setProperty('--x', `${e.clientX - r.left}px`);
+      f.style.setProperty('--y', `${e.clientY - r.top}px`);
+      btn.append(f);
+      f.addEventListener('animationend', () => f.remove(), { once: true });
+      setTimeout(() => f.remove(), 1200);   // falls animationend ausbleibt
+    });
+  }
+}
+
+// Silvester (D-071): unter dem Namen zählt ein Chip die letzte Stunde
+// herunter, nach Mitternacht steht bis 1 Uhr ein Gruß da
+let seasonTick = null;
+onSeason((season) => {
+  clearInterval(seasonTick);
+  const chip = $('season-chip');
+  chip.hidden = true;
+  if (season !== 'silvester') return;
+  const tick = () => {
+    const ny = newYear();
+    chip.hidden = ny.phase !== 'countdown' && ny.phase !== 'greeting';
+    chip.textContent = ny.phase === 'countdown' ? `noch ${mmss(ny.left)} bis ${ny.year}` : `Prost ${ny.year}!`;
+  };
+  tick();
+  seasonTick = setInterval(tick, 1000);
+});
+
+$('logout').addEventListener('click', (e) => {
+  e.preventDefault();
+  clearSession();
+  go('./', { morph: 'me' });   // Kopf gleitet zurück in die eigene Zeile (D-085)
+});
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+</body>
+</html>

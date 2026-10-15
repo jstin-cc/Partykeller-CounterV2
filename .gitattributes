@@ -1,0 +1,7 @@
+# Zeilenenden im Repo immer LF (läuft auf dem Raspberry Pi / Linux)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.woff2 binary
+*.mp4 binary
+*.wav binary

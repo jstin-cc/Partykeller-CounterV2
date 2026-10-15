@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D2 live</title>
+<link rel="stylesheet" href="../../public/css/theme.css">
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; gap: 48px; padding: 32px; }
+  .topo-bg { position: fixed; inset: 0; z-index: -1; }
+
+  /* --- Zählwerk: jede Ziffer ist ein Streifen 0–9, der hoch- oder runterrollt --- */
+  .odo { display: inline-flex; line-height: 1; }
+  .odo .col { display: inline-block; height: 1em; overflow: hidden; }
+  .odo .strip { display: flex; flex-direction: column; transition: transform 0.7s var(--ease); }
+  .odo .strip span { height: 1em; line-height: 1; display: block; text-align: center; }
+
+  /* --- Handy --- */
+  .phone {
+    position: relative; width: 340px; height: 650px; flex: none; overflow: hidden;
+    border-radius: 40px; border: 1px solid var(--line-strong); background: var(--bg);
+    padding: 58px 20px 22px; display: flex; flex-direction: column; gap: 14px;
+  }
+  .phone::before { content: ''; position: absolute; top: 14px; left: 50%; width: 92px; height: 24px; margin-left: -46px; border-radius: 14px; background: #000; }
+  .ph-head { display: flex; align-items: center; gap: 12px; }
+  .ph-head .avatar { width: 46px; height: 46px; font-size: 24px; background: var(--accent); color: var(--accent-ink); border: 0; }
+  .ph-head .nm { font-weight: 800; font-size: 40px; line-height: 0.85; text-transform: uppercase; letter-spacing: -0.04em; }
+  .today { display: flex; flex-direction: column; gap: 6px; padding: 6px 0 4px; border-bottom: 1px solid var(--line); }
+  .today .odo { font-size: 104px; font-weight: 800; letter-spacing: -0.05em; }
+  .drink {
+    position: relative; padding: 16px 18px 50px; border-radius: 14px; background: var(--beer); color: var(--beer-ink);
+  }
+  .drink.shot { background: var(--shot); color: var(--shot-ink); }
+  .drink-head { display: flex; justify-content: space-between; align-items: center; }
+  .drink-name { font-weight: 800; font-size: 24px; text-transform: uppercase; letter-spacing: -0.03em; }
+  .plus { position: relative; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid currentColor; transition: transform 0.4s var(--ease), background 0.2s; }
+  .plus::before, .plus::after { content: ''; position: absolute; left: 50%; top: 50%; width: 16px; height: 2px; margin: -1px 0 0 -8px; background: currentColor; }
+  .plus::after { transform: rotate(90deg); }
+  .drink.tap .plus { transform: rotate(90deg) scale(0.9); background: var(--beer-ink); color: var(--beer); }
+  .drink .odo { font-size: 70px; font-weight: 800; letter-spacing: -0.05em; margin-top: 6px; }
+  .drink .unit { position: absolute; left: 18px; bottom: 16px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.7; }
+  .float {
+    position: absolute; right: 30px; top: 30px; padding: 3px 8px; border-radius: 6px;
+    background: var(--beer-ink); color: var(--beer); font-weight: 800; font-size: 15px;
+    animation: float-up 0.8s var(--ease-out) forwards;
+  }
+  @keyframes float-up { 0% { opacity: 0; transform: translateY(6px) scale(0.6); } 18% { opacity: 1; transform: translateY(-10px); } 100% { opacity: 0; transform: translateY(-48px); } }
+  .finger {
+    position: absolute; width: 46px; height: 46px; border-radius: 50%; background: rgb(255 255 255 / 0.35);
+    box-shadow: 0 0 0 2px rgb(255 255 255 / 0.5); pointer-events: none; opacity: 0; transform: scale(1.4);
+    transition: opacity 0.18s, transform 0.18s;
+  }
+  .finger.down { opacity: 1; transform: scale(1); }
+
+  /* --- TV-Rangliste mit Fallblatt --- */
+  .tv {
+    position: relative; width: 760px; flex: none; padding: 34px 38px 38px;
+    border-radius: 22px; border: 1px solid var(--line-strong); background: var(--bg-deep);
+  }
+  .tv-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 24px; }
+  .tv-head .t-title { font-size: 52px; }
+  .board { display: flex; flex-direction: column; gap: 12px; }
+  .brow { display: grid; grid-template-columns: 70px 1fr 120px; align-items: center; gap: 18px; }
+  .brow .rank { font-family: var(--font-serif); font-size: 58px; line-height: 1; color: var(--ink-muted); }
+  .brow:first-child .rank { color: var(--accent-text); }
+  .brow .tot { font-size: 54px; font-weight: 800; letter-spacing: -0.04em; justify-self: end; }
+  .brow:first-child .tot { color: var(--accent-text); }
+
+  .flaps { display: flex; gap: 5px; }
+  .cell { position: relative; width: 48px; height: 68px; perspective: 320px; font-weight: 900; font-size: 44px; color: var(--ink); }
+  .half, .leaf { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; background: #1a2030; backface-visibility: hidden; }
+  .half.top, .leaf.ltop { top: 0; border-radius: 7px 7px 0 0; transform-origin: bottom; }
+  .half.bottom, .leaf.lbottom { bottom: 0; border-radius: 0 0 7px 7px; transform-origin: top; background: #1d2435; }
+  .half span, .leaf span { display: block; height: 68px; line-height: 68px; text-align: center; }
+  .half.bottom span, .leaf.lbottom span { margin-top: -34px; }
+  .leaf { visibility: hidden; }
+  .leaf.ltop { background: #222a3c; }
+  .cell::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: var(--bg-deep); z-index: 3; }
+  .brow:first-child .cell { color: var(--accent-text); }
+</style>
+</head>
+<body class="area-pk">
+<div class="topo topo-bg" aria-hidden="true"></div>
+
+<div class="phone">
+  <div class="ph-head"><span class="avatar">L</span><span class="nm">Luki</span></div>
+  <div class="today"><span class="eyebrow">Getränke heute</span><span class="odo num" id="ph-total"></span></div>
+  <div class="drink" id="beer">
+    <div class="drink-head"><span class="drink-name">Bier</span><span class="plus"></span></div>
+    <span class="odo num" id="ph-beer"></span>
+    <span class="unit">heute</span>
+  </div>
+  <div class="drink shot">
+    <div class="drink-head"><span class="drink-name">Shots</span><span class="plus"></span></div>
+    <span class="odo num" id="ph-shot"></span>
+    <span class="unit">heute</span>
+  </div>
+  <span class="finger" id="finger"></span>
+</div>
+
+<div class="tv">
+  <div class="tv-head"><h1 class="t-title">Rangliste <span class="t-serif t-accent">heute</span></h1><span class="eyebrow">SV Partykeller</span></div>
+  <div class="board" id="board"></div>
+</div>
+
+<script>
+// Zählwerk: Ziffern als Streifen, rollt jede Stelle einzeln
+function odo(el, value, digits = String(value).length) {
+  const s = String(value).padStart(digits, ' ');
+  while (el.children.length < s.length) {
+    const col = document.createElement('span');
+    col.className = 'col';
+    const strip = document.createElement('span');
+    strip.className = 'strip';
+    for (const d of ' 0123456789') { const x = document.createElement('span'); x.textContent = d; strip.append(x); }
+    col.append(strip);
+    el.prepend(col);
+  }
+  [...el.children].forEach((col, i) => {
+    const idx = ' 0123456789'.indexOf(s[i]);
+    col.firstChild.style.transform = `translateY(-${idx}em)`;
+  });
+}
+
+// Fallblatt: jede Zelle klappt über Zwischenbuchstaben bis zum Ziel
+const ABC = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+function makeCell(ch) {
+  const c = document.createElement('span');
+  c.className = 'cell';
+  c.innerHTML = '<span class="half top"><span></span></span><span class="half bottom"><span></span></span><span class="leaf ltop"><span></span></span><span class="leaf lbottom"><span></span></span>';
+  c.dataset.ch = ch;
+  c.querySelectorAll('.half span').forEach((s) => { s.textContent = ch; });
+  c.queue = Promise.resolve();
+  return c;
+}
+function flipOnce(c, to, ms) {
+  const from = c.dataset.ch;
+  const [top, bottom, ltop, lbottom] = [...c.children].map((x) => x.firstChild);
+  top.textContent = to;
+  bottom.textContent = from;
+  ltop.textContent = from;
+  lbottom.textContent = to;
+  const lt = c.children[2], lb = c.children[3];
+  lt.style.visibility = lb.style.visibility = 'visible';
+  const a1 = lt.animate([{ transform: 'rotateX(0deg)', filter: 'brightness(1)' }, { transform: 'rotateX(-90deg)', filter: 'brightness(0.6)' }], { duration: ms / 2, easing: 'ease-in', fill: 'forwards' });
+  const a2 = lb.animate([{ transform: 'rotateX(90deg)', filter: 'brightness(1.4)' }, { transform: 'rotateX(0deg)', filter: 'brightness(1)' }], { duration: ms / 2, delay: ms / 2, easing: 'ease-out', fill: 'forwards' });
+  c.dataset.ch = to;
+  return a2.finished.then(() => {
+    bottom.textContent = to;
+    lt.style.visibility = lb.style.visibility = 'hidden';
+    a1.cancel(); a2.cancel();
+  });
+}
+function flipTo(c, target, delay = 0) {
+  c.queue = c.queue.then(() => new Promise((r) => setTimeout(r, delay))).then(async () => {
+    let cur = c.dataset.ch;
+    let steps = 0;
+    while (cur !== target) {
+      // echte Fallblatt-Anzeigen laufen das Alphabet durch; hier höchstens fünf Zwischenstände
+      const ci = ABC.indexOf(cur), ti = ABC.indexOf(target);
+      const dist = (ti - ci + ABC.length) % ABC.length;
+      const next = steps >= 4 || dist <= 1 ? target : ABC[(ci + Math.ceil(dist / (5 - steps))) % ABC.length];
+      await flipOnce(c, next, 110);
+      cur = next;
+      steps += 1;
+    }
+  });
+}
+
+// Rangliste: feste Zeilen, die Inhalte klappen beim Platzwechsel um
+const W = 7;
+const players = { Brocky: 9, Justin: 8, Luki: 6, Tom: 5 };
+const board = document.getElementById('board');
+const rows = [];
+for (let i = 0; i < 4; i++) {
+  const r = document.createElement('div');
+  r.className = 'brow';
+  r.innerHTML = `<span class="rank">${i + 1}</span><span class="flaps"></span><span class="tot num odo"></span>`;
+  const cells = Array.from({ length: W }, () => makeCell(' '));
+  r.children[1].append(...cells);
+  board.append(r);
+  rows.push({ cells, tot: r.children[2] });
+}
+function render(initial = false) {
+  const order = Object.entries(players).sort((a, b) => b[1] - a[1]);
+  order.forEach(([name, n], i) => {
+    const word = name.toUpperCase().padEnd(W, ' ').slice(0, W);
+    rows[i].cells.forEach((c, k) => {
+      if (initial) { c.dataset.ch = word[k]; c.querySelectorAll('.half span').forEach((s) => { s.textContent = word[k]; }); }
+      else if (c.dataset.ch !== word[k]) flipTo(c, word[k], k * 45);
+    });
+    odo(rows[i].tot, n, 2);
+  });
+}
+render(true);
+
+// Handy von Luki: Tipp auf Bier = +1, Zahlen rollen, TV zieht nach
+let beer = 4, shot = 2;
+const phTotal = document.getElementById('ph-total');
+const phBeer = document.getElementById('ph-beer');
+const phShot = document.getElementById('ph-shot');
+odo(phTotal, beer + shot, 2); odo(phBeer, beer, 2); odo(phShot, shot, 2);
+const finger = document.getElementById('finger');
+const beerCard = document.getElementById('beer');
+function tap() {
+  const pr = beerCard.querySelector('.plus').getBoundingClientRect();
+  const ph = document.querySelector('.phone').getBoundingClientRect();
+  finger.style.left = `${pr.left - ph.left - 3}px`;
+  finger.style.top = `${pr.top - ph.top - 3}px`;
+  finger.classList.add('down');
+  beerCard.classList.add('tap');
+  setTimeout(() => { finger.classList.remove('down'); beerCard.classList.remove('tap'); }, 220);
+  const f = document.createElement('span');
+  f.className = 'float';
+  f.textContent = '+1';
+  beerCard.append(f);
+  setTimeout(() => f.remove(), 900);
+  beer += 1;
+  setTimeout(() => {
+    odo(phBeer, beer, 2);
+    odo(phTotal, beer + shot, 2);
+    players.Luki = beer + shot;
+    render();
+  }, 160);
+}
+const script = [900, 2600, 4300, 6000];
+script.forEach((t) => setTimeout(tap, t));
+setTimeout(() => { players.Tom += 1; render(); }, 3400);
+window.__done = 8800;
+</script>
+</body>
+</html>

@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="de" data-surface="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SV Partykeller – Abend-Archiv</title>
+<script>document.documentElement.classList.add('js-motion');
+// Seitenwechsel (D-085/D-087): Morph-Schlüssel vor dem ersten Bild setzen
+// (die Seite benennt daraufhin ihr Gegenstück), nach dem Übergang lösen.
+try {
+  var h = document.documentElement, ss = sessionStorage;
+  var m = ss.getItem('pk-morph');
+  ss.removeItem('pk-morph'); ss.removeItem('pk-curtain');   // pk-curtain: Rest des alten Vorhangs (D-084)
+  var vt = 'CSSViewTransitionRule' in window, flip = null;
+  try { flip = JSON.parse(ss.getItem('pk-flip')); } catch (e) {}
+  // Firefox (keine seitenübergreifenden View Transitions): Morph per Skript
+  // (D-087) — unsichtbar starten, lando.js legt die Elemente an ihre alte Stelle
+  var flipOn = !vt && !!flip && Date.now() - flip.t < 10000 && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!flipOn) ss.removeItem('pk-flip');
+  if (flipOn) { h.dataset.flip = '1'; setTimeout(function () { delete h.dataset.flip; }, 1500); }
+  // Kaltstart-Bild (D-093): nur beim ersten Öffnen in diesem Tab (PWA-Start,
+  // neuer Tab), nie bei Seitenwechseln in der App. Fläche in Akzentfarbe mit
+  // der Wortmarke, die nach dem Laden an ihren Platz in der Kopfleiste fliegt
+  // (frühestens 0,8 s, spätestens 1,4 s); Einblendungen starten erst dann
+  // (h.pkBootDone, lando.js initBoot).
+  if (!ss.getItem('pk-booted') && !m && !flipOn && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    h.classList.add('pk-boot');
+    var t0 = Date.now();
+    h.pkBootDone = new Promise(function (res) {
+      var out = function () {
+        if (h.classList.contains('pk-boot-out')) return;
+        h.classList.add('pk-boot-out');
+        res();
+        setTimeout(function () { h.classList.remove('pk-boot', 'pk-boot-out'); }, 1800);   // Rückfall, falls lando.js fehlt
+      };
+      addEventListener('load', function () { setTimeout(out, Math.max(0, 800 - (Date.now() - t0))); });
+      setTimeout(out, 1400);
+    });
+  }
+  ss.setItem('pk-booted', '1');
+  if (m && (vt || flipOn)) {
+    h.dataset.morph = m;
+    h.pkMorphDone = new Promise(function (res) {
+      var done = function () { delete h.dataset.morph; res(); };
+      h.pkMorphEnd = done;
+      setTimeout(done, 2000);
+      if (vt) addEventListener('pagereveal', function (e) {
+        if (e.viewTransition) { e.viewTransition.ready.catch(function () {}); e.viewTransition.finished.then(done, done); } else done();
+      }, { once: true });
+    });
+  }
+} catch (e) {}</script>
+<link rel="icon" href="assets/cones-flat.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f131c">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="css/theme.css">
+<style>
+  /* Abend-Archiv als „Chronik" im Stil von landonorris.com (D-078):
+     dunkler Hero mit Kennzahlen-Satz (L2), schwarze „Hall of Fame" der
+     Abendsieger als Kerben-Karten (L3), alle Abende auf Creme. Beim Scrollen
+     färbt initSurfaceMorph die ganze Seite um (html[data-surface]). */
+  body { overflow-x: clip; }
+  .page { position: relative; z-index: 1; }
+  .wrap {
+    width: 100%;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding-inline: max(16px, min(3.2vw, 44px));
+  }
+  .i-arrow--down { transform: rotate(135deg); }
+  .i-arrow--up { transform: rotate(-45deg); }
+
+  /* ---------------- Hero ---------------- */
+  .hero {
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+  .hero > .wrap { flex: 1; display: flex; flex-direction: column; max-width: 1680px; }
+  .hero-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: clamp(20px, 3.4vh, 34px);
+    padding: clamp(28px, 7vh, 110px) 0 clamp(22px, 4vh, 40px);
+  }
+  .hero-emblem { flex-direction: row; gap: 10px; align-self: flex-start; text-align: left; }
+  .hero-emblem .laurel { width: 34px; height: 34px; }
+  .hero-emblem .eyebrow { font-size: 10px; }
+
+  /* Höhe mitdenken: auf flachen Desktop-Fenstern soll das Laufband noch
+     im ersten Bild stehen */
+  .hero-title { font-size: clamp(38px, min(10.6vw, 15.5vh), 168px); line-height: 0.88; }
+  .hero-title .t-serif { font-size: 1.06em; line-height: 0.8; }
+  /* Die Maske reicht über die enge Zeilenhöhe hinaus (Umlaut-Punkte), und der
+     Weg nach unten ist so lang, dass die Punkte von „Ä" nicht vorzeitig in
+     der Maske auftauchen */
+  .hero-title .ln { display: block; overflow: hidden; padding: 0.2em 0 0.06em; margin: -0.2em 0 -0.06em; }
+  .hero-title .ln-i { display: inline-block; }
+  @media (prefers-reduced-motion: no-preference) {
+    .js-motion .hero-title[data-reveal] .ln-i {
+      transform: translateY(150%);
+      transition: transform 1s var(--ease);
+      transition-delay: calc(var(--i, 0) * 110ms + 80ms);
+    }
+    .js-motion .hero-title[data-reveal].is-in .ln-i { transform: none; }
+  }
+  .hero-title .scribbled > .scribble--underline {
+    --scribble-color: var(--accent);
+    --scribble-width: 5;
+    --draw-dur: 1.1s;
+    bottom: 0.02em;
+    height: 0.22em;
+  }
+
+  .hero-foot {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    grid-template-areas: "btn crest card";
+    align-items: end;
+    gap: 18px;
+  }
+  .hero-foot > .hf-btn { grid-area: btn; }
+  .hero-foot > .hero-crest { grid-area: crest; }
+  .hero-foot > .hf-card { grid-area: card; }
+  .pk-logo {
+    display: block;
+    width: clamp(64px, 8vw, 104px);
+    aspect-ratio: 1200 / 1000;
+    background: var(--ink);
+    -webkit-mask: url('assets/logo.png') center / contain no-repeat;
+    mask: url('assets/logo.png') center / contain no-repeat;
+    transition: background-color 0.5s var(--ease);
+  }
+
+  /* „Letzter Abend": kleines Kärtchen wie „Next Race" auf landonorris.com */
+  .last-card {
+    position: relative;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    width: 108px;
+    padding: 10px 8px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    color: var(--ink);
+    text-decoration: none;
+    transition: border-color 0.3s var(--ease), transform 0.5s var(--ease);
+  }
+  .last-card:hover { color: var(--ink); border-color: var(--accent); transform: translateY(-3px); }
+  .last-card .lc-when, .last-card .lc-win { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0; max-width: 100%; }
+  .last-card .lc-win { align-self: stretch; padding-top: 9px; border-top: 1px solid var(--line); }
+  .last-card .lc-label { display: none; }
+  .last-card .eyebrow { font-size: 8.5px; }
+  .last-card .last-day { font-size: 28px; line-height: 0.9; text-transform: uppercase; }
+  .last-card .last-date { font-family: var(--font-serif); font-size: 16px; line-height: 1; }
+  .last-card .laurel { width: 30px; height: 30px; flex: none; background: var(--accent-text); -webkit-mask: url('assets/laurel.svg') center / contain no-repeat; mask: url('assets/laurel.svg') center / contain no-repeat; }
+  .last-card .last-winner { color: var(--ink); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Handy (D-092): kein bildschirmhoher Kopf mit Leere darüber. Unter dem
+     Satz steht „Letzter Abend" als Datenleiste zwischen Haarlinien, darunter
+     Hall-of-Fame-Knopf und Logo in einer Reihe. */
+  @media (max-width: 640px) {
+    .hero { min-height: 0; }
+    .hero-body { justify-content: flex-start; padding: 52px 0 26px; gap: 22px; }
+    .hero-foot {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: "card card" "btn crest";
+      align-items: center;
+      gap: 22px 16px;
+    }
+    .hero-crest .pk-logo { width: 74px; }
+    .last-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: stretch;
+      gap: 0;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      border-top: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--line-strong);
+      border-radius: 0;
+      text-align: left;
+    }
+    .last-card:hover { transform: none; }
+    .last-card .lc-when, .last-card .lc-win { display: grid; align-items: center; gap: 8px; padding: 14px 0; border: 0; }
+    .last-card .lc-when { grid-template-columns: auto 1fr; grid-template-areas: "eb eb" "day date"; column-gap: 8px; }
+    .last-card .lc-when > .eyebrow { grid-area: eb; }
+    .last-card .lc-when .last-date { align-self: end; padding-bottom: 2px; font-size: 19px; }
+    .last-card .lc-win {
+      grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "eb eb" "lr wn"; column-gap: 8px;
+      padding-left: 16px; border-left: 1px solid var(--line);
+    }
+    .last-card .lc-label { display: block; grid-area: eb; }
+    .last-card .eyebrow { font-size: 10px; }
+    .last-card .laurel { grid-area: lr; width: 24px; height: 24px; }
+    .last-card .last-winner {
+      grid-area: wn; font-size: 18px; font-weight: 800; letter-spacing: -0.02em; line-height: 1;
+    }
+  }
+
+  /* Laufband mit den Abendsiegern */
+  .hero-marquee {
+    --marquee-speed: 46;
+    border-top: 1px solid var(--line);
+    padding: 14px 0 max(14px, env(safe-area-inset-bottom));
+  }
+  .mq-item { display: inline-flex; align-items: baseline; gap: 12px; padding-right: 30px; white-space: nowrap; }
+  .mq-item .t-serif { font-size: clamp(24px, 3vw, 34px); line-height: 1; color: var(--ink); }
+  .mq-item .eyebrow { color: var(--ink-muted); }
+  .mq-item::after { content: ''; width: 7px; height: 7px; margin-left: 18px; align-self: center; background: var(--accent); border-radius: 1px; }
+
+  /* ---------------- Abschnitte ---------------- */
+  .chapter { position: relative; padding: clamp(72px, 12vh, 140px) 0; }
+  .sec-head {
+    display: grid;
+    gap: 14px 40px;
+    margin-bottom: clamp(28px, 5vh, 52px);
+  }
+  .sec-head .sec-kicker { display: flex; justify-content: space-between; gap: 12px; }
+  .sec-head .t-title { font-size: clamp(44px, 9vw, 112px); line-height: 0.86; }
+  .sec-head .t-title .t-serif { font-size: 1.05em; }
+  @media (min-width: 900px) {
+    .sec-head { grid-template-columns: 1fr minmax(0, 420px); align-items: end; }
+    .sec-head .sec-kicker { grid-column: 1 / -1; }
+  }
+
+  /* ---------------- Hall of Fame (L3) ---------------- */
+  .hof-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  @media (min-width: 900px) { .hof-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; } }
+  .hof-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    min-height: 262px;
+    padding: 14px 12px 46px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--ink);
+    --notch-fill: transparent;
+    --notch-line: var(--line-strong);
+    --notch-tag-ink: var(--ink-2);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.6s var(--ease);
+  }
+  .hof-card:hover { color: var(--ink); }
+  .hof-card .notch-line path { transition: stroke 0.4s var(--ease); }
+  .hof-top { align-self: stretch; display: flex; justify-content: space-between; align-items: center; gap: 6px; min-height: 22px; }
+  .hof-top .eyebrow { color: var(--ink-muted); }
+  .hof-top .chip { padding: 3px 7px; font-size: 9.5px; }
+  .hof-crest {
+    position: relative;
+    width: 92px;
+    height: 92px;
+    margin-top: 6px;
+    display: grid;
+    place-items: center;
+  }
+  .hof-crest::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent-text);
+    -webkit-mask: url('assets/laurel.svg') center / contain no-repeat;
+    mask: url('assets/laurel.svg') center / contain no-repeat;
+    transition: transform 0.8s var(--ease);
+  }
+  .hof-crest .avatar { width: 52px; height: 52px; font-size: 30px; background: var(--surface-2); }
+  .hof-name {
+    max-width: 100%;
+    font-weight: 800;
+    font-size: clamp(19px, 2vw, 26px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hof-count { display: flex; align-items: baseline; gap: 6px; color: var(--ink-muted); font-size: 12px; }
+  .hof-count .num { font-size: 22px; color: var(--ink); }
+  .hof-card .notch-tag { font-size: 11px; }
+  /* Rekord: gefüllte Akzentkarte */
+  .hof-card.is-record { --notch-fill: var(--accent); color: var(--accent-ink); }
+  .hof-card.is-record:hover { color: var(--accent-ink); }
+  .hof-card.is-record .hof-top .eyebrow,
+  .hof-card.is-record .hof-count,
+  .hof-card.is-record .hof-count .num { color: var(--accent-ink); }
+  .hof-card.is-record .hof-crest::before { background: var(--accent-ink); }
+  .hof-card.is-record .avatar { background: var(--accent-ink); color: var(--accent); border-color: transparent; }
+  .hof-card.is-record .chip { background: var(--accent-ink); color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) {
+    .hof-card:hover { transform: translateY(-6px); }
+    .hof-card:hover .notch-line path { stroke: var(--accent); }
+    .hof-card:hover .hof-crest::before { transform: rotate(-10deg) scale(1.06); }
+  }
+
+  /* ---------------- Alle Abende (Creme) ---------------- */
+  .chron-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .chron-actions:empty { display: none; }
+  .sec-head > div:has(> .chron-actions):not(:has(button:not([hidden]))) { display: none; }
+
+  /* Register (D-094): die Abende liegen als Karten in einem seitlich
+     scrollbaren Karussell. Gescrollt wird nativ (Snap, Touch, Trackpad);
+     JS liest nur die Position und dreht/staffelt die Karten in 3D. */
+  .deck { position: relative; }
+  .deck-track {
+    --card-w: min(78vw, 400px);
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 36px calc(50% - var(--card-w) / 2) 64px;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    outline: none;
+  }
+  .deck-track::-webkit-scrollbar { display: none; }
+  @media (hover: hover) and (pointer: fine) { .deck-track { cursor: grab; } }
+  .deck-track.is-dragging { cursor: grabbing; scroll-snap-type: none; user-select: none; }
+  .night-slide {
+    position: relative;
+    flex: none;
+    width: var(--card-w);
+    scroll-snap-align: center;
+  }
+  /* Gedreht wird nur die innere Ebene: Chrome misst die Einrastpunkte an der
+     transformierten Box, die Hülle muss deshalb unbewegt bleiben. */
+  .night-plate { position: relative; height: 100%; will-change: transform; }
+  .night-plate > .night-card { height: 100%; }
+  /* Gleich hohe Karten: die Knöpfe sitzen immer unten */
+  .night-slide .night-card > .night-actions:not(.night-actions--admin) { margin-top: auto; }
+  /* Weicher Bodenschatten: gibt den gestaffelten Karten Tiefe */
+  .night-plate::after {
+    content: '';
+    position: absolute;
+    left: 10%; right: 10%; bottom: -34px;
+    height: 34px;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--ink) 16%, transparent), transparent);
+    pointer-events: none;
+  }
+  .deck-track:focus-visible .night-slide.is-active .night-card { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+  .deck-nav { display: flex; align-items: center; gap: clamp(14px, 3vw, 28px); }
+  .deck-count { flex: none; min-width: 74px; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; color: var(--ink-muted); }
+  .deck-count b { color: var(--ink); font-weight: 800; }
+  .deck-progress {
+    position: relative;
+    flex: 1;
+    height: 22px;
+    cursor: pointer;
+  }
+  .deck-progress::before, .deck-progress > span {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: 50%;
+    height: 2px;
+    margin-top: -1px;
+    border-radius: 2px;
+  }
+  .deck-progress::before { background: var(--line-strong); }
+  .deck-progress > span {
+    background: var(--accent);
+    transform-origin: left center;
+    transform: scaleX(var(--p, 0));
+    transition: transform 0.6s var(--ease);
+  }
+  .deck-btns { display: flex; gap: 8px; flex: none; }
+  .deck-btns .btn:disabled { opacity: 0.35; cursor: default; }
+  .i-arrow--next { transform: rotate(45deg); }
+
+  .night-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 20px 54px;
+    color: var(--ink);
+    --notch-fill: var(--bg-hi);
+    --notch-line: var(--line);
+    --notch-tag-ink: var(--ink-muted);
+    scroll-margin-top: 24px;
+  }
+  /* Die Kartenfläche färbt sich mit dem Seitengrund um (initSurfaceMorph) */
+  .night-card > .notch-bg, .hof-card > .notch-bg { transition: background-color var(--dur) var(--ease); }
+  .night-head { display: flex; flex-direction: column; gap: 8px; }
+  .night-when { position: relative; align-self: flex-start; }
+  .night-weekday {
+    font-weight: 800;
+    font-size: 30px;
+    line-height: 0.9;
+    letter-spacing: -0.035em;
+    text-transform: uppercase;
+  }
+  .night-date { font-size: 30px; line-height: 0.95; color: var(--ink-faint); }
+  .night-when > .scribble--circle {
+    position: absolute; left: -12%; top: -24%; width: 124%; height: 148%;
+    --scribble-width: 3; --draw-dur: 1s; --scribble-color: var(--accent-text);
+  }
+  /* Vom Admin vergebener Abend-Name (D-028), in der Serif */
+  .night-name {
+    font-family: var(--font-serif);
+    font-size: 29px;
+    line-height: 1;
+    color: var(--accent-text);
+    overflow-wrap: anywhere;
+  }
+  /* Admin: der Name ist der Knopf zum Benennen (D-077) */
+  .name-edit {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+    min-height: 40px;
+    background: none; border: none; padding: 0; cursor: pointer; text-align: left;
+  }
+  /* Unsichtbar etwas größere Tap-Fläche (44 px), ohne das Layout aufzublähen */
+  .name-edit::after { content: ""; position: absolute; inset: -2px -4px; }
+  .name-edit svg { width: 15px; height: 15px; flex: none; opacity: 0.5; transition: opacity 0.2s ease, transform 0.4s var(--ease); }
+  .name-edit:hover svg { opacity: 1; transform: rotate(-12deg); }
+  .name-edit.empty {
+    font-family: var(--font-sans);
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-muted);
+    padding: 0 14px; border: 1px dashed var(--line-strong); border-radius: 8px;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .name-edit.empty svg { width: 12px; height: 12px; }
+  .name-edit.empty:hover { color: var(--ink); border-color: var(--ink); }
+
+  /* Sieger als Zeile zwischen Haarlinien (D-044) */
+  .night-winner {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .night-winner.none { display: block; color: var(--ink-faint); }
+  .night-winner .crest {
+    position: relative; width: 44px; height: 44px; display: grid; place-items: center;
+  }
+  .night-winner .crest::before {
+    content: ''; position: absolute; inset: 0; background: var(--ink);
+    -webkit-mask: url('assets/laurel.svg') center / contain no-repeat;
+    mask: url('assets/laurel.svg') center / contain no-repeat;
+  }
+  .night-winner .crest .avatar { width: 26px; height: 26px; font-size: 16px; background: var(--accent); color: var(--accent-ink); border: 0; }
+  .night-winner .who { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .night-winner .name {
+    font-weight: 800; font-size: 19px; line-height: 1; letter-spacing: -0.02em; text-transform: uppercase;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .night-winner .count { font-size: 12.5px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
+
+  /* Kennzahlen: Wert groß, darunter Versal-Label mit Farbquadrat */
+  .night-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .night-stats .cell { text-align: left; }
+  .night-stats .value { font-size: 27px; line-height: 1; color: var(--ink); }
+  .night-stats .cell:last-child .value { color: var(--accent-text); }
+  .night-stats .label { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 9.5px; }
+  .night-stats .label::before {
+    content: ''; width: 7px; height: 7px; border-radius: 1px; flex: none;
+    background: var(--sw, var(--ink)); box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+
+  /* Verlauf des Abends (D-029): dunkle Linie, Spitzenstunde in Akzent.
+     Die Fläche wird ungleichmäßig auf die Kartenbreite gezogen; damit die
+     Linie dabei nicht mitverzerrt, hängt ihre Stärke an non-scaling-stroke. */
+  .night-chart { display: flex; flex-direction: column; gap: 8px; }
+  .night-chart .chart-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .night-chart .chart-head .what { font-size: 10px; font-weight: 600; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .night-chart .chart-head .peak {
+    font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 4px 8px; border-radius: 5px;
+    background: var(--accent); color: var(--accent-ink);
+  }
+  .night-chart svg { width: 100%; height: 64px; display: block; overflow: visible; }
+  .night-chart .peak-band { fill: var(--accent); opacity: 0.85; }
+  .night-chart .area { fill: var(--ink); opacity: 0.07; }
+  .night-chart .line {
+    fill: none; stroke: var(--ink); stroke-width: 2;
+    stroke-linejoin: round; stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .night-chart .base { stroke: var(--line-strong); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .night-chart .peak-mark {
+    stroke: var(--ink); stroke-width: 1; stroke-dasharray: 2 3;
+    vector-effect: non-scaling-stroke; opacity: 0.5;
+  }
+  .night-chart .plot { position: relative; }
+  /* Der Punkt auf der Spitze sitzt als HTML-Element über der Fläche: ein
+     <circle> würde vom ungleichmäßigen Skalieren zur Ellipse verzogen. */
+  .night-chart .peak-dot {
+    position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px;
+    border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 0 2px var(--ink);
+    pointer-events: none;
+  }
+  .night-chart .hit { fill: transparent; }
+  .night-chart .axis {
+    display: flex; justify-content: space-between;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  /* Knöpfe je Abend: Story für alle, darunter die Admin-Werkzeuge */
+  .night-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .night-actions .btn { flex: 1 1 auto; }
+  .night-actions--admin { padding-top: 12px; border-top: 1px dashed var(--line); }
+  /* Handy/Touch: die kleinen Knöpfe auf volle Tap-Größe (44 px) */
+  @media (max-width: 719px), (pointer: coarse) {
+    .btn--sm.night-btn { min-height: 44px; font-size: 12px; padding: 0 14px; }
+  }
+  .night-btn.on-tv { --btn-bg: var(--accent); --btn-ink: var(--accent-ink); --btn-line: var(--accent); }
+  .night-btn:disabled { opacity: 0.55; cursor: progress; }
+
+  .chron-empty {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 16px;
+    padding: clamp(28px, 6vh, 60px) 0;
+  }
+  .chron-empty .t-title { font-size: clamp(38px, 7vw, 80px); }
+  .chron-empty .scribbled > .scribble--underline { --scribble-color: var(--accent-text); --scribble-width: 4; bottom: -0.05em; }
+  .chron-empty p { margin: 0; max-width: 36ch; }
+
+  /* ---------------- Fuß: Lando-Fußkarte ---------------- */
+  .foot-zone { position: relative; overflow-x: clip; padding: 8px 0 max(24px, env(safe-area-inset-bottom)); }
+  .foot-card {
+    position: relative;
+    isolation: isolate;
+    color: var(--ink);
+    padding: 70px clamp(20px, 4vw, 52px) clamp(22px, 4vw, 40px);
+    --notch-fill: var(--bg);
+    --notch-tag-ink: var(--ink-muted);
+  }
+  /* Die Kerbe sitzt oben links: die Hintergrundfläche wird einfach um 180°
+     gedreht, das Etikett wandert nach oben. */
+  .foot-card > .notch-bg { transform: rotate(180deg); }
+  .foot-card > .notch-tag {
+    top: 0; left: 0; right: auto; bottom: auto;
+    justify-content: flex-start; padding: 0 18px 0 4px;
+    color: var(--ink-2);
+  }
+  html[data-surface="light"] .foot-card > .notch-tag { color: #0f131c; }
+  .foot-card > .notch-tag .laurel-mini { width: 20px; height: 20px; background: currentColor; -webkit-mask: url('assets/laurel.svg') center / contain no-repeat; mask: url('assets/laurel.svg') center / contain no-repeat; }
+  /* Die Linien bekommen dieselbe (gedrehte) Form wie die Fläche */
+  .foot-card > .topo--abs { z-index: -1; opacity: 0.9; transform: rotate(180deg); }
+  /* Akzent-Schimmer außen herum: ein weicher Kegelverlauf hinter der Karte.
+     Bewusst OHNE filter: blur und ohne mask – die Weichheit kommt aus
+     breiten Verlaufsstopps und einem statischen Innenschatten in der
+     Seitenfarbe (::after), der den Rand nach außen ausblendet. Gedreht wird
+     nur die Kind-Ebene (transform) – und nur EINMAL beim Erscheinen der
+     Karte, keine Endlos-Animation neben dem Laufband. */
+  .foot-zone { --halo-fade: var(--bg); }
+  .foot-halo {
+    position: absolute;
+    inset: -22px;
+    z-index: -2;
+    border-radius: 40px;
+    overflow: hidden;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .foot-halo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 16px 9px var(--halo-fade);
+    /* folgt dem Hintergrundwechsel der Seite im selben Tempo */
+    transition: box-shadow var(--dur) var(--ease);
+  }
+  .foot-halo > span {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: max(150%, 900px);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    rotate: -140deg;
+    background: conic-gradient(from 0deg,
+      transparent 0 6%,
+      color-mix(in srgb, var(--accent) 45%, transparent) 14%,
+      var(--accent) 22%,
+      color-mix(in srgb, var(--accent) 45%, transparent) 30%,
+      transparent 40% 56%,
+      color-mix(in srgb, var(--accent) 45%, transparent) 62%,
+      var(--accent) 70%,
+      color-mix(in srgb, var(--accent) 45%, transparent) 78%,
+      transparent 88% 100%);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html.js-motion .foot-halo > span { animation: halo-spin 3.2s var(--ease) 1 both; animation-play-state: paused; }
+    html.js-motion .foot-card.is-live .foot-halo > span { animation-play-state: running; }
+  }
+  @keyframes halo-spin { from { rotate: -140deg; } to { rotate: 0deg; } }
+
+  .foot-grid { display: grid; gap: 34px; }
+  @media (min-width: 900px) { .foot-grid { grid-template-columns: 1fr auto; align-items: end; } }
+  /* „Prost auf den" soll immer in eine Zeile passen: Größe an der Spalte
+     (Container-Einheit), nicht am Fenster messen */
+  .foot-main { container-type: inline-size; min-width: 0; }
+  .foot-title { font-size: clamp(34px, 12.4cqi, 124px); line-height: 0.94; }
+  .foot-title .t-serif { font-size: 1.06em; }
+  .foot-title .scribbled > .scribble--underline { --scribble-color: var(--accent); --scribble-width: 5; bottom: 0; height: 0.22em; }
+  .foot-sign { width: 170px; height: 89px; margin-top: 18px; --scribble-color: var(--accent-text); --scribble-width: 2.4; --draw-dur: 2.2s; }
+  .foot-links { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); min-width: min(100%, 300px); }
+  .foot-links li { border-bottom: 1px solid var(--line); }
+  .foot-links a, .foot-links button {
+    display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%;
+    padding: 14px 2px;
+    background: none; border: 0; color: var(--ink);
+    font: 700 13px/1 var(--font-sans); letter-spacing: 0.03em; text-transform: uppercase;
+    text-decoration: none; text-align: left;
+    transition: color 0.3s var(--ease), padding 0.5s var(--ease);
+  }
+  .foot-links a:hover, .foot-links button:hover { color: var(--accent-text); padding-left: 10px; }
+  .foot-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; margin-top: 40px; }
+
+  /* ---------------- Toast und Dialog ---------------- */
+  .toast {
+    position: fixed; left: 50%; bottom: max(22px, env(safe-area-inset-bottom)); z-index: 95;
+    transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px;
+    width: max-content; max-width: calc(100vw - 32px);
+    padding: 13px 18px 13px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--ink); color: var(--bg);
+    font-size: 13.5px; font-weight: 600; line-height: 1.3;
+    box-shadow: 0 18px 50px -20px rgb(0 0 0 / 0.6);
+    animation: toast-in 0.55s var(--ease);
+  }
+  .toast::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 1px; background: var(--danger); }
+  .toast.ok::before { background: var(--accent); }
+  @keyframes toast-in { from { opacity: 0; translate: 0 18px; } }
+
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 92;
+    background: var(--scrim);
+    display: flex; align-items: flex-end; justify-content: center;
+    padding: 16px;
+    animation: fade-in 0.35s ease;
+  }
+  @media (min-width: 640px) { .modal-backdrop { align-items: center; } }
+  .edit-card {
+    width: 100%; max-width: 540px; max-height: 86vh; overflow: auto;
+    background: var(--bg); color: var(--ink);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    display: flex; flex-direction: column; gap: 16px;
+    animation: card-in 0.6s var(--ease);
+  }
+  .edit-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .edit-title { font-size: clamp(24px, 6vw, 32px); }
+  .edit-title .t-serif { font-size: 1.08em; }
+  .name-row { display: flex; gap: 8px; align-items: stretch; }
+  .name-row .field { flex: 1 1 auto; min-width: 0; font-size: 16px; padding: 10px 12px; }
+  .name-row .btn { flex: none; }
+  /* Schmal: Feld volle Breite, Knopf darunter ebenfalls volle Breite */
+  @media (max-width: 559px) {
+    .name-row { flex-wrap: wrap; }
+    .name-row .field, .name-row .btn { flex: 1 1 100%; }
+    .name-row .field { min-height: 48px; }
+  }
+  @keyframes fade-in { from { opacity: 0; } }
+  @keyframes card-in { from { opacity: 0; transform: translateY(30px) scale(0.98); } }
+  /* Abgänge (lando.js leave) */
+  @media (prefers-reduced-motion: no-preference) {
+    .toast.is-leaving { animation: leave-sink 0.4s var(--ease) both; }
+    .modal-backdrop.is-leaving { animation: leave-fade 0.4s ease 0.08s both; }
+    .modal-backdrop.is-leaving .edit-card { animation: leave-drop 0.42s var(--ease) both; }
+  }
+</style>
+</head>
+<body>
+<div class="topo" aria-hidden="true"></div>
+<div class="topo-spot" aria-hidden="true"></div>
+
+<!-- Vollbild-Menü (lando.js initMenu). Bereichsfarben fest, damit es auch auf
+     der hellen Fläche dunkel bleibt. -->
+<nav id="site-menu" class="site-menu area-pk" aria-hidden="true" aria-label="Menü">
+  <div class="topo topo--abs" aria-hidden="true"></div>
+  <div class="topbar">
+    <span class="wordmark" aria-hidden="true">
+      <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
+    </span>
+    <button class="btn btn--ghost btn--icon" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="Menü schließen"><span class="i-menu"></span></button>
+  </div>
+  <div class="menu-nav">
+    <a class="menu-link" style="--i:0" href="./" data-home data-home-label>Anmeldung</a>
+    <a class="menu-link is-current" style="--i:1" href="#top" aria-current="page">Archiv<svg class="scribble scribble--strike" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 18c26-8 44 6 70-2s46-9 74-2 52 5 88-6" pathLength="1"/></svg></a>
+    <a class="menu-link" style="--i:2" href="tv">TV</a>
+    <a class="menu-link" style="--i:3" href="admin" data-morph="admin" data-morph-self>Admin</a>
+  </div>
+  <div class="menu-foot">
+    <div class="emblem"><span class="laurel"></span><span class="eyebrow">Abend-Archiv</span></div>
+  </div>
+</nav>
+
+<main class="page">
+  <!-- 1) Hero: Kennzahlen-Satz (L2) -->
+  <section class="hero" id="top" data-surface="dark">
+    <div class="wrap">
+      <header class="topbar">
+        <a class="wordmark" href="./" data-home aria-label="Startseite des Bereichs">
+          <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
+        </a>
+        <div class="topbar-actions">
+          <a id="back" class="btn btn--ghost btn--sm" href="./"><span class="i-arrow i-arrow--back"></span><span class="back-label">Zur Anmeldung</span></a>
+          <button class="btn btn--ghost btn--icon btn--sm" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="Menü"><span class="i-menu"></span></button>
+        </div>
+      </header>
+
+      <div class="hero-body">
+        <div class="emblem hero-emblem" data-reveal="fade">
+          <span class="laurel"></span>
+          <span class="eyebrow">Abend-Archiv · seit <span id="hero-since" class="num">–</span></span>
+        </div>
+        <h1 class="t-impact hero-title" id="hero-title" aria-live="off">
+          <span class="ln"><span class="ln-i" style="--i:0"><span class="num" id="stat-nights">0</span> <span class="t-serif t-accent" id="stat-nights-word">Abende</span>,</span></span>
+          <span class="ln"><span class="ln-i" style="--i:1"><span class="num" id="stat-drinks">0</span> <span id="stat-drinks-word">Getränke</span>,</span></span>
+          <span class="ln"><span class="ln-i" style="--i:2">ein <span class="scribbled"><span class="t-serif t-accent">Keller</span><svg class="scribble scribble--underline" id="hero-scribble" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1"/></svg></span>.</span></span>
+        </h1>
+        <div class="hero-foot">
+          <div class="hf-btn" data-reveal="up" data-delay="450">
+            <a class="btn btn--ghost btn--sm" href="#hof">Hall of Fame <span class="i-arrow i-arrow--down"></span></a>
+          </div>
+          <div class="hero-crest" data-reveal="up" data-delay="520">
+            <span class="pk-logo" role="img" aria-label="SV Partykeller Logo" style="view-transition-name:area-logo"></span>
+          </div>
+          <div class="hf-card" data-reveal="up" data-delay="560">
+            <a class="last-card" id="last-card" href="#chronik" hidden>
+              <span class="lc-when">
+                <span class="eyebrow">Letzter Abend</span>
+                <span class="num last-day" id="last-day">–</span>
+                <span class="last-date" id="last-date"></span>
+              </span>
+              <span class="lc-win">
+                <span class="eyebrow lc-label" id="last-winner-label">Abendsieger</span>
+                <span class="laurel"></span>
+                <span class="eyebrow last-winner" id="last-winner"></span>
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="marquee hero-marquee" id="hero-marquee" data-marquee hidden aria-label="Die letzten Abendsieger">
+      <div class="marquee-track" id="hero-marquee-track"></div>
+    </div>
+  </section>
+
+  <!-- 2) Hall of Fame der Abendsieger (L3) -->
+  <section class="chapter" id="hof" data-surface="black" hidden>
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="sec-kicker"><span class="eyebrow">01 · Abendsieger</span><span class="eyebrow" id="hof-kicker"></span></div>
+        <h2 class="t-title" data-reveal="words">Hall of<br><span class="t-serif t-accent">Fame</span></h2>
+      </div>
+      <div class="hof-grid" id="hof-grid"></div>
+    </div>
+  </section>
+
+  <!-- 3) Alle Abende auf Creme -->
+  <section class="chapter" id="chronik" data-surface="light">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="sec-kicker"><span class="eyebrow">02 · Chronik</span><span class="eyebrow num" id="chron-count"></span></div>
+        <h2 class="t-title" data-reveal="words">Alle<br><span class="t-serif t-accent">Abende</span></h2>
+        <div>
+          <div class="chron-actions">
+            <button id="tv-live" class="btn btn--sm btn--dark night-btn" type="button" hidden>TV zurück zur Live-Ansicht <span class="i-arrow"></span></button>
+            <button id="export-all" class="btn btn--sm btn--ghost night-btn" type="button" hidden>Alle Abende als CSV <span class="i-arrow i-arrow--down"></span></button>
+          </div>
+        </div>
+      </div>
+
+      <div id="empty" class="chron-empty" hidden>
+        <p class="eyebrow">Noch leer</p>
+        <h3 class="t-title">Noch keine<br><span class="scribbled"><span class="t-serif t-accent">Abende</span><svg class="scribble scribble--underline" data-draw="300" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1"/></svg></span></h3>
+      </div>
+    </div>
+
+    <!-- Register (D-094): volle Breite, damit die Karten seitlich auslaufen -->
+    <div id="deck" class="deck" data-reveal="up" hidden>
+      <div id="cards" class="deck-track" role="region" aria-roledescription="Karussell" aria-label="Alle Abende" tabindex="0"></div>
+      <div class="wrap deck-nav">
+        <span class="deck-count num" aria-live="polite"><b id="deck-pos">01</b> / <span id="deck-total">01</span></span>
+        <div class="deck-progress" id="deck-progress" aria-hidden="true"><span id="deck-bar"></span></div>
+        <div class="deck-btns">
+          <button id="deck-prev" class="btn btn--ghost btn--icon" type="button" aria-label="Vorheriger Abend"><span class="i-arrow i-arrow--back"></span></button>
+          <button id="deck-next" class="btn btn--ghost btn--icon" type="button" aria-label="Nächster Abend"><span class="i-arrow i-arrow--next"></span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4) Fuß: dunkle Karte mit Kerbe oben und Akzent-Schimmer -->
+  <div class="foot-zone" data-surface="light">
+    <div class="wrap">
+      <footer class="foot-card area-pk" id="foot-card" data-notch="tabW:190;tabH:42;r:18;slant:24">
+        <span class="foot-halo" aria-hidden="true"><span></span></span>
+        <span class="topo topo--abs notch-clip" aria-hidden="true"></span>
+        <div class="foot-grid">
+          <div class="foot-main">
+            <p class="eyebrow" style="margin:0 0 14px">Bis zum nächsten Abend</p>
+            <h2 class="t-impact foot-title" data-reveal="words">Prost auf den<br><span class="scribbled"><span class="t-serif t-accent">nächsten</span><svg class="scribble scribble--underline" data-draw="650" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1"/></svg></span>.</h2>
+            <svg class="scribble scribble--signature foot-sign" data-draw="1100" viewBox="0 0 268 141" fill="none" aria-hidden="true"><path d="M 33.3 80.9 C 38.1 91.8 58.4 82.1 58.9 68.3 C 59.3 57.7 39.8 64.2 47.2 46.1 C 53 32.1 69 25.5 74.1 32.7 C 70.4 50.1 68.3 65.4 66.4 80 C 76.8 58.9 88.6 37 102.8 17.1 C 89.2 53 72.5 97 57.4 136.9 C 71.5 96.5 89.3 50.5 104.1 18.7 C 141.6 -4.7 149.1 23.2 118.2 42.9 C 108.1 49.1 101.2 46.6 99 39.2 C 102.6 46.3 106.9 52.3 107.3 55.9 C 105.1 53.8 99 62.7 99.7 69.8 C 99.9 73.2 103.3 69.1 107 57.2 C 106.6 63.7 103.1 71.4 107.5 69.7 C 108.4 65.4 110.5 57.9 112.4 55.7 C 112.3 58.9 114.5 56.8 116.4 54.3 C 115.2 60.5 114.2 65.6 115.9 67.9 C 116.7 63 122.7 47.5 128.1 31.9 C 123.2 48.5 118 63.3 120.4 66.7 C 121.9 64.7 122.9 57.2 125.6 53.8 C 122.4 62.3 123.6 65.8 125.6 63.8 C 127.7 60.9 129.7 54.9 131 51.3 C 125.8 69.3 122.7 81.9 118.7 82.9 C 116 86.2 119.3 77 124.6 71.4 C 126.5 69.8 129.1 66 130.4 64.9 C 135.4 53.9 140.1 38.1 146 19.3 C 140.5 38.4 134.9 55 131.4 65.8 C 135.9 55.6 140.5 48.9 141.1 51.3 C 141.2 56.2 136.7 58.8 135 57.1 C 136.5 60.6 137.5 65.2 139.9 65.1 C 142.2 62.3 146.3 54.7 145.7 50.7 C 146.9 46.8 141.7 53.5 141.5 57.6 C 139.7 65.9 142.4 64.9 146.3 60.9 C 149.7 52.2 154.7 37.6 157.2 28.6 C 157.2 24.2 155.5 24.6 152.1 38.8 C 147.7 52.2 145.5 64.1 148 63.4 C 153.5 52.6 157.5 41 160.2 32.4 C 160 27.4 157.5 29 154.5 40.4 C 150.9 53.2 150.4 63.3 151.8 62.6 C 154.8 60 158.3 54.4 157.9 50.9 C 158.7 48.3 154.7 54.6 154.2 56.6 C 153.5 63.3 156.1 61 158.3 57.2 C 159.5 55.2 161.3 51.1 161.3 50.6 C 162.1 52.1 163.9 50.7 166.8 46.8 C 163.9 51.5 164.5 56.5 165.4 55.2 C 197.5 50.7 231.7 29.1 252.8 11.1 C 260.2 4.9 258.7 1.4 251.7 6.4 C 204 38.4 116.6 88.6 12.2 126.2 C 1.5 130 1.2 135.6 11.5 131.3 C 70.3 112.9 152.6 82.8 210.6 58.3 C 236.3 47.6 252.6 39.7 264 33.4 M 120.8 48.7 C 128.7 44.8 137.8 40.7 149.5 33.1" pathLength="1"/></svg>
+          </div>
+          <ul class="foot-links">
+            <li><a href="./" data-home><span data-home-label>Anmeldung</span><span class="i-arrow"></span></a></li>
+            <li><a href="tv">TV-Ansicht <span class="i-arrow"></span></a></li>
+            <li><a href="admin">Admin <span class="i-arrow"></span></a></li>
+            <li><button type="button" id="to-top">Nach oben <span class="i-arrow i-arrow--up"></span></button></li>
+          </ul>
+        </div>
+        <div class="foot-bottom">
+          <span class="eyebrow">© SV Partykeller</span>
+        </div>
+        <span class="notch-tag"><span class="laurel-mini" aria-hidden="true"></span>Abend-Archiv</span>
+      </footer>
+    </div>
+  </div>
+</main>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
+<!-- Dialog: Abend benennen (nur Admin, D-028). Getränke korrigiert der Admin
+     seit D-076 im Getränke-Protokoll, nicht mehr hier. -->
+<div id="edit-modal" class="modal-backdrop" hidden>
+  <div class="glass edit-card" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+    <div class="edit-head">
+      <div>
+        <h2 class="t-h3 edit-title" id="edit-title">Abend <span class="t-serif t-accent">benennen</span>: <span id="edit-day-label" class="num"></span></h2>
+      </div>
+      <button id="close-edit" class="btn btn--ghost btn--sm" type="button">Schließen</button>
+    </div>
+    <div id="edit-error" class="error-msg" style="min-height:0;"></div>
+    <div>
+      <label for="edit-name-input" class="eyebrow" style="display:block;margin-bottom:8px;">Name des Abends</label>
+      <div class="name-row">
+        <input id="edit-name-input" class="field" maxlength="40" autocomplete="off"
+               placeholder="z. B. Saisonabschluss">
+        <button id="save-name" class="btn night-btn" type="button">Speichern <span class="i-arrow"></span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { AREA } from './js/area.js';
+import { connectState } from './js/ws-client.js';
+import { buildCurve } from './js/curve.js';
+import { getSession } from './js/api.js';
+import {
+  initLando, initReveal, notch, scribble, drawScribble, countUp, initMarquee, reducedMotion, leave, enter,
+} from './js/lando.js';
+
+const $ = (id) => document.getElementById(id);
+// Wer angemeldet ist, kommt aus dem Dashboard und will dorthin zurück —
+// nicht zur Anmeldung (D-054)
+if (getSession().token) {
+  $('back').href = 'dashboard';
+  $('back').querySelector('.back-label').textContent = 'Zurück';
+  document.querySelectorAll('[data-home]').forEach((a) => { a.href = 'dashboard'; });
+  document.querySelectorAll('[data-home-label]').forEach((el) => { el.textContent = 'Zählen'; });
+}
+
+// Admin-Werkzeuge (Name, Protokoll, TV-Anzeige) erscheinen nur mit Admin-Login aus
+// derselben Browser-Session (Token wie in admin.html, bereichsgetrennt D-019)
+const adminToken = sessionStorage.getItem(`${AREA.keyPrefix}_admin_token`);
+let ws = null;               // WS nur für Admin-Aktionen + Live-Refresh
+let board = { mode: null, day: null };
+let nights = [];             // aktuelle Archiv-Liste
+let editDay = null;          // im Modal geöffneter Party-Tag
+
+function showEditError(message) {
+  $('edit-error').textContent = message;
+  setTimeout(() => { $('edit-error').textContent = ''; }, 4000);
+}
+
+// Meldung außerhalb des Bearbeiten-Modals (z. B. fehlgeschlagener Download)
+let toastTimer = null;
+function showToast(message, ok = false) {
+  $('toast').textContent = message;
+  $('toast').classList.toggle('ok', ok);
+  enter($('toast'));
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => leave($('toast')), 4000);
+}
+
+function send(msg) {
+  ws?.send({ ...msg, token: adminToken });
+}
+
+// Übergabedatei holen (nur Admin, D-027). Der Server prüft das Token im
+// Authorization-Header, ein einfacher Link könnte den nicht mitschicken —
+// deshalb per fetch laden und den Blob über einen Klick-Link speichern.
+async function downloadCsv(path, filename) {
+  try {
+    const res = await fetch(`${AREA.base}/api${path}`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    if (!res.ok) {
+      showToast(res.status === 403
+        ? 'Download nur mit Admin-Login möglich – bitte neu anmelden.'
+        : 'Download fehlgeschlagen.');
+      return;
+    }
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    showToast('Download fehlgeschlagen.');
+  }
+}
+
+// Abendrückblick als Bild im Story-Format (D-049). Das Zeichenmodul wird erst
+// beim Klick geladen — wer nur im Archiv blättert, holt es gar nicht.
+async function saveStory(night, btn) {
+  const label = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = 'Bild wird erstellt …';
+  try {
+    const { downloadStory } = await import('./js/story.js');
+    await downloadStory(night);
+    showToast('Story gespeichert – sie liegt bei deinen Downloads.', true);
+  } catch (err) {
+    showToast(err.message || 'Story konnte nicht erstellt werden.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = label;
+  }
+}
+
+const WEEKDAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+
+// '2026-09-25' -> { date: '25.09.2026', weekday: 'Freitag', short: '25.09.' }
+function fmtDay(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const dm = `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.`;
+  return {
+    date: `${dm}${y}`,
+    short: dm,
+    weekday: WEEKDAYS[new Date(y, m - 1, d).getDay()],
+  };
+}
+
+// Kleiner DOM-Helfer für die Vorlagen (Text immer über textContent)
+function h(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+const drinks = (n) => (n === 1 ? '1 Getränk' : `${n} Getränke`);
+const initial = (name) => [...(name || '?').trim()][0] ?? '?';
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const hourLabel = (h) => `${((h % 24) + 24) % 24} Uhr`;
+
+// Verlauf des Abends (D-029): Kurve über die Stunden, alle Personen zusammen.
+// Der Server liefert nur die Stunden, in denen wirklich etwas passiert ist.
+// Die viewBox ist fest (100 x 40) und wird per preserveAspectRatio auf die
+// Kartenbreite gezogen — so muss die Breite nie gemessen werden.
+function buildChart(timeline) {
+  // Erst ab zwei Stunden gibt es einen Verlauf; eine einzelne Stunde wäre
+  // nur ein flacher Strich mit einem Block in der Mitte
+  if (!(timeline?.counts?.length > 1)) return null;
+  const { startHour, counts } = timeline;
+  const n = counts.length;
+  const W = 100, H = 40, PAD_T = 4;   // PAD_T: Luft, damit die Spitze nicht anstößt
+  // Kurve wie im Story-Bild — dieselbe Formel liegt in js/curve.js
+  const { max, peak, xAt, yAt, d: line } = buildCurve(counts, W, H, PAD_T);
+
+  const el = (name, attrs, cls) => {
+    const node = document.createElementNS(SVG_NS, name);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v));
+    if (cls) node.setAttribute('class', cls);
+    return node;
+  };
+
+  const box = h('div', 'night-chart');
+  const head = h('div', 'chart-head');
+  head.append(h('span', 'what', 'Verlauf pro Stunde'), h('span', 'peak', `Spitze ${hourLabel(startHour + peak)}: ${max}`));
+
+  const svg = el('svg', {
+    viewBox: `0 0 ${W} ${H}`,
+    preserveAspectRatio: 'none',
+    role: 'img',
+    'aria-label':
+      `Getränke pro Stunde von ${hourLabel(startHour)} bis ${hourLabel(startHour + n)}, Spitze ${max}`,
+  });
+  // Spitzenstunde als Akzent-Streifen hinter der Kurve (D-078)
+  const step = W / (n - 1);
+  const bandW = Math.min(W, Math.max(6, step * 0.55));
+  const bandX = Math.min(W - bandW, Math.max(0, xAt(peak) - bandW / 2));
+  svg.append(
+    el('rect', { x: bandX, y: 0, width: bandW, height: H }, 'peak-band'),
+    el('path', { d: `${line} L${W} ${H} L0 ${H} Z` }, 'area'),
+    el('line', { x1: 0, y1: H, x2: W, y2: H }, 'base'),
+    el('path', { d: line }, 'line'),
+    el('line', { x1: xAt(peak), y1: yAt(max), x2: xAt(peak), y2: H }, 'peak-mark'),
+  );
+  // Unsichtbare Streifen je Stunde: nur als Ziel für den Tooltip
+  counts.forEach((v, i) => {
+    const x = Math.max(0, xAt(i) - step / 2);
+    const hit = el('rect', { x, y: 0, width: Math.min(step, W - x), height: H }, 'hit');
+    const title = document.createElementNS(SVG_NS, 'title');
+    title.textContent = `${hourLabel(startHour + i)}: ${v === 1 ? '1 Getränk' : `${v} Getränke`}`;
+    hit.appendChild(title);
+    svg.appendChild(hit);
+  });
+
+  const plot = h('div', 'plot');
+  const dot = h('span', 'peak-dot');
+  dot.style.left = `${(xAt(peak) / W) * 100}%`;
+  dot.style.top = `${(yAt(max) / H) * 100}%`;
+  plot.append(svg, dot);
+
+  const axis = h('div', 'axis');
+  axis.append(h('span', '', hourLabel(startHour)), h('span', '', hourLabel(startHour + n - 1)));
+
+  box.append(head, plot, axis);
+  return box;
+}
+
+// Kennzahl: Wert groß, Label mit Farbquadrat der Getränkeart
+function statCell(value, label, color) {
+  const cell = h('div', 'cell');
+  cell.style.setProperty('--sw', color);
+  cell.append(h('div', 'value num', String(value)), h('div', 'label', label));
+  return cell;
+}
+
+const NIGHT_NOTCH = { tabW: 138, tabH: 34, r: 14, slant: 20, stroke: true };
+
+function buildCard(night) {
+  const { date, weekday } = fmtDay(night.day);
+  const card = h('article', 'night-card');
+  card.id = `night-${night.day}`;   // Sprungziel beim Nachladen (D-042)
+
+  const head = h('div', 'night-head');
+  const when = h('div', 'night-when');
+  when.append(h('div', 'night-weekday', weekday), h('div', 'night-date num', date));
+  head.append(when);
+  // Vom Admin vergebener Name (D-028) – steht unter dem Datum, falls gesetzt.
+  // Für den Admin ist er zugleich der Knopf zum Benennen (D-077); ohne Namen
+  // steht dort leise „Namen geben“.
+  if (adminToken) {
+    const nm = h('button', 'night-name name-edit' + (night.name ? '' : ' empty'), night.name || 'Namen geben');
+    nm.type = 'button';
+    nm.title = night.name ? 'Namen ändern' : 'Diesem Abend einen Namen geben';
+    nm.insertAdjacentHTML('beforeend', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>');
+    nm.addEventListener('click', () => openEdit(night.day));
+    head.appendChild(nm);
+  } else if (night.name) {
+    head.appendChild(h('div', 'night-name', night.name));
+  }
+
+  const winner = h('div', 'night-winner');
+  if (night.winner) {
+    const crest = h('span', 'crest');
+    crest.setAttribute('aria-hidden', 'true');
+    crest.append(h('span', 'avatar', initial(night.winner.name)));
+    const who = h('span', 'who');
+    who.append(h('span', 'eyebrow', 'Abendsieger'), h('span', 'name', night.winner.name));
+    winner.append(crest, who, h('span', 'count', `${night.winner.total} Getränke`));
+  } else {
+    winner.classList.add('none');
+    winner.textContent = '—';
+  }
+
+  const stats = h('div', 'night-stats');
+  stats.append(
+    statCell(night.beers, 'Bier', 'var(--beer)'),
+    statCell(night.shots, 'Shots', 'var(--shot)'),
+    statCell(night.mixes, 'Mischen', 'var(--mixc)'),
+    statCell(night.total, 'Gesamt', 'var(--ink)'),
+  );
+
+  // Teilnehmerzahl steht im Kerben-Etikett unten rechts
+  const meta = h('div', 'night-meta notch-tag');
+  meta.append(h('span', '', night.participants === 1 ? '1 Teilnehmer' : `${night.participants} Teilnehmer`));
+
+  card.append(head, winner, stats);
+  const chart = buildChart(night.timeline);
+  if (chart) card.appendChild(chart);
+
+  // Story kann jeder speichern — eigene Zeile, damit die Admin-Werkzeuge
+  // darunter so breit bleiben wie bisher
+  const shareRow = h('div', 'night-actions');
+  const story = h('button', 'btn btn--sm night-btn');
+  story.type = 'button';
+  story.title = `Abendrückblick vom ${date} als Bild fürs Handy`;
+  story.append('Story ', h('span', 'i-arrow i-arrow--down'));
+  story.addEventListener('click', () => saveStory(night, story));
+  shareRow.appendChild(story);
+  card.appendChild(shareRow);
+
+  // Übergabedatei, Name, Protokoll und TV-Anzeige bleiben dem Admin vorbehalten
+  if (adminToken) {
+    const actions = h('div', 'night-actions night-actions--admin');
+
+    const csv = h('button', 'btn btn--sm btn--ghost night-btn', 'CSV ');
+    csv.append(h('span', 'i-arrow i-arrow--down'));
+    csv.type = 'button';
+    csv.title = `Teilnehmerliste vom ${date} als CSV`;
+    csv.addEventListener('click', () =>
+      downloadCsv(`/export/archive/${night.day}`, `${AREA.id}-abend-${night.day}.csv`));
+    actions.appendChild(csv);
+
+    // Getränke dieses Abends einzeln korrigieren: im Getränke-Protokoll (D-076)
+    const log = h('a', 'btn btn--sm btn--ghost night-btn', 'Protokoll ');
+    log.href = `admin?protokoll=${night.day}`;
+    log.title = 'Getränke dieses Abends einzeln ansehen und korrigieren';
+    log.append(h('span', 'i-arrow'));
+    const tv = h('button', 'btn btn--sm btn--dark night-btn');
+    tv.type = 'button';
+    const onTv = board.mode === 'archive' && board.day === night.day;
+    tv.classList.toggle('on-tv', onTv);
+    tv.textContent = onTv ? '✓ Auf dem TV' : 'Auf den TV';
+    tv.title = onTv ? 'Dieser Abend läuft gerade auf dem TV' : 'Diesen Abend auf dem TV zeigen';
+    tv.addEventListener('click', () => send({ type: 'setBoardMode', mode: 'archive', day: night.day }));
+    actions.append(log, tv);
+    card.appendChild(actions);
+  }
+  card.appendChild(meta);
+  return card;
+}
+
+// Wie viele Abende gerade gezeichnet sind. Die Liste kommt komplett vom
+// Server (60 Abende sind rund 11 KB), teuer ist erst das Zeichnen: jede Karte
+// bringt eine eigene SVG-Kurve mit. Darum in Blöcken (D-042) — im Register
+// (D-094) wird der nächste Block nachgezeichnet, sobald man sich dem Ende nähert.
+const PAGE = 12;
+let shown = PAGE;
+
+// --- Register (D-094): Abende als 3D-Karussell ---
+const track = $('cards');
+let slides = [];
+let active = -1;
+let frame = 0;
+// Auffächern beim ersten Erscheinen: 0 = alle Karten gestapelt, 1 = Register
+let spread = reducedMotion() ? 1 : 0;
+// Leichtes Neigen der vorderen Karte zur Maus (Ziel- und aktueller Wert)
+const tilt = { x: 0, y: 0, tx: 0, ty: 0 };
+
+const slideCenter = (sl) => sl.offsetLeft + sl.offsetWidth / 2;
+const slideStep = () => (slides.length > 1 ? slides[1].offsetLeft - slides[0].offsetLeft : track.clientWidth || 1);
+const pad2 = (n) => String(n).padStart(2, '0');
+const schedule = () => { if (!frame) frame = requestAnimationFrame(layoutDeck); };
+
+function layoutDeck() {
+  frame = 0;
+  if (!slides.length) return;
+  const mid = track.scrollLeft + track.clientWidth / 2;
+  const step = slideStep();
+  const flat = reducedMotion();
+  tilt.x += (tilt.tx - tilt.x) * 0.14;
+  tilt.y += (tilt.ty - tilt.y) * 0.14;
+  let best = 0;
+  let bestA = Infinity;
+  slides.forEach((sl, i) => {
+    const d = (slideCenter(sl) - mid) / step;   // Abstand zur Mitte in Karten
+    const a = Math.abs(d);
+    if (a < bestA) { bestA = a; best = i; }
+    if (flat) return;
+    if (a > 4.5) { sl.style.visibility = 'hidden'; return; }
+    sl.style.visibility = '';
+    const pl = sl.firstChild;
+    const sg = Math.sign(d);
+    const c = Math.min(a, 3);
+    // Trommel: die Außenkante weicht zurück, die Seitenkarten rücken
+    // zusammen und nach hinten — wie ein Register, das man durchblättert
+    const rot = sg * Math.min(a, 1.6) * 34 * spread;
+    const z = -c * 150 * spread;
+    const pull = -sg * Math.max(0, a - 0.5) * step * 0.26 * spread;
+    const stack = -d * step * (1 - spread);              // beim Auffächern: alle auf einem Stapel
+    const scale = 1 - c * 0.05 * spread;
+    const near = Math.max(0, 1 - a * 2);                 // nur die vordere Karte neigt sich
+    pl.style.transform =
+      `perspective(1400px) translate3d(${(pull + stack).toFixed(1)}px,0,${z.toFixed(1)}px) ` +
+      `rotateY(${(rot + tilt.x * near).toFixed(2)}deg) rotateX(${(tilt.y * near).toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+    pl.style.opacity = String(Math.max(0.2, 1 - Math.max(0, a - 0.6) * 0.34 * spread));
+    sl.style.zIndex = String(100 - Math.round(a * 10));
+  });
+  if (best !== active) setActive(best);
+  if (Math.abs(tilt.tx - tilt.x) > 0.02 || Math.abs(tilt.ty - tilt.y) > 0.02) schedule();
+}
+
+function setActive(i) {
+  active = i;
+  slides.forEach((sl, j) => sl.classList.toggle('is-active', j === i));
+  const n = nights.length;
+  $('deck-pos').textContent = pad2(i + 1);
+  $('deck-total').textContent = pad2(n);
+  $('deck-bar').style.setProperty('--p', n > 1 ? String(i / (n - 1)) : '1');
+  $('deck-prev').disabled = i <= 0;
+  $('deck-next').disabled = i >= n - 1;
+  // Nächsten Block nachzeichnen, bevor man ans Ende stößt
+  if (i >= slides.length - 4 && nights.length > shown) {
+    shown += PAGE;
+    setTimeout(renderCards, 0);
+  }
+}
+
+function goTo(i, { smooth = true } = {}) {
+  if (!slides.length) return;
+  if (i >= slides.length && nights.length > shown) {
+    shown = Math.ceil((i + 1) / PAGE) * PAGE;
+    renderCards();
+  }
+  const sl = slides[Math.max(0, Math.min(slides.length - 1, i))];
+  track.scrollTo({ left: slideCenter(sl) - track.clientWidth / 2, behavior: smooth && !reducedMotion() ? 'smooth' : 'auto' });
+}
+
+function renderCards() {
+  const keep = slides[active]?.dataset.day;
+  track.textContent = '';
+  $('empty').hidden = nights.length > 0;
+  $('deck').hidden = nights.length === 0;
+  slides = nights.slice(0, shown).map((night) => {
+    const sl = h('div', 'night-slide');
+    sl.dataset.day = night.day;
+    const plate = h('div', 'night-plate');
+    plate.appendChild(buildCard(night));
+    sl.appendChild(plate);
+    track.appendChild(sl);
+    return sl;
+  });
+  slides.forEach((sl) => notch(sl.firstChild.firstChild, NIGHT_NOTCH));
+  $('chron-count').textContent = nights.length === 1 ? '1 Abend' : `${nights.length} Abende`;
+  $('tv-live').hidden = !(adminToken && board.mode === 'archive');
+  // Übergabedatei über alle Abende: nur als Admin und nur wenn es Abende gibt
+  $('export-all').hidden = !adminToken || nights.length === 0;
+
+  // Admins zeichnen bei jedem State-Broadcast neu: dieselbe Karte bleibt vorn
+  const idx = keep ? Math.max(0, slides.findIndex((sl) => sl.dataset.day === keep)) : 0;
+  track.scrollLeft = slides[idx] ? slideCenter(slides[idx]) - track.clientWidth / 2 : 0;
+  active = -1;
+  layoutDeck();
+}
+
+track.addEventListener('scroll', schedule, { passive: true });
+addEventListener('resize', schedule);
+$('deck-prev').addEventListener('click', () => goTo(active - 1));
+$('deck-next').addEventListener('click', () => goTo(active + 1));
+$('deck-progress').addEventListener('click', (e) => {
+  const r = e.currentTarget.getBoundingClientRect();
+  goTo(Math.round(((e.clientX - r.left) / r.width) * (nights.length - 1)));
+});
+track.addEventListener('keydown', (e) => {
+  if (e.target.closest('input, textarea')) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); goTo(active + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(active - 1); }
+  if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+  if (e.key === 'End') { e.preventDefault(); goTo(nights.length - 1); }
+});
+// Tab in eine Seitenkarte holt sie nach vorn
+track.addEventListener('focusin', (e) => {
+  const sl = e.target.closest('.night-slide');
+  if (sl && !sl.classList.contains('is-active')) goTo(slides.indexOf(sl));
+});
+
+// Maus: Ziehen mit Schwung. Während des Ziehens ist der Snap aus, danach
+// läuft das Register weich auf die Zielkarte und rastet dort wieder ein.
+let drag = null;
+let dragged = false;
+track.addEventListener('pointerdown', (e) => {
+  if (e.pointerType !== 'mouse' || e.button !== 0) return;
+  const now = performance.now();
+  drag = { x: e.clientX, left: track.scrollLeft, v: 0, lastX: e.clientX, lastT: now };
+  dragged = false;
+});
+addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x;
+  if (!dragged && Math.abs(dx) < 6) return;
+  if (!dragged) {
+    dragged = true;
+    track.classList.add('is-dragging');
+    getSelection()?.removeAllRanges();
+  }
+  const now = performance.now();
+  drag.v = (e.clientX - drag.lastX) / Math.max(1, now - drag.lastT);   // px pro ms
+  drag.lastX = e.clientX;
+  drag.lastT = now;
+  track.scrollLeft = drag.left - dx;
+});
+addEventListener('pointerup', () => {
+  if (!drag) return;
+  const { v } = drag;
+  drag = null;
+  if (!dragged) return;
+  const pos = (track.scrollLeft + track.clientWidth / 2 - slideCenter(slides[0])) / slideStep();
+  goTo(Math.round(pos - (v * 260) / slideStep()));
+  const snapBack = () => track.classList.remove('is-dragging');
+  if ('onscrollend' in track) track.addEventListener('scrollend', snapBack, { once: true });
+  setTimeout(snapBack, 900);
+});
+
+// Klick auf eine Seitenkarte holt sie nach vorn, statt ihre Knöpfe auszulösen;
+// nach dem Ziehen löst das Loslassen keinen Klick aus. Tastatur-Klicks
+// (detail 0) gehen immer durch.
+track.addEventListener('click', (e) => {
+  if (dragged) { dragged = false; e.preventDefault(); e.stopPropagation(); return; }
+  if (e.detail === 0) return;
+  const sl = e.target.closest('.night-slide');
+  if (!sl || sl.classList.contains('is-active')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  goTo(slides.indexOf(sl));
+}, true);
+
+// Vordere Karte neigt sich leicht zur Maus
+track.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse' || drag || reducedMotion() || !slides[active]) return;
+  const r = slides[active].getBoundingClientRect();
+  const px = (e.clientX - r.left) / r.width - 0.5;
+  const py = (e.clientY - r.top) / r.height - 0.5;
+  const inside = Math.abs(px) <= 0.5 && Math.abs(py) <= 0.5;
+  tilt.tx = inside ? px * 8 : 0;
+  tilt.ty = inside ? -py * 6 : 0;
+  schedule();
+});
+track.addEventListener('pointerleave', () => { tilt.tx = 0; tilt.ty = 0; schedule(); });
+
+// Beim ersten Erscheinen fächert sich der Stapel zum Register auf
+if (spread < 1 && 'IntersectionObserver' in window) {
+  const io = new IntersectionObserver(([en]) => {
+    if (!en.isIntersecting || !slides.length) return;
+    io.disconnect();
+    const t0 = performance.now() + 250;
+    const DUR = 1300;
+    const ease = (t) => 1 - Math.pow(1 - t, 4);
+    const tick = (now) => {
+      const t = Math.min(1, Math.max(0, (now - t0) / DUR));
+      spread = ease(t);
+      layoutDeck();
+      if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, { threshold: 0.3 });
+  io.observe(track);
+} else {
+  spread = 1;
+}
+
+// Sprung aus Hall of Fame / „Letzter Abend" zur Karte des Abends: erst zum
+// Register scrollen, dann die Karte nach vorn blättern und einkreisen.
+function jumpToNight(day) {
+  const idx = nights.findIndex((n) => n.day === day);
+  if (idx < 0) return;
+  if (idx >= shown) { shown = Math.ceil((idx + 1) / PAGE) * PAGE; renderCards(); }
+  const sl = slides[idx];
+  if (!sl) return;
+  const rm = reducedMotion();
+  $('deck').classList.add('is-in');
+  $('deck').scrollIntoView({ block: 'center', behavior: rm ? 'auto' : 'smooth' });
+  setTimeout(() => goTo(idx), rm ? 0 : 450);
+  const when = sl.querySelector('.night-when');
+  when.querySelector('.scribble')?.remove();
+  when.insertAdjacentHTML('beforeend', scribble('circle'));
+  drawScribble(when.lastElementChild, { delay: rm ? 0 : 1100 });
+}
+
+// --- Hall of Fame (L3): Sieger der letzten Abende, Rekord als Akzentkarte ---
+const HOF_MAX = 8;
+const HOF_NOTCH = { tabW: 112, tabH: 30, r: 14, slant: 18 };
+const hofSeen = new Set();
+
+function renderHof() {
+  const withWinner = nights.filter((n) => n.winner);
+  $('hof').hidden = withWinner.length === 0;
+  const grid = $('hof-grid');
+  grid.textContent = '';
+  if (!withWinner.length) return;
+  // Rekord = meiste Getränke eines Abendsiegers (bei Gleichstand der jüngere)
+  const record = withWinner.reduce((a, b) => (b.winner.total > a.winner.total ? b : a));
+  let list = withWinner.slice(0, HOF_MAX);
+  if (!list.includes(record)) list = [...list.slice(0, HOF_MAX - 1), record];
+  $('hof-kicker').textContent = list.length === 1 ? 'Der letzte Abend' : `Die letzten ${list.length} Abende`;
+
+  let fresh = 0;
+  for (const night of list) {
+    const isRecord = night === record && withWinner.length > 1;
+    const { short, weekday } = fmtDay(night.day);
+    const a = h('a', 'hof-card' + (isRecord ? ' is-record' : ''));
+    a.href = `#night-${night.day}`;
+    a.setAttribute('aria-label', `${night.winner.name}, Abendsieger am ${fmtDay(night.day).date} mit ${drinks(night.winner.total)} – zum Abend springen`);
+    const top = h('span', 'hof-top');
+    top.append(h('span', 'eyebrow', weekday));
+    if (isRecord) top.append(h('span', 'chip', 'Rekord'));
+    const crest = h('span', 'hof-crest');
+    crest.append(h('span', 'avatar', initial(night.winner.name)));
+    const count = h('span', 'hof-count');
+    count.append(h('span', 'num', String(night.winner.total)), document.createTextNode(night.winner.total === 1 ? 'Getränk' : 'Getränke'));
+    const tag = h('span', 'notch-tag', `${short} · `);
+    tag.append(h('span', 'hl num', String(night.winner.total)));
+    a.append(top, crest, h('span', 'hof-name', night.winner.name), count, tag);
+    a.addEventListener('click', (e) => { e.preventDefault(); jumpToNight(night.day); });
+    if (!hofSeen.has(night.day)) {
+      hofSeen.add(night.day);
+      a.dataset.reveal = 'up';
+      a.dataset.delay = String(Math.min(fresh++, 7) * 60);
+    }
+    grid.appendChild(a);
+    notch(a, { ...HOF_NOTCH, stroke: !isRecord });
+  }
+  initReveal(grid);
+}
+
+// --- Hero: Kennzahlen-Satz (L2), „Letzter Abend", Laufband der Sieger ---
+let heroShown = false;
+let marqueeKey = '';
+
+function setNum(el, to) {
+  const from = Number(el.dataset.v ?? 0);
+  el.dataset.v = String(to);
+  if (from === to && el.textContent !== '0') { el.textContent = to.toLocaleString('de-DE'); return; }
+  countUp(el, to, { from, dur: heroShown ? 700 : 1500 });
+}
+
+function renderHero() {
+  const total = nights.reduce((s, n) => s + n.total, 0);
+  setNum($('stat-nights'), nights.length);
+  setNum($('stat-drinks'), total);
+  $('stat-nights-word').textContent = nights.length === 1 ? 'Abend' : 'Abende';
+  $('stat-drinks-word').textContent = total === 1 ? 'Getränk' : 'Getränke';
+  $('hero-since').textContent = nights.length ? nights[nights.length - 1].day.slice(0, 4) : String(new Date().getFullYear());
+
+  const last = nights[0];
+  $('last-card').hidden = !last;
+  if (last) {
+    const { short, weekday } = fmtDay(last.day);
+    $('last-day').textContent = weekday.slice(0, 2);
+    $('last-date').textContent = short;
+    $('last-winner').textContent = last.winner ? `${last.winner.name} · ${last.winner.total}` : `${last.total} Getränke`;
+    $('last-winner-label').textContent = last.winner ? 'Abendsieger' : 'Gesamt';
+  }
+
+  // Laufband nur neu aufbauen, wenn sich die Sieger geändert haben
+  const winners = nights.filter((n) => n.winner).slice(0, 12);
+  const key = winners.map((n) => `${n.day}${n.winner.name}${n.winner.total}`).join('|');
+  if (key !== marqueeKey) {
+    marqueeKey = key;
+    const track = $('hero-marquee-track');
+    track.textContent = '';
+    for (const n of winners) {
+      const item = h('span', 'mq-item');
+      item.append(h('span', 't-serif', n.winner.name), h('span', 'eyebrow num', `${fmtDay(n.day).short} · ${drinks(n.winner.total)}`));
+      track.append(item);
+    }
+    $('hero-marquee').hidden = winners.length === 0;
+    if (winners.length) initMarquee($('hero-marquee'));
+  }
+
+  // Zeilenweise Einblendung erst, wenn die Zahlen da sind
+  if (!heroShown) {
+    heroShown = true;
+    $('hero-title').dataset.reveal = 'lines';
+    initReveal($('hero-title').parentElement);
+    const sc = $('hero-scribble');
+    drawScribble(sc, { delay: reducedMotion() ? 0 : 900 });
+  }
+}
+
+async function load() {
+  const res = await fetch(`${AREA.base}/api/archive`);
+  ({ days: nights } = await res.json());
+  renderCards();
+  renderHof();
+  renderHero();
+}
+
+$('last-card').addEventListener('click', (e) => {
+  if (!nights[0]) return;
+  e.preventDefault();
+  jumpToNight(nights[0].day);
+});
+$('to-top').addEventListener('click', () => {
+  scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' });
+});
+
+// --- Abend benennen (Admin) ---
+function openEdit(day) {
+  editDay = day;
+  $('edit-day-label').textContent = fmtDay(day).date;
+  $('edit-error').textContent = '';
+  // Name nur beim Öffnen setzen: spätere State-Broadcasts sollen nicht in ein
+  // Feld schreiben, in dem gerade getippt wird.
+  $('edit-name-input').value = nights.find((n) => n.day === day)?.name ?? '';
+  enter($('edit-modal'));
+  $('edit-name-input').focus();
+}
+
+// Abend benennen (D-028); leeres Feld entfernt den Namen wieder
+function saveNightName() {
+  if (!editDay) return;
+  send({ type: 'setNightName', day: editDay, name: $('edit-name-input').value.trim() });
+  showToast($('edit-name-input').value.trim() ? 'Name gespeichert.' : 'Name entfernt.', true);
+  closeEdit();
+}
+function closeEdit() { leave($('edit-modal')); editDay = null; }
+
+$('export-all').addEventListener('click', () =>
+  downloadCsv('/export/archive', `${AREA.id}-abende-gesamt.csv`));
+$('save-name').addEventListener('click', saveNightName);
+$('edit-name-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveNightName(); });
+$('close-edit').addEventListener('click', closeEdit);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('edit-modal').hidden) closeEdit(); });
+$('tv-live').addEventListener('click', () => send({ type: 'setBoardMode', mode: 'alltime' }));
+
+// Lando-Bewegung: Einblendungen, Kringel, Kerben, Menü, Hintergrundwechsel
+initLando();
+
+// Der Schimmer um die Fußkarte dreht sich nur, solange sie im Bild ist
+if ('IntersectionObserver' in window) {
+  new IntersectionObserver(([en]) => $('foot-card').classList.toggle('is-live', en.isIntersecting))
+    .observe($('foot-card'));
+}
+
+// Admin: über den State-Broadcast bleiben TV-Status und Abend-Namen aktuell
+if (adminToken) {
+  ws = connectState({
+    onState(state) {
+      board = { mode: state.boardMode ?? 'alltime', day: state.boardDay ?? null };
+      load();   // Archiv-Liste ändert sich durch neue Getränke und Namen
+    },
+    onError: showEditError,
+  });
+} else {
+  load();
+}
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+</body>
+</html>

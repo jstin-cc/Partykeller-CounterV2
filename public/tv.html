@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SV Partykeller – Scoreboard</title>
+<script>document.documentElement.classList.add('js-motion');
+// Seitenwechsel (D-085/D-087): Morph-Schlüssel vor dem ersten Bild setzen
+// (die Seite benennt daraufhin ihr Gegenstück), nach dem Übergang lösen.
+try {
+  var h = document.documentElement, ss = sessionStorage;
+  var m = ss.getItem('pk-morph');
+  ss.removeItem('pk-morph'); ss.removeItem('pk-curtain');   // pk-curtain: Rest des alten Vorhangs (D-084)
+  var vt = 'CSSViewTransitionRule' in window, flip = null;
+  try { flip = JSON.parse(ss.getItem('pk-flip')); } catch (e) {}
+  // Firefox (keine seitenübergreifenden View Transitions): Morph per Skript
+  // (D-087) — unsichtbar starten, lando.js legt die Elemente an ihre alte Stelle
+  var flipOn = !vt && !!flip && Date.now() - flip.t < 10000 && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!flipOn) ss.removeItem('pk-flip');
+  if (flipOn) { h.dataset.flip = '1'; setTimeout(function () { delete h.dataset.flip; }, 1500); }
+  ss.setItem('pk-booted', '1');   // Kaltstart-Bild (D-093) nur auf den Gästeseiten
+  if (m && (vt || flipOn)) {
+    h.dataset.morph = m;
+    h.pkMorphDone = new Promise(function (res) {
+      var done = function () { delete h.dataset.morph; res(); };
+      h.pkMorphEnd = done;
+      setTimeout(done, 2000);
+      if (vt) addEventListener('pagereveal', function (e) {
+        if (e.viewTransition) { e.viewTransition.ready.catch(function () {}); e.viewTransition.finished.then(done, done); } else done();
+      }, { once: true });
+    });
+  }
+} catch (e) {}</script>
+<link rel="icon" href="assets/cones-flat.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f131c">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/vendor/qrcode.js"></script>
+<style>
+  /* TV-Scoreboard im Lando-Stil (D-078): dunkler Bereichsgrund mit langsam
+     treibenden Höhenlinien, Wortmarke + Emblem links oben, Kennzahlen und
+     QR-Kerbenkarte rechts oben (die Mitte des Kopfs bleibt für die
+     Fasching-Luftschlangen frei). Darunter die Hero-Zeile: große Versal-
+     Headline mit Serif-Akzent links, Podest als Kerbenkarten in den
+     Rangfarben rechts. Dann die Rangliste mit Haarlinien und das Fun-Fact-
+     Band in der Serif. Alle Maße in Design-Pixeln einer 1080 px hohen Bühne. */
+  html, body { height: 100%; }
+  body { overflow: hidden; }
+  .tv {
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg);
+    overflow: hidden;
+    position: relative;
+    cursor: none;              /* Kiosk: kein Mauszeiger über dem Board */
+    /* Spaltenraster der Rangliste (Kopf und Zeilen teilen es) */
+    --c-gap: 28px;
+    --w-rank: 78px;
+    --w-num: 128px;
+    --w-total: 150px;
+    --w-gap: 104px;
+  }
+  /* Design-Bühne: das Board ist auf 1080 Design-Pixel Höhe ausgelegt und wird
+     als Ganzes per transform auf die echte Fensterhöhe skaliert. So sieht das
+     Layout auf jeder Auflösung/Zoomstufe identisch aus. Die Breite bleibt
+     fluid (min. 1440 Design-Pixel), Extra-Höhe bei schmalen Formaten bekommt
+     die Rangliste über flex. */
+  .stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    overflow: hidden;
+  }
+
+  /* --- Hintergrund-Ebene (MUSS erstes Kind von #stage bleiben: seasonfx
+     hängt die Schnee-Canvas direkt dahinter). Höhenlinien treiben sehr
+     langsam — die einzige Dauerbewegung außer dem Rekordkurs-Glühen. --- */
+  .tv-bg {
+    position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(110% 80% at 0% 0%, var(--bg-hi) 0%, transparent 58%),
+      radial-gradient(90% 70% at 100% 100%, var(--bg-deep) 0%, transparent 62%);
+  }
+  .tv-topo {
+    inset: -90px;
+    will-change: transform;
+    animation: tv-drift 110s ease-in-out infinite alternate;
+  }
+  @keyframes tv-drift {
+    from { transform: translate3d(-44px, -26px, 0) scale(1.02); }
+    to   { transform: translate3d(44px, 26px, 0) scale(1.07); }
+  }
+
+  /* Inhalts-Spalte der Bühne (z1 zwischen den Canvas-Ebenen z0/z5); zum
+     Oktoberfest rückt sie unter die Wimpelkette (D-071) */
+  .tv-body {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column;
+    height: 100%;
+    padding: 28px 64px 0 64px;
+  }
+  html[data-season="oktoberfest"] .tv-body { padding-top: 58px; }
+  /* Fasching-Luftschlangen (theme.css: left 600, Breite 680) liegen in der
+     freien Kopf-Mitte. Auf schmalen Bühnen (4:3, 1440 px) ist die Lücke
+     zwischen Wortmarke und Kennzahlen kleiner — dort rücken sie hinein. */
+  .stage { container-type: inline-size; }
+  @container (max-width: 1720px) {
+    #stage .season-streamers--tv { left: 404px; width: 300px; }
+    /* Headline bekommt etwas mehr Platz, das Podest rückt zusammen */
+    #board > .tv-hero { gap: 32px; }
+    .tv-hero > .tv-title { min-width: 360px; }
+    .tv-hero > #podium { gap: 12px; }
+  }
+
+  /* ======================= Kopf ======================= */
+  .tv-head {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 132px;
+    margin-bottom: 20px;
+  }
+  .tv-brand { flex: none; display: flex; align-items: center; gap: 24px; }
+  /* Partykeller-Logo als Maske: nimmt die Schriftfarbe an (wie auf der Startseite) */
+  .tv-emblem {
+    display: block; flex: none;
+    height: 100px; aspect-ratio: 1181 / 1000;
+    background: var(--ink);
+    -webkit-mask: url('assets/logo.png') center / contain no-repeat;
+    mask: url('assets/logo.png') center / contain no-repeat;
+  }
+  .tv-wordmark { font-size: 52px; }
+  .tv-wordmark .wm-top { color: var(--accent-text); }
+
+  /* Kennzahlen + QR: halten Mindestabstand zur Wortmarke; wird es eng (4:3),
+     geben nur die Kennzahlen nach (Ellipse), die QR-Karte bleibt voll scanbar */
+  .tv-meta { flex: 0 1 auto; min-width: 0; margin-left: 48px; display: flex; align-items: center; gap: 34px; }
+  /* Zahl, Summen und Rekordkurs passen in die 132 px des Kopfs; einzeilig
+     reicht der Rekordkurs-Chip unter den Fasching-Luftschlangen (y < 125) durch */
+  .tv-stats { flex: 0 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 9px; text-align: right; }
+  /* Teilnehmerzahl: große Zahl, Beschriftung als Eyebrow daneben */
+  .tv-count { display: flex; align-items: flex-end; gap: 12px; line-height: 1; }
+  .tv-count-n { display: block; font-size: 76px; line-height: 0.78; letter-spacing: -0.045em; color: var(--ink); }
+  .tv-count-l { font-size: 15px; color: var(--ink-muted); padding-bottom: 2px; text-align: left; white-space: nowrap; }
+  .tv-totals {
+    max-width: 100%; font-size: 14px; letter-spacing: 0.05em; color: var(--ink-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* Rekordkurs (Bier-Pace): Lime-Chip, das Glühen läuft als reine Deckkraft
+     eines Schattens (kein Box-Shadow-Repaint pro Bild) */
+  .pace-pill {
+    position: relative;
+    display: block; max-width: 100%;
+    /* zu lang für den Kopf: Ellipse statt Überlauf; overflow: clip mit
+       Rand lässt das Glühen (::after-Schatten) außen stehen */
+    overflow: clip; overflow-clip-margin: 32px; text-overflow: ellipsis;
+    padding: 6px 12px 5px;
+    border-radius: var(--radius-sm);
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--font-sans); font-weight: 750; font-size: 14px; line-height: 1.2; letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .pace-pill::after {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    box-shadow: 0 0 22px 4px color-mix(in srgb, var(--accent) 60%, transparent);
+    opacity: 0.15;
+    animation: tv-paceglow 2.4s ease-in-out infinite alternate;
+  }
+  @keyframes tv-paceglow { to { opacity: 0.9; } }
+
+  /* Silvester: Countdown in der letzten Stunde, danach ein Gruß (D-071).
+     Steht über der Headline an Stelle der Eyebrow — der Kopf ist auf 4:3
+     mit Kennzahlen, Rekordkurs und QR schon voll. */
+  .season-countdown {
+    display: inline-flex; align-items: baseline; gap: 10px;
+    max-width: 100%; overflow: hidden;
+    padding: 7px 14px 6px; border-radius: var(--radius-sm);
+    border: 1px solid var(--line-strong);
+    font-family: var(--font-sans); font-weight: 700; font-size: 14px; line-height: 1;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .season-countdown b { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; color: var(--accent-text); }
+
+  /* QR-Code: helle Kerbenkarte, das Etikett steht in der Stufe auf dem Grund */
+  .qr-card {
+    position: relative; flex: none;
+    width: 300px; height: 132px;
+    --notch-fill: var(--lando-white);
+    --notch-tag-ink: var(--ink-2);
+    color: var(--accent-2-ink);
+  }
+  .qr-card #qr {
+    position: absolute; left: 14px; top: 14px;
+    width: 96px; height: 96px;
+    background: #fff;                /* Scanner brauchen hellen Grund + Ruhezone */
+    overflow: hidden;
+  }
+  .qr-copy { position: absolute; left: 128px; right: 16px; top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .qr-copy .eyebrow { color: color-mix(in srgb, var(--accent-2-ink) 62%, transparent); font-size: 12px; }
+  .qr-title { font-weight: 800; text-transform: uppercase; font-size: 30px; line-height: 0.86; letter-spacing: -0.03em; }
+  .qr-title .t-serif { display: block; text-transform: none; font-size: 1.08em; letter-spacing: -0.01em; }
+  .qr-card .notch-tag { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; }
+
+  /* ======================= Board ======================= */
+  #board { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 26px; }
+
+  /* Hero-Zeile: Headline links, Podest rechts, beide unten bündig */
+  .tv-hero { flex-shrink: 0; display: flex; align-items: flex-end; gap: 44px; }
+  .tv-title { flex: 1 1 0; min-width: 340px; container-type: inline-size; padding-bottom: 2px; }
+  .tv-kicker-row { display: flex; align-items: center; min-width: 0; margin: 0 0 20px; }
+  .tv-kicker-row:has(> #season-countdown:not([hidden])) { margin-bottom: 16px; }
+  .tv-kicker-row:has(> #season-countdown:not([hidden])) > .tv-kicker { display: none; }
+  .tv-kicker { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 15px; letter-spacing: 0.08em; color: var(--ink-muted); }
+  .tv-kicker::before { content: ''; width: 8px; height: 8px; border-radius: 1px; background: var(--accent); }
+  /* #board-subtitle: JS setzt zwei Zeilen — Grotesk + Serif-Akzentwort */
+  .tv-headline { font-size: clamp(44px, 17cqw, 116px); line-height: 0.86; }
+  .tv-headline .bt-l1 {
+    display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding-top: 0.12em; margin-top: -0.12em;      /* Umlaut-Punkte nicht abschneiden */
+  }
+  /* lange Abend-Namen: zwei Zeilen statt winziger Schrift (fitHeadline) */
+  .tv-headline.is-long .bt-l1 {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+    white-space: normal; line-height: 1;
+    /* Box exakt auf zwei Zeilen (+ Umlaut-Polster oben) begrenzen. Mona Sans
+       setzt Umlaut-Punkte ~0.115em über die Zeilenoberkante — die der
+       weggeklammerten 3. Zeile ragen deshalb in den Fuß der 2. Zeile; das
+       Stück unter der Grundlinie (nur Unterlängen, in Versalien kaum) wird
+       weggeschnitten. Metriken (scrollHeight für fitHeadline) bleiben gleich. */
+    max-height: calc(2em + 0.12em); padding-bottom: 0;
+    clip-path: inset(0 0 0.12em 0);
+  }
+  .tv-headline.is-long .bt-l2 { margin-top: 0.1em; }
+  .tv-headline .bt-l2 { position: relative; display: inline-block; max-width: 100%; }
+  .tv-headline .bt-l2 .t-serif { display: block; font-size: 1.1em; line-height: 0.92; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tv-headline .bt-scribble {
+    position: absolute; left: -3%; bottom: -0.1em; width: 106%; height: 0.22em;
+    --scribble-width: 4; --draw-dur: 1.1s;
+  }
+
+  /* Podest (D-051, im Lando-Stil D-078): Name in Versalien darüber, Karte
+     mit Kerbe in der Rangfarbe, große Serif-Rangziffer, riesige
+     Gesamtzahl; die Getränke stehen im Etikett in der Stufe. */
+  #podium { flex: 0 1 auto; min-width: 0; display: flex; align-items: flex-end; justify-content: flex-end; gap: 22px; }
+  .slot { display: flex; flex-direction: column; min-width: 0; }
+  /* feste Breite als Wunschmaß (die Karten haben nur absolut gesetzten
+     Inhalt, ohne width fiele ihre Eigenbreite auf 0); schmale Bühnen (4:3)
+     dürfen sie schrumpfen */
+  #pod-1 { flex: 0 1 auto; width: 392px; --rank: var(--rank-1); --rank-ink: var(--accent-ink); }
+  #pod-2 { flex: 0 1 auto; width: 332px; --rank: var(--rank-2); --rank-ink: var(--accent-2-ink); }
+  #pod-3 { flex: 0 1 auto; width: 320px; --rank: var(--rank-3); --rank-ink: var(--mixc-ink); }
+
+  .slot-head { position: relative; padding: 0 2px 14px; min-width: 0; display: flex; align-items: flex-end; gap: 14px; }
+  .name-wrap { position: relative; display: inline-block; flex: 0 1 auto; min-width: 0; max-width: 100%; vertical-align: bottom; }
+  /* Timing-Tower (D-093): ▲▼, Bestwert/Rekord und Abstand zum Vordermann */
+  .slot-meta { flex: none; margin-left: auto; display: flex; align-items: center; gap: 12px; padding-bottom: 2px; transition: opacity 0.4s var(--ease); }
+  .is-new-leader .slot-meta { opacity: 0; }
+  .pod-gap { font-family: var(--font-sans); font-weight: 800; font-size: 24px; line-height: 1; letter-spacing: -0.02em; color: var(--ink-muted); }
+  .pod-gap:empty { display: none; }
+  .slot-name {
+    display: block;
+    font-family: var(--font-sans); font-weight: 800; text-transform: uppercase;
+    letter-spacing: -0.025em; line-height: 0.9; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding-top: 0.12em; margin-top: -0.12em;
+  }
+  #pod-1 .slot-name { font-size: 42px; }
+  #pod-2 .slot-name, #pod-3 .slot-name { font-size: 30px; }
+
+  /* Neue Nr. 1 (Idee L1): Kringel um den Namen + Serif-Notiz, ~10 s */
+  .lead-ring {
+    position: absolute; left: -16%; top: -46%; width: 134%; height: 190%;
+    --scribble-width: 3.5; --draw-dur: 0.95s;
+    opacity: 0; transition: opacity 0.7s var(--ease);
+  }
+  /* rechtsbündig auf Höhe des Namens, leicht schräg wie eine Randnotiz */
+  .lead-note {
+    position: absolute; right: 4px; bottom: 18px;
+    font-family: var(--font-serif); font-style: italic; font-size: 32px; line-height: 1;
+    color: var(--accent-text); white-space: nowrap;
+    opacity: 0; transform: translateY(10px) rotate(-5deg); transform-origin: 100% 100%;
+    transition: opacity 0.6s var(--ease), transform 0.8s var(--ease);
+  }
+  /* Chromium rechnet pathLength="1" zusammen mit vector-effect:
+     non-scaling-stroke nicht sauber um — mit Strich/Lücke 1 endete der
+     Kringel bei ~75 %. Mit 2 steht er am Ende sicher vollständig da. */
+  .stage .scribble path { stroke-dasharray: 2; stroke-dashoffset: 2; }
+  .stage .scribble.is-static path { stroke-dashoffset: 0; }
+  .is-new-leader .lead-ring { opacity: 1; }
+  .is-new-leader .name-wrap { max-width: calc(100% - 150px); }
+  .is-new-leader .lead-note { opacity: 1; transform: rotate(-5deg); transition-delay: 0.45s; }
+
+  .podium-card {
+    position: relative;
+    --notch-fill: var(--rank);
+    --notch-tag-ink: var(--ink-2);
+    color: var(--rank-ink);
+    --pk-flash: color-mix(in srgb, var(--rank) 70%, transparent);
+  }
+  #pod-1 .podium-card { height: 228px; }
+  #pod-2 .podium-card { height: 190px; }
+  #pod-3 .podium-card { height: 172px; }
+  /* feine Höhenlinien in der Karte, in der Schriftfarbe der Rangfläche */
+  .pod-topo { z-index: 0; background: color-mix(in srgb, var(--rank-ink) 9%, transparent); }
+  .podium-badge {
+    position: absolute; left: 20px; top: 12px;
+    font-family: var(--font-serif); font-weight: 400; line-height: 0.8;
+    -webkit-text-stroke: 0.02em currentColor; paint-order: stroke fill;
+  }
+  #pod-1 .podium-badge { font-size: 124px; }
+  #pod-2 .podium-badge { font-size: 96px; }
+  #pod-3 .podium-badge { font-size: 88px; }
+  .pod-kicker { position: absolute; right: 20px; top: 18px; color: inherit; opacity: 0.62; font-size: 12.5px; }
+  .podium-card .total {
+    position: absolute; right: 20px;
+    line-height: 0.78; letter-spacing: -0.05em;
+    transform-origin: 100% 100%;
+  }
+  .podium-card .total.pk-pop { transform-origin: 100% 100%; }
+  #pod-1 .total { font-size: 132px; bottom: 58px; }
+  #pod-2 .total { font-size: 100px; bottom: 52px; }
+  #pod-3 .total { font-size: 88px; bottom: 50px; }
+  /* Getränke im Etikett: farbig auf dem Seitengrund */
+  /* links wenig Polster: das Etikett beginnt erst hinter der Schräge */
+  .podium-card .drinks { font-size: 14px; font-weight: 750; letter-spacing: 0.01em; gap: 0; padding-left: 8px; }
+  .drinks [data-f="beers"] { color: var(--beer); }
+  .drinks [data-f="shots"] { color: var(--shot); }
+  .drinks [data-f="mixes"] { color: var(--mix-text); }
+  .drinks .sep { color: var(--ink-faint); padding: 0 5px; }
+  /* Platzwechsel: .is-notched unterdrückt box-shadow — deshalb leuchtet die
+     Karte hier über drop-shadow, das der Kerben-Form folgt */
+  .podium-card.pk-flash { animation: tv-podflash 0.95s ease; }
+  @keyframes tv-podflash {
+    0%   { filter: drop-shadow(0 0 0 transparent); }
+    30%  { filter: drop-shadow(0 0 3px var(--rank)) drop-shadow(0 0 30px var(--pk-flash)); }
+    100% { filter: drop-shadow(0 0 0 transparent); }
+  }
+
+  /* --- Rangliste ab Platz 4: Zeilen mit Haarlinien, Rang als Serif-Ziffer --- */
+  .table-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .thead {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: var(--c-gap);
+    padding: 0 20px 12px 14px;
+    font-size: 13.5px; letter-spacing: 0.08em;
+  }
+  .thead > span { flex: none; }
+  .th-rank { width: var(--w-rank); }
+  .th-name { flex: 1 1 auto !important; }
+  .th-num { width: var(--w-num); display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  .th-num::before { content: ''; width: 7px; height: 7px; border-radius: 1px; background: var(--dot); }
+  .th-total { width: var(--w-total); text-align: right; }
+  .th-gap { width: var(--w-gap); text-align: right; }
+  .rest-viewport { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+  /* Wenn rotiert wird, läuft die Liste unten über die Deckkraft ganzer Zeilen
+     aus (applyFade, D-055/D-056); die angeschnittene Zeile schneidet
+     syncScroll per clip-path weg. Abstand 0 = GAP im Skript. */
+  .rest-track { position: absolute; left: 0; right: 0; top: 0; display: flex; flex-direction: column; gap: 0; will-change: transform; }
+  .row {
+    display: flex; align-items: center; gap: var(--c-gap);
+    padding: 0 20px 0 14px;
+    flex: 0 0 auto;
+    position: relative;
+    border-top: 1px solid var(--line);
+  }
+  /* kurzes Aufleuchten der Zeile, wenn sich ihr Wert erhöht */
+  .row.pk-rowflash::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    animation: pk-rowflash 0.85s ease;
+  }
+  @keyframes pk-rowflash {
+    0%   { background: transparent; }
+    30%  { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+    100% { background: transparent; }
+  }
+  .col-rank {
+    width: var(--w-rank); flex: none;
+    font-family: var(--font-serif); font-size: 44px; line-height: 1; color: var(--ink-muted);
+  }
+  .col-name {
+    flex: 1; min-width: 0;
+    display: flex; align-items: center; gap: 16px;
+    font-family: var(--font-sans); font-weight: 700; font-size: 31px; line-height: 1.1;
+    text-transform: uppercase; letter-spacing: -0.015em;
+    white-space: nowrap;
+  }
+  .col-name > .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .col-gap {
+    width: var(--w-gap); flex: none; text-align: right;
+    font-family: var(--font-sans); font-weight: 800; font-size: 26px; letter-spacing: -0.02em;
+    color: var(--ink-muted);
+  }
+  /* Positionswechsel: Dreieck + Plätze, einige Sekunden lang */
+  .mv {
+    flex: none; display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-sans); font-weight: 800; font-size: 22px; line-height: 1; letter-spacing: -0.01em;
+    text-transform: none; color: var(--gain);
+    animation: tv-mv-in 0.5s var(--ease) both;
+  }
+  .mv::before { content: ''; width: 14px; height: 12px; background: currentColor; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .mv.is-down { color: var(--loss); }
+  .mv.is-down::before { transform: rotate(180deg); }
+  .mv:empty { display: none; }
+  @keyframes tv-mv-in { from { opacity: 0; transform: translateY(8px); } }
+  /* Bestwert (grün) und Hausrekord (lila) wie die Sektorfarben der F1 */
+  .best {
+    flex: none; padding: 6px 9px 5px; border-radius: 6px;
+    font-family: var(--font-sans); font-weight: 800; font-size: 13px; line-height: 1;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    background: var(--pb); color: var(--pb-ink);
+  }
+  .best.is-record { background: var(--record); color: var(--record-ink); }
+  .best:empty { display: none; }
+  #board[data-mode="today"] .row.is-pb .col-total > span { background: var(--pb); color: var(--pb-ink); }
+  #board[data-mode="today"] .row.is-record .col-total > span { background: var(--record); color: var(--record-ink); }
+  .col-beer, .col-shot, .col-mix {
+    width: var(--w-num); flex: none; text-align: right;
+    font-family: var(--font-sans); font-weight: 800; font-size: 32px; letter-spacing: -0.03em;
+  }
+  .col-beer { color: var(--beer); }
+  .col-shot { color: var(--shot); }
+  .col-mix { color: var(--mix-text); }
+  .col-total { width: var(--w-total); flex: none; display: flex; justify-content: flex-end; }
+  .col-total > span {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 88px; padding: 6px 14px 5px;
+    background: var(--accent); color: var(--accent-ink); border-radius: var(--radius-sm);
+    font-family: var(--font-sans); font-weight: 800; font-size: 32px; line-height: 1; letter-spacing: -0.03em;
+  }
+
+  /* ======================= Fun-Fact-Band ======================= */
+  /* Titel als Lime-Chip, Text in der Serif (Zitat-Stil). Einzeilig —
+     zu lange Facts verkleinert fitFactText(). */
+  #funfacts {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 26px;
+    height: 84px;
+    padding: 0 8px 0 0;
+    margin-top: 10px;
+    margin-bottom: 12px;
+    border-top: 1px solid var(--line-strong);
+    overflow: hidden;
+  }
+  #funfact-title {
+    flex-shrink: 0;
+    display: flex; align-items: center;
+    padding: 8px 12px 7px; border-radius: 6px;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--font-sans); font-weight: 800; font-size: 14px;
+    text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
+    transition: opacity 0.4s;
+  }
+  #funfact-text {
+    font-family: var(--font-serif); font-weight: 400; font-size: 42px; line-height: 1.15;
+    letter-spacing: 0.005em; color: var(--ink);
+    min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: opacity 0.4s;
+  }
+
+  /* Fuß-Streifen: Träger für Kürbisse/Schneewehe (season.js). Ohne Saison
+     flach; randlos über die Seitenränder (gekoppelt an padding 64px). */
+  .tv-woods { position: relative; flex-shrink: 0; width: calc(100% + 128px); margin-left: -64px; height: 0; }
+  html:is([data-season="halloween"], [data-season="winter"], [data-season="silvester"]) .tv-woods { height: 28px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tv-topo, .pace-pill::after, .row.pk-rowflash::after, .podium-card.pk-flash { animation: none; }
+  }
+
+  /* --- Große Momente (D-095): Namens-Plakat (L21) und Meilenstein-Bild (L24).
+     Eine Vollbild-Ebene über der Bühne, die von oben einwischt, ein paar
+     Sekunden steht und nach unten wieder wegwischt. --- */
+  .takeover {
+    position: absolute; inset: 0; z-index: 8; overflow: hidden;
+    background: var(--bg-deep); pointer-events: none;
+    animation: to-in 0.7s var(--ease) both;
+  }
+  .takeover.is-leaving { animation: to-out 0.6s var(--ease) both; }
+  @keyframes to-in { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+  @keyframes to-out { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(100% 0 0 0); } }
+  .takeover .corner { position: absolute; z-index: 3; top: 52px; left: 64px; font-size: 22px; }
+  .takeover .corner-r { left: auto; right: 64px; }
+
+  /* Namens-Plakat: der Name riesig als Umriss, davor Initiale im Lorbeer */
+  .poster-name {
+    position: absolute; top: 50%; left: 0; white-space: nowrap;
+    font: 900 560px/1 var(--font-sans); text-transform: uppercase; letter-spacing: -0.04em;
+    color: transparent; -webkit-text-stroke: 5px var(--accent);
+    transform: translateY(-54%);
+    animation: poster-drift 14s linear both;
+  }
+  @keyframes poster-drift { from { translate: 4% 0; } to { translate: -34% 0; } }
+  .poster-front {
+    position: absolute; inset: 0; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  }
+  .poster-crest {
+    position: relative; width: 400px; height: 400px; display: grid; place-items: center;
+    animation: poster-pop 0.9s var(--ease-spring) 0.35s both;
+  }
+  .poster-crest::before {
+    content: ''; position: absolute; inset: 0; background: var(--accent-text);
+    -webkit-mask: url('assets/laurel.svg') center / contain no-repeat;
+    mask: url('assets/laurel.svg') center / contain no-repeat;
+  }
+  .poster-crest .avatar {
+    width: 230px; height: 230px; font-size: 140px;
+    background: var(--accent); color: var(--accent-ink); border: 0;
+    box-shadow: 0 0 0 20px var(--bg-deep);
+  }
+  .poster-front .who, .poster-front .cnt { background: var(--bg-deep); border-radius: 14px; }
+  .poster-front .who { font-family: var(--font-serif); font-size: 88px; line-height: 1; padding: 2px 28px 14px; }
+  .poster-front .cnt {
+    display: flex; align-items: baseline; gap: 12px; padding: 6px 22px;
+    font-weight: 800; font-size: 28px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted);
+  }
+  .poster-front .cnt .num { font-size: 52px; color: var(--ink); letter-spacing: -0.03em; }
+  .poster-front .who, .poster-front .cnt { animation: poster-rise 0.8s var(--ease) 0.6s both; }
+  @keyframes poster-pop { from { opacity: 0; transform: scale(0.6) rotate(-12deg); } }
+  @keyframes poster-rise { from { opacity: 0; transform: translateY(30px); } }
+
+  /* Meilenstein-Bild: Kacheln klappen nacheinander auf, Pfeile fahren ein */
+  .ms-tiles {
+    position: absolute; inset: 0; z-index: 0; display: grid; gap: 12px; padding: 12px;
+    grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 1fr);
+    perspective: 1600px;
+  }
+  .ms-tile {
+    display: grid; place-items: center; border-radius: 16px;
+    font: 900 66px/1 var(--font-sans); letter-spacing: -0.03em; text-transform: uppercase;
+    animation: ms-flip 0.7s var(--ease) both; animation-delay: calc(var(--i) * 60ms + 250ms);
+  }
+  .ms-tile.o { background: var(--accent); color: var(--accent-ink); }
+  .ms-tile.d { background: var(--bg); color: transparent; -webkit-text-stroke: 2.5px var(--accent); }
+  @keyframes ms-flip { from { opacity: 0; transform: rotateX(90deg); } }
+  /* Die Karte springt deckend auf (nur Skalierung, keine Durchsicht) — halb
+     durchsichtig sah sie aus, als läge sie hinter dem Raster */
+  .ms-card {
+    position: absolute; left: 50%; top: 50%; z-index: 3;
+    translate: -50% -50%;
+    padding: 46px 76px 54px; border-radius: 26px; text-align: center;
+    background: var(--bg-deep); box-shadow: 0 0 0 12px var(--bg-deep);
+    animation: ms-pop 0.8s var(--ease-spring) 1s both;
+  }
+  @keyframes ms-pop { from { transform: scale(0) rotate(-10deg); } }
+  .ms-card .num { display: block; font-size: 240px; line-height: 0.84; letter-spacing: -0.05em; }
+  .ms-card .t-serif { display: block; margin-top: 14px; font-size: 66px; line-height: 1; color: var(--accent-text); }
+  .ms-arrow {
+    position: absolute; top: 50%; z-index: 3; translate: 0 -50%;
+    font: 900 150px/1 var(--font-sans); color: var(--ink);
+    animation: ms-in-l 1s var(--ease) 0.8s both;
+  }
+  .ms-arrow.l { left: 40px; }
+  .ms-arrow.r { right: 40px; animation-name: ms-in-r; }
+  @keyframes ms-in-l { from { transform: translateX(-420px); } }
+  @keyframes ms-in-r { from { transform: translateX(420px); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .takeover, .takeover * { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="tv">
+  <div class="stage" id="stage" data-deco-top="tv">
+  <!-- Hintergrund-Ebene: MUSS erstes Kind der Bühne bleiben (seasonfx) -->
+  <div class="tv-bg" aria-hidden="true">
+    <div class="topo topo--abs tv-topo"></div>
+  </div>
+
+  <div class="tv-body">
+
+    <header class="tv-head">
+      <div class="tv-brand" data-reveal="up">
+        <span class="tv-emblem" role="img" aria-label="SV Partykeller"></span>
+        <div class="wordmark tv-wordmark" aria-hidden="true">
+          <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
+        </div>
+      </div>
+      <div class="tv-meta" data-reveal="up" data-delay="120">
+        <div class="tv-stats">
+          <div id="participant-count" class="num tv-count"><span class="tv-count-n">0</span> <span class="tv-count-l eyebrow">Teilnehmer</span></div>
+          <div id="totals" class="eyebrow tv-totals">0 Bier · 0 Shots gesamt</div>
+          <div id="pace-pill" class="pace-pill" hidden>🔥 Auf Rekordkurs!</div>
+        </div>
+        <div class="qr-card" data-notch="tabW:176;tabH:34;r:14;slant:20">
+          <div id="qr"></div>
+          <div class="qr-copy">
+            <span class="eyebrow">Mitmachen</span>
+            <span class="qr-title">Zählen <span class="t-serif">am Handy</span></span>
+          </div>
+          <span class="notch-tag">Scan zum Beitreten</span>
+        </div>
+      </div>
+    </header>
+
+    <div id="board">
+
+      <div class="tv-hero">
+        <div class="tv-title" data-reveal="up" data-delay="200">
+          <div class="tv-kicker-row">
+            <p class="eyebrow tv-kicker">Getränke-Counter</p>
+            <!-- Silvester: Countdown bzw. Gruß ersetzt die Eyebrow (Platz auch auf 4:3) -->
+            <div id="season-countdown" class="season-countdown" hidden></div>
+          </div>
+          <h1 id="board-subtitle" class="t-impact tv-headline">All-Time Rangliste</h1>
+        </div>
+
+        <div id="podium">
+          <div id="pod-2" class="slot" hidden data-reveal="up" data-delay="380">
+            <div class="slot-head"><span class="name-wrap"><span class="slot-name" data-f="name"></span></span><span class="slot-meta"><span class="mv"></span><span class="best"></span><span class="pod-gap num"></span></span></div>
+            <div class="podium-card" data-notch="tabW:252;tabH:36;r:14;slant:22">
+              <span class="topo topo--abs notch-clip pod-topo" aria-hidden="true"></span>
+              <span class="podium-badge">2</span>
+              <span class="eyebrow pod-kicker">Getränke</span>
+              <div data-f="total" class="total num"></div>
+              <span class="notch-tag drinks"><span data-f="beers"></span><span class="sep">·</span><span data-f="shots"></span><span class="sep">·</span><span data-f="mixes"></span></span>
+            </div>
+          </div>
+          <div id="pod-1" class="slot" hidden data-reveal="up" data-delay="280">
+            <div class="slot-head">
+              <span class="lead-note" aria-hidden="true">Neue Nr. 1</span>
+              <span class="name-wrap"><span class="slot-name" data-f="name"></span></span>
+              <span class="slot-meta"><span class="mv"></span><span class="best"></span></span>
+            </div>
+            <div class="podium-card" data-notch="tabW:284;tabH:40;r:14;slant:24">
+              <span class="topo topo--abs notch-clip pod-topo" aria-hidden="true"></span>
+              <span class="podium-badge">1</span>
+              <span class="eyebrow pod-kicker">Getränke</span>
+              <div data-f="total" class="total num"></div>
+              <span class="notch-tag drinks"><span data-f="beers"></span><span class="sep">·</span><span data-f="shots"></span><span class="sep">·</span><span data-f="mixes"></span></span>
+            </div>
+          </div>
+          <div id="pod-3" class="slot" hidden data-reveal="up" data-delay="460">
+            <div class="slot-head"><span class="name-wrap"><span class="slot-name" data-f="name"></span></span><span class="slot-meta"><span class="mv"></span><span class="best"></span><span class="pod-gap num"></span></span></div>
+            <div class="podium-card" data-notch="tabW:252;tabH:36;r:14;slant:22">
+              <span class="topo topo--abs notch-clip pod-topo" aria-hidden="true"></span>
+              <span class="podium-badge">3</span>
+              <span class="eyebrow pod-kicker">Getränke</span>
+              <div data-f="total" class="total num"></div>
+              <span class="notch-tag drinks"><span data-f="beers"></span><span class="sep">·</span><span data-f="shots"></span><span class="sep">·</span><span data-f="mixes"></span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-panel" data-reveal="fade" data-delay="520">
+        <div class="thead eyebrow" aria-hidden="true">
+          <span class="th-rank">Rang</span>
+          <span class="th-name">Name</span>
+          <span class="th-gap">Abstand</span>
+          <span class="th-num" style="--dot: var(--beer)">Bier</span>
+          <span class="th-num" style="--dot: var(--shot)">Shots</span>
+          <span class="th-num" style="--dot: var(--mixc)">Mischen</span>
+          <span class="th-total">Gesamt</span>
+        </div>
+        <div id="rest" class="rest-viewport"></div>
+      </div>
+
+    </div><!-- /#board -->
+
+    <!-- Fun-Facts (live): Band unten, eine Zeile hoch (Styles oben) -->
+    <div id="funfacts" data-reveal="fade" data-delay="600">
+      <span id="funfact-title">Fun Fact</span>
+      <span id="funfact-text">Bald gibt's hier Statistiken.</span>
+    </div>
+
+    <!-- Saison-Deko unten (Kürbisse, Schneewehe) -->
+    <div class="tv-woods" data-deco-foot="tv"></div>
+  </div>
+
+  <!-- Große Momente (D-095): Namens-Plakat und Meilenstein-Bild -->
+  <div id="takeover" class="takeover" role="status" hidden></div>
+  </div><!-- /.stage -->
+</div>
+
+<script type="module">
+import { AREA } from './js/area.js';
+import { connectState } from './js/ws-client.js';
+import { factList, fmtDay } from './js/facts.js';
+import { onSeason, setSeasonEnabled, newYear, mmss } from './js/season.js';
+import { createSeasonFx } from './js/seasonfx.js';
+import { initReveal, initNotches, notch, scribble, drawScribble } from './js/lando.js';
+
+const $ = (id) => document.getElementById(id);
+
+// --- Design-Bühne auf Fenstergröße skalieren (siehe CSS .stage) ---
+// Höhe fest 1080 Design-Pixel, Breite fluid ab 1440; bei schmaleren Formaten
+// (z. B. 4:3) wächst die Bühnenhöhe und die Rangliste zeigt mehr Zeilen.
+const DESIGN_H = 1080;
+const MIN_W = 1440;
+let stageScale = 1;       // für FLIP: getBoundingClientRect liefert skalierte px
+
+function fitStage() {
+  const scale = Math.min(window.innerHeight / DESIGN_H, window.innerWidth / MIN_W);
+  const stage = $('stage');
+  stageScale = scale;
+  stage.style.width = `${window.innerWidth / scale}px`;
+  stage.style.height = `${window.innerHeight / scale}px`;
+  stage.style.transform = `scale(${scale})`;
+}
+fitStage();
+window.addEventListener('resize', fitStage);
+
+// Lando-Bausteine (D-078): Kerben-Karten (Podest, QR) und Einblenden
+initNotches();
+initReveal();
+
+// Podest-Kerben an die Kartenbreite koppeln: Auf schmalen Bühnen (4:3)
+// schrumpfen die Karten, das Etikett aus data-notch (tabW) wäre dann breiter
+// als Platz da ist und die Stufe kippte zum Zipfel. Deshalb tabW so kappen,
+// dass links neben der Schräge immer ein flaches Stück Karte bleibt. Der
+// eigene ResizeObserver entsteht nach dem aus initNotches und läuft darum im
+// selben Frame als Letzter (setzt die Form also endgültig). Rein optisch.
+const POD_FLAT = 44;     // Mindestbreite des flachen Kartenfußes links der Stufe
+const podNotchRo = new ResizeObserver((entries) => {
+  for (const { target: card } of entries) {
+    const base = Object.fromEntries(card.dataset.notch.split(';').map((p) => {
+      const [k, v] = p.split(':');
+      return [k.trim(), Number(v)];
+    }));
+    const w = card.offsetWidth;
+    if (!w) continue;
+    const tabW = Math.max(120, Math.min(base.tabW, Math.floor(w - base.slant - POD_FLAT)));
+    notch(card, { ...base, tabW });
+    fitDrinks(card.querySelector('.drinks'));
+  }
+});
+document.querySelectorAll('.podium-card').forEach((card) => podNotchRo.observe(card));
+// Kringel für „Neue Nr. 1" (Idee L1): liegt bereit und zeichnet sich erst beim
+// Führungswechsel (leaderRing)
+document.querySelector('#pod-1 .name-wrap').insertAdjacentHTML('beforeend', scribble('circle', { cls: 'lead-ring' }));
+
+// --- QR-Code zum Beitreten ---
+// Zieladresse ist die vom Admin gesetzte joinUrl; ohne Vorgabe die
+// Startseite dieses Servers (auf dem Pi z. B. http://partykeller.local:3000/).
+let currentQrUrl = null;
+function renderQr(url) {
+  if (url === currentQrUrl) return;
+  currentQrUrl = url;
+  const qr = qrcode(0, 'M');
+  qr.addData(url);
+  qr.make();
+  $('qr').innerHTML = qr.createSvgTag({ cellSize: 3, margin: 2, scalable: true });
+  $('qr').firstElementChild.style.cssText = 'width:100%;height:100%;display:block;';
+}
+
+// „1 Mische", ab zwei „Mischen"
+const fmtMixes = (n) => `${n} ${n === 1 ? 'Mische' : 'Mischen'}`;
+
+// kurze Animationen (Reflow erzwingt Neustart)
+function pop(el) { el.classList.remove('pk-pop'); void el.offsetWidth; el.classList.add('pk-pop'); }
+function flash(el) { el.classList.remove('pk-flash'); void el.offsetWidth; el.classList.add('pk-flash'); }
+
+const prevPod = { 1: null, 2: null, 3: null };
+
+function fillPodium(el, p, slot) {
+  el.hidden = !p;
+  if (!p) { prevPod[slot] = null; return; }
+  const totalEl = el.querySelector('[data-f=total]');
+  el.querySelector('[data-f=name]').textContent = p.name;
+  totalEl.textContent = p.total;
+  el.querySelector('[data-f=beers]').textContent = `${p.beers} Bier`;
+  el.querySelector('[data-f=shots]').textContent = `${p.shots} Shots`;
+  el.querySelector('[data-f=mixes]').textContent = fmtMixes(p.mixes);
+  fitDrinks(el.querySelector('.drinks'));
+
+  const prev = prevPod[slot];
+  if (!modeSwitching && prev && prev.id === p.id && p.total > prev.total) {
+    pop(totalEl);                                    // gleicher Mensch, mehr Getränke
+  } else if (!modeSwitching && prev && prev.id !== p.id) {
+    flash(el.querySelector('.podium-card'));         // neuer Name auf diesem Podestplatz
+    if (slot === 1 && currentMode !== 'archive') {
+      seasonLeader(p.name);
+      leaderRing();
+    }
+  }
+  prevPod[slot] = { id: p.id, total: p.total };
+}
+
+// Getränke-Etikett in der Kerbe: hat feste Breite (tabW). Bei großen Zahlen
+// wird die Schrift so weit verkleinert, dass die Zeile hineinpasst (rein
+// optisch; offsetLeft/-Width sind Bühnen-px, unabhängig von der Skalierung).
+const DRINKS_SIZE = 14;
+function fitDrinks(tag) {
+  tag.style.fontSize = '';
+  const first = tag.firstElementChild, last = tag.lastElementChild;
+  const need = last.offsetLeft + last.offsetWidth - first.offsetLeft;
+  const cs = getComputedStyle(tag);
+  const avail = tag.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  if (avail > 0 && need > avail) tag.style.fontSize = `${Math.max(11, Math.floor(DRINKS_SIZE * avail / need * 10) / 10)}px`;
+}
+document.fonts?.ready.then(() => document.querySelectorAll('.podium-card .drinks').forEach(fitDrinks));
+
+// Neue Nr. 1 (Idee L1, D-078): Lime-Kringel zeichnet sich um den Namen, dazu
+// „Neue Nr. 1" in der Serif; nach 10 s blendet beides wieder aus. Rein optisch,
+// gleiche Bedingungen wie seasonLeader (nicht beim ersten Rendern, nicht beim
+// Moduswechsel, nicht im Archiv).
+let leadTimer = null;
+function leaderRing() {
+  const slot = $('pod-1');
+  slot.classList.add('is-new-leader');
+  drawScribble(slot.querySelector('.lead-ring'), { restart: true, delay: 200 });
+  clearTimeout(leadTimer);
+  leadTimer = setTimeout(() => slot.classList.remove('is-new-leader'), 10 * 1000);
+}
+
+// --- Rangliste ab Platz 4 ---
+// Feste Zeilenhöhe im Design-Raster; wie viele Zeilen sichtbar sind, ergibt
+// sich aus dem verfügbaren Platz (füllt die Tabelle immer komplett). Passen
+// nicht alle rein, scrollt das Fenster Zeile für Zeile nach unten; unten
+// angekommen springt es schnell wieder ganz nach oben und beginnt von vorne.
+const ROW_H = 66;         // Zeilenhöhe in Design-Pixeln (Haarlinie inklusive)
+const GAP = 0;            // px zwischen den Zeilen (muss zu .rest-track gap passen)
+const SCROLL_MS = 650;    // sanft eine Zeile weiter
+const RESET_MS = 900;     // schnell zurück nach oben
+// Verlauf unten (D-056): Deckkraft der letzten beiden ganz sichtbaren Zeilen
+const FADE_STEPS = [0.55, 0.2];
+
+// Verweildauer pro Schritt: im Admin einstellbar (setScrollSpeed), kommt im State
+let stepMs = 3200;
+
+let others = [];          // Spieler ab Platz 4 (aktuellster State)
+let prevOthers = [];      // vorheriger 4+-Stand (Diff: Umsortierung erkennen)
+let prevVals = {};        // id -> {beers,shots,mixes,total} (Pop bei Anstieg)
+let track = null;
+let pos = 0;
+let maxPos = 0;
+let scrollTimer = null;
+let modeSwitching = false; // beim Moduswechsel keine Zeilen-Animation (Slide übernimmt)
+
+// Wie viele Zeilen passen komplett in die Höhe h?
+function rowsIn(h) {
+  return Math.max(1, Math.floor((h + GAP) / (ROW_H + GAP)));
+}
+
+function popEl(el) { el.classList.remove('pk-pop'); void el.offsetWidth; el.classList.add('pk-pop'); }
+function rowFlash(el) { el.classList.remove('pk-rowflash'); void el.offsetWidth; el.classList.add('pk-rowflash'); }
+
+// prev = Vorwerte desselben Spielers; gestiegene Zähler bekommen direkt „Pop",
+// die ganze Zeile leuchtet kurz auf.
+function buildRow(p, prev) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.dataset.id = p.id;
+  for (const [cls, text, key] of [
+    ['col-rank', p.rank, null],
+    ['col-name', p.name, null],
+    ['col-gap', '', null],
+    ['col-beer', p.beers, 'beers'],
+    ['col-shot', p.shots, 'shots'],
+    ['col-mix', p.mixes, 'mixes'],
+    ['col-total', p.total, 'total'],
+  ]) {
+    const cell = document.createElement('div');
+    cell.className = cls;
+    // Die Gesamtzahl steht im Lime-Chip, alles andere direkt in der Zelle
+    if (cls === 'col-total') {
+      const pill = document.createElement('span');
+      pill.textContent = text;
+      cell.appendChild(pill);
+    } else if (cls === 'col-name') {
+      // Name zuerst (firstElementChild: updateRowsInPlace schreibt hinein),
+      // dahinter die Tower-Etiketten, die paintTower() füllt
+      cell.innerHTML = '<span class="nm"></span><span class="mv"></span><span class="best"></span>';
+      cell.firstElementChild.textContent = text;
+    } else {
+      cell.textContent = text;
+    }
+    if (key && prev && p[key] > prev[key]) (cell.firstElementChild ?? cell).classList.add('pk-pop');
+    row.appendChild(cell);
+  }
+  if (prev && p.total > prev.total) row.classList.add('pk-rowflash');
+  return row;
+}
+
+// Verlauf unten (D-055, D-056): Jede Zeile bekommt die Deckkraft ihres
+// Platzes im Fenster. Sichtbar sind nur ganze Zeilen; die letzten beiden
+// blenden stufenweise aus (FADE_STEPS). Die angeschnittene Zeile darunter
+// steht auf 0 und wird zusätzlich weggeschnitten (clip-path in syncScroll).
+// Ohne Rotation (alles passt hinein) bleibt jede Zeile voll.
+let slots = 1;            // ganz sichtbare Zeilen im Fenster (syncScroll)
+
+function rowOpacity(i) {
+  if (maxPos <= 0) return 1;
+  const slot = i - pos;
+  if (slot < 0 || slot >= slots) return 0;
+  const fadeFrom = slots - FADE_STEPS.length;
+  return slot < fadeFrom ? 1 : FADE_STEPS[slot - fadeFrom];
+}
+
+// ms = Dauer, passend zur Bewegung der Liste (0 = sofort)
+function applyFade(ms) {
+  if (!track) return;
+  [...track.children].forEach((r, i) => {
+    r.style.transition = ms ? `opacity ${ms}ms var(--ease)` : 'none';
+    r.style.opacity = String(rowOpacity(i));
+  });
+}
+
+function stopScroll() {
+  if (scrollTimer) { clearInterval(scrollTimer); scrollTimer = null; }
+}
+
+function scrollStep() {
+  if (maxPos <= 0 || !track) return;
+  if (pos >= maxPos) {
+    // Ende erreicht: schnell zurück nach oben und von vorne
+    track.style.transition = `transform ${RESET_MS}ms var(--ease)`;
+    pos = 0;
+    applyFade(RESET_MS);
+  } else {
+    track.style.transition = `transform ${SCROLL_MS}ms var(--ease)`;
+    pos += 1;
+    applyFade(SCROLL_MS);
+  }
+  track.style.transform = `translateY(${-pos * (ROW_H + GAP)}px)`;
+}
+
+// Rotation passend zum aktuellen Stand (Zeilenzahl, Platz) starten/stoppen
+function syncScroll() {
+  // Rotiert wird nur, wenn nicht alle Zeilen ins Fenster passen. Dann liegen
+  // unten die ausblendenden Zeilen, und als voll sichtbar zählt nur, was
+  // darüber Platz hat — am Listenende steht der letzte Platz voll lesbar da.
+  // Bei sehr wenig Platz (unter drei Zeilen) entfällt der Verlauf.
+  const h = $('rest').clientHeight;
+  slots = rowsIn(h);
+  const faded = slots > FADE_STEPS.length ? FADE_STEPS.length : 0;
+  maxPos = others.length > slots ? others.length - (slots - faded) : 0;
+  // Die angeschnittene Zeile unter der letzten ganzen wegschneiden
+  const used = slots * (ROW_H + GAP) - GAP;
+  $('rest').style.clipPath = maxPos > 0 ? `inset(0 0 ${Math.max(0, h - used)}px 0)` : '';
+  if (pos > maxPos) {
+    pos = Math.min(pos, maxPos);
+    if (track) {
+      track.style.transition = 'none';
+      track.style.transform = `translateY(${-pos * (ROW_H + GAP)}px)`;
+      void track.offsetWidth;
+    }
+  }
+  if (maxPos > 0 && !scrollTimer) scrollTimer = setInterval(scrollStep, stepMs);
+  if (maxPos <= 0) stopScroll();
+  applyFade(0);
+}
+
+function sameIds(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i].id !== b[i].id) return false;
+  return true;
+}
+
+// Reihenfolge unverändert: Werte in den vorhandenen Zeilen aktualisieren, ohne
+// neu aufzubauen. Die Scrollposition bleibt erhalten, gestiegene Zähler poppen.
+function updateRowsInPlace(list) {
+  for (let i = 0; i < list.length; i++) {
+    const p = list[i];
+    const el = track.children[i];
+    if (!el) continue;
+    const prev = prevVals[p.id];
+    const set = (cls, val, key) => {
+      const cell = el.querySelector('.' + cls);
+      const target = cell.firstElementChild ?? cell;   // Gesamt steht im Chip
+      if (target.textContent !== String(val)) target.textContent = val;
+      if (key && prev && val > prev[key]) popEl(target);
+    };
+    set('col-rank', p.rank);
+    set('col-name', p.name);
+    set('col-beer', p.beers, 'beers');
+    set('col-shot', p.shots, 'shots');
+    set('col-mix', p.mixes, 'mixes');
+    set('col-total', p.total, 'total');
+    if (prev && p.total > prev.total) rowFlash(el);
+  }
+}
+
+// Reihenfolge/Menge geändert: neu aufbauen. Bei Umsortierung gleiten die Zeilen
+// per FLIP von ihrer alten an die neue Position.
+function rebuildRest(animate) {
+  const viewport = $('rest');
+  const oldTop = {};
+  if (track) for (const r of track.children) oldTop[r.dataset.id] = r.getBoundingClientRect().top;
+
+  stopScroll();
+  viewport.textContent = '';
+  pos = 0;
+  if (others.length === 0) { track = null; return; }
+
+  track = document.createElement('div');
+  track.className = 'rest-track';
+  for (const p of others) track.appendChild(buildRow(p, modeSwitching ? null : prevVals[p.id]));
+  viewport.appendChild(track);
+
+  // feste Zeilenhöhe im Design-Raster: bleibt auf jeder Auflösung gleich,
+  // nur die Anzahl sichtbarer Zeilen variiert mit dem Platz
+  for (const r of track.children) r.style.height = `${ROW_H}px`;
+  track.style.transition = 'none';
+  track.style.transform = 'translateY(0)';
+  // Rotation und Verlauf zuerst, damit neue Zeilen unten gleich auf ihre
+  // Deckkraft im Verlauf einblenden statt auf voll
+  syncScroll();
+
+  if (animate && !modeSwitching) {
+    [...track.children].forEach((r, i) => {
+      const id = r.dataset.id;
+      const newTop = r.getBoundingClientRect().top;
+      if (oldTop[id] != null) {
+        // Bildschirm-px in Bühnen-px umrechnen (Bühne ist skaliert)
+        const delta = (oldTop[id] - newTop) / stageScale;
+        if (delta) {
+          r.style.transform = `translateY(${delta}px)`;
+          requestAnimationFrame(() => {
+            r.style.transition = 'transform 0.6s var(--ease-out)';
+            r.style.transform = 'translateY(0)';
+          });
+        }
+      } else {
+        r.style.opacity = '0';               // neue Zeile: sanft einblenden
+        requestAnimationFrame(() => { r.style.transition = 'opacity 0.55s ease'; r.style.opacity = String(rowOpacity(i)); });
+      }
+    });
+  }
+}
+
+// Ändert sich der verfügbare Platz (Fenster-Resize, Font-Swap, anderes
+// Seitenformat), passt sich nur die Anzahl sichtbarer Zeilen an — Rotation
+// und Scrollposition werden dazu neu ausgerichtet.
+new ResizeObserver(() => { if (track) syncScroll(); }).observe($('rest'));
+
+// Geschwindigkeit geändert (Admin): laufende Rotation mit neuem Takt fortsetzen
+function applyScrollSpeed(seconds) {
+  const ms = Math.round((Number(seconds) || 3.2) * 1000);
+  if (ms === stepMs) return;
+  stepMs = ms;
+  if (scrollTimer) {
+    clearInterval(scrollTimer);
+    scrollTimer = setInterval(scrollStep, stepMs);
+  }
+}
+
+// Einstieg: In-Place-Update bei gleicher Reihenfolge, sonst Neuaufbau mit FLIP.
+function updateRest(newOthers) {
+  const reorder = modeSwitching || !track || !sameIds(prevOthers, newOthers);
+  others = newOthers;
+  if (reorder) rebuildRest(prevOthers.length > 0);
+  else updateRowsInPlace(newOthers);
+
+  prevVals = {};
+  for (const p of newOthers) prevVals[p.id] = { beers: p.beers, shots: p.shots, mixes: p.mixes, total: p.total };
+  prevOthers = newOthers;
+}
+
+// --- Board-Modus (All-Time / Heute / Archiv-Abend), im Admin umschaltbar ---
+let currentMode = null;
+let currentDay = null;   // bei Modus 'archive': der gezeigte Party-Tag
+
+function metricsFor(p, mode) {
+  return mode === 'today'
+    ? { beers: p.beersToday, shots: p.shotsToday, mixes: p.mixesToday,
+        total: p.beersToday + p.shotsToday + p.mixesToday, ts: p.lastDrinkTsToday }
+    : { beers: p.beers, shots: p.shots, mixes: p.mixes, total: p.total, ts: p.lastDrinkTs };
+}
+
+// Modus bestimmt, wer auf dem Board steht:
+//  - alltime: alle mit Haken im Admin (der Haken gilt nur für die Gesamtansicht)
+//  - today:   alle, die heute mindestens ein Getränk geloggt haben
+function boardRows(players, mode) {
+  const rows = players
+    .map((p) => ({ id: p.id, name: p.name, hidden: p.hidden, ...metricsFor(p, mode) }))
+    .filter((r) => (mode === 'today' ? r.total > 0 : !r.hidden));
+  // Tiebreak bei Punktegleichstand: zuerst nach Uhrzeit (wer zuerst auf dem
+  // Stand war), Name nur noch als letzter Fallback (z. B. beide 0 Getränke).
+  rows.sort((a, b) =>
+    b.total - a.total ||
+    (a.ts ?? Infinity) - (b.ts ?? Infinity) ||
+    a.name.localeCompare(b.name, 'de')
+  );
+  rows.forEach((r, i) => { r.rank = i + 1; });
+  return rows;
+}
+
+// Headline im Lando-Stil: erste Zeile Grotesk, zweite Zeile ein Serif-Wort
+// mit Kringel darunter. Neu gesetzt (und der Kringel neu gezeichnet) nur,
+// wenn sich der Text ändert.
+let titleKey = '';
+function setBoardTitle(sans, serif) {
+  const key = `${sans}|${serif}`;
+  if (key === titleKey) return;
+  titleKey = key;
+  const l1 = document.createElement('span');
+  l1.className = 'bt-l1';
+  l1.textContent = sans;
+  const l2 = document.createElement('span');
+  l2.className = 'bt-l2';
+  const word = document.createElement('span');
+  word.className = 't-serif t-accent';
+  word.textContent = serif;
+  l2.append(word);
+  l2.insertAdjacentHTML('beforeend', scribble('underline', { cls: 'bt-scribble' }));
+  $('board-subtitle').replaceChildren(l1, ' ', l2);
+  fitHeadline();
+  drawScribble(l2.lastElementChild, { delay: 380 });
+}
+
+// Lange Zeilen (Archiv: Abend-Namen) verkleinern die Headline in Schritten,
+// bis beide Zeilen passen; unter 72 px darf der Name auf zwei Zeilen umbrechen
+// (.is-long), erst bei 40 px greift die Ellipse. Rein optisch.
+function fitHeadline() {
+  const h = $('board-subtitle');
+  const l1 = h.querySelector('.bt-l1');
+  const l2 = h.querySelector('.bt-l2 .t-serif');
+  h.style.fontSize = '';
+  h.classList.remove('is-long');
+  if (!l1 || !l2 || !h.clientWidth) return;
+  let size = parseFloat(getComputedStyle(h).fontSize);
+  const fits = () => l2.scrollWidth <= l2.clientWidth + 1 && (h.classList.contains('is-long')
+    ? l1.scrollHeight <= l1.clientHeight + 1
+    : l1.scrollWidth <= l1.clientWidth + 1);
+  while (!fits() && size > 40) {
+    size = Math.max(40, size - 4);
+    h.style.fontSize = `${size}px`;
+    if (size < 72) h.classList.add('is-long');
+  }
+}
+window.addEventListener('resize', fitHeadline);
+document.fonts?.ready.then(fitHeadline);
+// fonts.ready kann schon erfüllt sein, bevor die Webfonts überhaupt geladen
+// werden (sie laden erst beim ersten Gebrauch) — nach jedem Nachladen alles
+// Eingepasste neu messen
+document.fonts?.addEventListener?.('loadingdone', () => {
+  fitHeadline();
+  fitFactText();
+  document.querySelectorAll('.podium-card .drinks').forEach(fitDrinks);
+});
+
+// Teilnehmerzahl: große Zahl + Eyebrow; poppt, wenn jemand dazukommt (nicht
+// beim ersten Stand und nicht beim Moduswechsel — rein optisch)
+let countShown = false;
+function setCount(n, label) {
+  const el = $('participant-count');
+  const num = el.querySelector('.tv-count-n');
+  const before = Number(num.textContent);
+  num.textContent = n;
+  el.querySelector('.tv-count-l').textContent = label;
+  if (!modeSwitching && countShown && n > before) pop(num);
+  countShown = true;
+}
+
+function applyState(state, mode) {
+  // Archiv-Modus: der Server liefert die Werte des gewählten Party-Tags fertig
+  // sortiert mit (archivePlayers); Live-Modi rechnen wie gehabt aus players.
+  const rows = mode === 'archive'
+    ? (state.archivePlayers ?? []).map((p, i) => ({ ...p, rank: i + 1 }))
+    : boardRows(state.players, mode);
+
+  if (mode === 'today') setBoardTitle('Rangliste', 'heute');
+  else if (mode === 'archive') setBoardTitle(state.boardName || 'Abend vom', fmtDay(state.boardDay));
+  else setBoardTitle('All-Time', 'Rangliste');
+  setCount(rows.length,
+    mode === 'today' ? 'heute dabei'
+    : mode === 'archive' ? 'waren dabei'
+    : 'Teilnehmer');
+  const beers = rows.reduce((s, r) => s + r.beers, 0);
+  const shots = rows.reduce((s, r) => s + r.shots, 0);
+  const mixes = rows.reduce((s, r) => s + r.mixes, 0);
+  const suffix = mode === 'today' ? 'heute' : mode === 'archive' ? 'an dem Abend' : 'gesamt';
+  $('totals').textContent = `${beers} Bier · ${shots} Shots · ${fmtMixes(mixes)} ${suffix}`;
+
+  fillPodium($('pod-1'), rows[0], 1);
+  fillPodium($('pod-2'), rows[1], 2);
+  fillPodium($('pod-3'), rows[2], 3);
+
+  updateRest(rows.slice(3));
+  trackTower(rows, mode, state);
+  updateFacts(state.players.filter((p) => !p.hidden), state.records, state.customFacts, state.funStats);
+  updatePace(state.funStats?.pace, mode);
+}
+
+// --- Timing-Tower (Idee L18, D-093) ---
+// Wie die F1-Grafik: Abstand zum Vordermann, ▲▼ für ein paar Sekunden, wenn
+// jemand Plätze gewinnt oder verliert, und in den Live-Ansichten Grün für
+// einen neuen persönlichen Bestwert (mehr als am bisher besten Abend) bzw.
+// Lila für einen neuen Hausrekord (mehr als je eine Person an einem Abend).
+// Positionswechsel zählen nur innerhalb derselben Ansicht, nicht beim
+// ersten Stand und nicht beim Moduswechsel.
+const MOVE_MS = 10 * 1000;
+const moves = new Map();      // id -> { d: gewonnene Plätze (negativ = verloren), until }
+let prevRanks = null;         // id -> Platz im vorigen Stand derselben Ansicht
+let towerRows = [];
+let towerFlags = new Map();   // id -> 'pb' | 'record'
+let moveTimer = null;
+
+function trackTower(rows, mode, state) {
+  const now = Date.now();
+  if (modeSwitching || mode === 'archive') moves.clear();
+  else if (prevRanks) {
+    for (const r of rows) {
+      const before = prevRanks.get(r.id);
+      if (before && before !== r.rank) moves.set(r.id, { d: before - r.rank, until: now + MOVE_MS });
+    }
+  }
+  prevRanks = mode === 'archive' ? null : new Map(rows.map((r) => [r.id, r.rank]));
+
+  towerFlags = new Map();
+  if (mode !== 'archive') {
+    const house = state.houseBestNight ?? 0;
+    for (const p of state.players) {
+      const tonight = p.beersToday + p.shotsToday + p.mixesToday;
+      if (!tonight) continue;
+      if (house > 0 && tonight > house && !p.hidden) towerFlags.set(p.id, 'record');
+      else if (p.bestNight > 0 && tonight > p.bestNight) towerFlags.set(p.id, 'pb');
+    }
+  }
+  $('board').dataset.mode = mode;
+  towerRows = rows;
+  paintTower();
+}
+
+// Etiketten einer Zeile bzw. eines Podestplatzes; liefert die Bestwert-Art
+function paintTags(mvEl, bestEl, r) {
+  const m = moves.get(r.id);
+  const live = !!m && m.until > Date.now();
+  if (m && !live) moves.delete(r.id);
+  const txt = live ? String(Math.abs(m.d)) : '';
+  if (mvEl.textContent !== txt) mvEl.textContent = txt;
+  mvEl.classList.toggle('is-down', live && m.d < 0);
+  const flag = towerFlags.get(r.id);
+  const label = flag === 'record' ? 'Hausrekord' : flag === 'pb' ? 'Bestwert' : '';
+  if (bestEl.textContent !== label) bestEl.textContent = label;
+  bestEl.classList.toggle('is-record', flag === 'record');
+  return flag;
+}
+
+function paintTower() {
+  const gapText = (i) => (i > 0 && towerRows[i] ? `+${towerRows[i - 1].total - towerRows[i].total}` : '');
+  [1, 2, 3].forEach((slot) => {
+    const el = $(`pod-${slot}`);
+    const r = towerRows[slot - 1];
+    if (!r) return;
+    paintTags(el.querySelector('.slot-meta .mv'), el.querySelector('.slot-meta .best'), r);
+    const gap = el.querySelector('.pod-gap');
+    if (gap) gap.textContent = gapText(slot - 1);
+  });
+  if (track) {
+    [...track.children].forEach((row, i) => {
+      const r = towerRows[i + 3];
+      if (!r || row.dataset.id !== r.id) return;
+      const flag = paintTags(row.querySelector('.mv'), row.querySelector('.best'), r);
+      row.classList.toggle('is-pb', flag === 'pb');
+      row.classList.toggle('is-record', flag === 'record');
+      const gap = row.querySelector('.col-gap');
+      const t = gapText(i + 3);
+      if (gap.textContent !== t) gap.textContent = t;
+    });
+  }
+  // beim nächsten auslaufenden ▲▼ neu malen
+  clearTimeout(moveTimer);
+  const next = Math.min(...[...moves.values()].map((m) => m.until));
+  if (Number.isFinite(next)) moveTimer = setTimeout(paintTower, Math.max(50, next - Date.now() + 20));
+}
+
+// --- Rekordkurs (Bier-Pace): Chip im Kopf, sobald der Abend vor dem besten
+// bisherigen Abend liegt (ab 3 Getränken, nicht im Archiv-Modus). Zwischen
+// zwei Getränken „altert" der Vergleich — deshalb unten der 5-Minuten-Refresh.
+// 45 -> '45 min', 120 -> '2 h', 150 -> '2,5 h'
+function fmtElapsed(min) {
+  if (min < 60) return `${min} min`;
+  const h = Math.round(min / 30) / 2;
+  return `${h.toLocaleString('de-DE')} h`;
+}
+
+function updatePace(pace, mode) {
+  const el = $('pace-pill');
+  const show = mode !== 'archive' && !!pace && pace.onPace && pace.todayTotal >= 3;
+  el.hidden = !show;
+  if (show) {
+    // „27 : 9 nach 2 h" = heute 27 Getränke, der Rekord-Abend hatte nach derselben
+    // Zeit seit seinem ersten Getränk erst 9 (D-045)
+    el.textContent = `🔥 Auf Rekordkurs! ${pace.todayTotal} : ${pace.recordAtSameTime} nach ${fmtElapsed(pace.elapsedMin)} · Rekord-Abend ${fmtDay(pace.recordDay)} (${pace.recordTotal})`;
+  }
+}
+
+setInterval(async () => {
+  try {
+    const res = await fetch(`${AREA.base}/api/state`);
+    if (!res.ok) return;
+    const s = await res.json();
+    updatePace(s.funStats?.pace, currentMode);
+  } catch { /* nächster Broadcast/Refresh richtet es */ }
+}, 5 * 60 * 1000);
+
+// Moduswechsel: das ganze Board fährt raus und das neue fährt wieder ein
+// (Easing wie überall im Lando-Stil: --ease)
+function slideSwap(rebuild) {
+  const board = $('board');
+  board.style.transition = 'transform 0.32s var(--ease), opacity 0.32s var(--ease)';
+  board.style.transform = 'translateX(-70px)';
+  board.style.opacity = '0';
+  setTimeout(() => {
+    modeSwitching = true;
+    rebuild();
+    modeSwitching = false;
+    board.style.transition = 'none';
+    board.style.transform = 'translateX(70px)';
+    void board.offsetWidth;
+    board.style.transition = 'transform 0.6s var(--ease), opacity 0.45s var(--ease)';
+    board.style.transform = 'translateX(0)';
+    board.style.opacity = '1';
+  }, 340);
+}
+
+// --- Große Momente (D-095) ---
+// Namens-Plakat (L21): wenn der Admin einen Abend auf den TV legt, steht
+// dessen Sieger groß da; live, wenn heute jemand Neues die Führung übernimmt
+// (höchstens alle drei Minuten, ab drei Getränken). Meilenstein-Bild (L24):
+// wenn im Haus eine runde 500er-Marke fällt oder jemand eine persönliche
+// Marke knackt (Werte kommen fertig aus funStats). Momente laufen
+// nacheinander ab, nie übereinander. Nie beim ersten Stand nach dem Laden —
+// ein Neustart des TV soll nichts wiederholen.
+// Zum Ausprobieren: ?moment=plakat bzw. ?moment=meilenstein in der Adresse.
+const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const mk = (tag, cls, text) => {
+  const el = document.createElement(tag);
+  if (cls) el.className = cls;
+  if (text !== undefined) el.textContent = text;
+  return el;
+};
+const initialOf = (name) => [...(name || '?').trim()][0] ?? '?';
+const WEEKDAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+const weekdayOf = (iso) => { const [y, m, d] = iso.split('-').map(Number); return WEEKDAYS[new Date(y, m - 1, d).getDay()]; };
+
+const momentQueue = [];
+let momentBusy = false;
+function moment(build, ms) {
+  momentQueue.push([build, ms]);
+  if (!momentBusy) nextMoment();
+}
+function nextMoment() {
+  const item = momentQueue.shift();
+  const el = $('takeover');
+  if (!item) { momentBusy = false; return; }
+  momentBusy = true;
+  el.className = 'takeover';
+  el.textContent = '';
+  item[0](el);
+  el.hidden = false;
+  setTimeout(() => {
+    el.classList.add('is-leaving');
+    setTimeout(() => { el.hidden = true; el.textContent = ''; nextMoment(); }, reduced() ? 0 : 620);
+  }, item[1]);
+}
+
+function posterMoment({ name, total, label, kicker }) {
+  moment((el) => {
+    el.setAttribute('aria-label', `${label}: ${name} mit ${total} Getränken`);
+    const big = mk('div', 'poster-name', [name, name, name].join(' '));
+    big.setAttribute('aria-hidden', 'true');
+    const crest = mk('div', 'poster-crest');
+    crest.append(mk('span', 'avatar', initialOf(name)));
+    const cnt = mk('div', 'cnt');
+    cnt.append(mk('span', 'num', String(total)), total === 1 ? 'Getränk' : 'Getränke');
+    const front = mk('div', 'poster-front');
+    front.append(crest, mk('div', 'who', label), cnt);
+    el.append(mk('span', 'eyebrow corner', kicker), mk('span', 'eyebrow corner corner-r', AREA.name), big, front);
+  }, 9000);
+}
+
+const MS_WORD = { beer: 'Bier', shot: 'Shot', mix: 'Mische', total: 'Getränk' };
+function milestoneMoment(n, line) {
+  moment((el) => {
+    el.setAttribute('aria-label', `${n}. ${line}`);
+    const tiles = mk('div', 'ms-tiles');
+    tiles.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 24; i++) {
+      const row = Math.floor(i / 6);
+      const t = mk('div', `ms-tile ${(i + row) % 2 ? 'd' : 'o'}`, 'Prost');
+      t.style.setProperty('--i', (i % 6) + row);
+      tiles.append(t);
+    }
+    const card = mk('div', 'ms-card');
+    card.append(mk('span', 'num', `${n}.`), mk('span', 't-serif', line));
+    const l = mk('span', 'ms-arrow l', '→');
+    const r = mk('span', 'ms-arrow r', '←');
+    l.setAttribute('aria-hidden', 'true');
+    r.setAttribute('aria-hidden', 'true');
+    el.append(tiles, l, r, card);
+  }, 7000);
+}
+
+let momentsReady = false;       // erst ab dem zweiten Stand
+let leaderToday = null;
+let lastLeaderPoster = 0;
+let houseMark = null;
+let playerMark = null;
+function checkMoments(state, mode, switched) {
+  const fs = state.funStats ?? {};
+  const house = fs.houseMilestone?.total ?? null;
+  const pm = fs.milestone ? `${fs.milestone.name}|${fs.milestone.kind}|${fs.milestone.n}` : null;
+  const leader = boardRows(state.players, 'today')[0] ?? null;
+
+  if (momentsReady) {
+    if (house && house !== houseMark) milestoneMoment(house, 'Getränk im Keller');
+    if (pm && pm !== playerMark) {
+      const m = fs.milestone;
+      milestoneMoment(m.n, `${MS_WORD[m.kind] ?? 'Getränk'} von ${m.name}`);
+    }
+    if (mode === 'archive' && switched && state.archivePlayers?.length) {
+      const w = state.archivePlayers[0];
+      posterMoment({ name: w.name, total: w.total, label: 'Abendsieger', kicker: `${weekdayOf(state.boardDay)} · ${fmtDay(state.boardDay)}` });
+    } else if (mode !== 'archive' && leader && leader.total >= 3 && leader.id !== leaderToday?.id
+      && Date.now() - lastLeaderPoster > 3 * 60 * 1000) {
+      lastLeaderPoster = Date.now();
+      posterMoment({ name: leader.name, total: leader.total, label: 'Führt heute', kicker: 'Neue Nummer 1' });
+    }
+  }
+  houseMark = house;
+  playerMark = pm;
+  leaderToday = leader;
+  momentsReady = true;
+}
+
+connectState({
+  onFact({ index }) { setFactIndex(index); },
+  onState(state) {
+    const { joinUrl, boardMode } = state;
+    setSeasonEnabled(state.seasonal);   // Saison-Akzente (D-071), im Admin abschaltbar
+    seasonFirstBeer(state.players);
+    renderQr((joinUrl && joinUrl.length ? joinUrl : location.origin + AREA.base + '/'));
+    applyScrollSpeed(state.scrollSeconds);
+    const mode = boardMode === 'today' ? 'today'
+      : (boardMode === 'archive' && state.boardDay) ? 'archive'
+      : 'alltime';
+
+    // Slide auch beim Wechsel zwischen zwei Archiv-Abenden
+    const switched = currentMode !== null &&
+      (mode !== currentMode || (mode === 'archive' && state.boardDay !== currentDay));
+    if (switched) {
+      slideSwap(() => { currentMode = mode; currentDay = state.boardDay ?? null; applyState(state, mode); });
+    } else {
+      currentMode = mode;
+      currentDay = state.boardDay ?? null;
+      applyState(state, mode);
+    }
+    checkMoments(state, mode, switched);
+  },
+});
+
+// Zum Ausprobieren auf dem TV (wie ?jetzt= für die Saison-Akzente)
+const demo = new URLSearchParams(location.search).get('moment');
+if (demo === 'plakat') setTimeout(() => posterMoment({ name: 'Brocky', total: 9, label: 'Abendsieger', kicker: 'Donnerstag · 15.10.2026' }), 1500);
+if (demo === 'meilenstein') setTimeout(() => milestoneMoment(1000, 'Getränk im Keller'), 1500);
+
+// --- Fun-Facts (live) ---
+// Die Liste kommt aus js/facts.js, damit die Admin-Übersicht dieselbe zeigt;
+// welcher Eintrag gerade dran ist, sagt der Server (D-043).
+let facts = [];
+let factIdx = 0;
+const factEl = $('funfact-text');
+const factTitleEl = $('funfact-title');
+
+// Das Band ist einzeilig. Kurze Facts stehen groß in der Serif da; nur wenn
+// ein Fact breiter ist als das Band, wird er so weit verkleinert, dass er noch
+// komplett hineinpasst.
+const FACT_SIZE_MAX = 42;   // Design-Pixel (Serif, wirkt wie ~30 px Grotesk)
+const FACT_SIZE_MIN = 22;
+
+function fitFactText() {
+  factEl.style.fontSize = `${FACT_SIZE_MAX}px`;
+  const band = $('funfacts');
+  const style = getComputedStyle(band);
+  const avail = band.clientWidth
+    - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+    - parseFloat(style.columnGap || 0) - factTitleEl.offsetWidth;
+  // scrollWidth ist die volle Textbreite, auch wenn die Box schon abschneidet
+  const needed = factEl.scrollWidth;
+  if (avail > 0 && needed > avail) {
+    const size = Math.max(FACT_SIZE_MIN, Math.floor(FACT_SIZE_MAX * avail / needed));
+    factEl.style.fontSize = `${size}px`;
+  }
+}
+
+function showFact(f) {
+  if (bandMoment) f = bandMoment;   // ein Saison-Moment steht gerade im Band (D-071)
+  factTitleEl.textContent = f.title;
+  factEl.textContent = f.text;
+  fitFactText();
+}
+
+function currentFact() {
+  return facts[factIdx % facts.length];
+}
+
+function updateFacts(players, records, customFacts, funStats) {
+  facts = factList(players, records, customFacts, funStats);
+  showFact(currentFact());
+}
+
+// Der Server gibt den Takt vor und sagt, welcher Fact dran ist (D-043).
+// Der Fernseher blendet nur um — so zeigen zwei Bildschirme dasselbe und der
+// Admin kann von Hand weiterschalten.
+function setFactIndex(index) {
+  if (index === factIdx) return;
+  factIdx = index;
+  if (!facts.length) return;
+  factEl.style.opacity = '0';
+  factTitleEl.style.opacity = '0';
+  setTimeout(() => {
+    showFact(currentFact());
+    factEl.style.opacity = '1';
+    factTitleEl.style.opacity = '1';
+  }, 400);
+}
+
+// Bandbreite hängt an der Fenstergröße, die Textbreite am erst nachgeladenen
+// Webfont – in beiden Fällen neu einpassen.
+fitFactText();
+window.addEventListener('resize', fitFactText);
+document.fonts?.ready.then(fitFactText);
+
+// --- Saison-Akzente (D-071) ---
+// Stehende Deko setzt js/season.js; hier laufen Schnee, Momente und der
+// Silvester-Ablauf. Ein Moment übernimmt kurz das Fun-Fact-Band.
+const seasonFx = createSeasonFx($('stage'));
+let season = null;
+let bandMoment = null;
+let bandTimer = null;
+
+function showMoment(title, text, ms = 8000) {
+  bandMoment = { title, text };
+  factEl.style.opacity = '0';
+  factTitleEl.style.opacity = '0';
+  setTimeout(() => { showFact(currentFact() ?? bandMoment); factEl.style.opacity = '1'; factTitleEl.style.opacity = '1'; }, 400);
+  clearTimeout(bandTimer);
+  bandTimer = setTimeout(() => {
+    bandMoment = null;
+    factEl.style.opacity = '0';
+    factTitleEl.style.opacity = '0';
+    setTimeout(() => { if (facts.length) showFact(currentFact()); factEl.style.opacity = '1'; factTitleEl.style.opacity = '1'; }, 400);
+  }, ms);
+}
+
+// Führungswechsel: Halloween schickt eine Fledermaus, Fasching Konfetti.
+// Höchstens alle zwei Minuten, früh am Abend wechselt die Spitze oft.
+let lastLeaderMoment = 0;
+function seasonLeader(name) {
+  if (season !== 'halloween' && season !== 'fasching') return;
+  if (Date.now() - lastLeaderMoment < 2 * 60 * 1000) return;
+  lastLeaderMoment = Date.now();
+  if (season === 'halloween') { seasonFx.bat(); showMoment('Führungswechsel', `${name} übernimmt Platz 1.`); }
+  if (season === 'fasching') { seasonFx.confetti(); showMoment('Helau', `${name} ist die neue Nummer 1.`); }
+}
+
+// Oktoberfest: das erste Bier des Abends zapft an
+let beersTodayBefore = null;
+function seasonFirstBeer(players) {
+  const sum = players.reduce((n, p) => n + (p.beersToday ?? 0), 0);
+  if (season === 'oktoberfest' && beersTodayBefore === 0 && sum > 0) {
+    const who = players.find((p) => p.beersToday > 0);
+    const band = $('funfacts');
+    seasonFx.bubbles(band.offsetTop + band.parentElement.offsetTop);
+    showMoment('Oktoberfest', `O’zapft is! ${who ? who.name : 'Jemand'} hat das erste Bier des Abends gezählt.`);
+  }
+  beersTodayBefore = sum;
+}
+
+// Silvester: Countdown in der letzten Stunde, um 0 Uhr ein großes Feuerwerk,
+// danach bis 6 Uhr alle paar Minuten noch ein paar Raketen
+let nyTick = null;
+let nyPhase = null;
+let nextVolley = 0;
+function newYearTick() {
+  const ny = newYear();
+  const pill = $('season-countdown');
+  pill.hidden = ny.phase !== 'countdown' && ny.phase !== 'greeting';
+  if (ny.phase === 'countdown') pill.innerHTML = `noch <b>${mmss(ny.left)}</b> bis ${ny.year}`;
+  if (ny.phase === 'greeting') pill.innerHTML = `<b>${ny.year}</b> Frohes neues Jahr`;
+  const midnight = nyPhase === 'countdown' && ny.phase === 'greeting';
+  const justAfter = nyPhase === null && ny.phase === 'greeting' && ny.since < 60 * 1000;
+  if (midnight || justAfter) {
+    for (let wave = 0; wave < 4; wave++) setTimeout(() => seasonFx.fireworks(7, 150), wave * 3500);
+    showMoment('Neujahr', `Frohes neues Jahr! Prost auf ${ny.year}.`, 30 * 1000);
+    nextVolley = Date.now() + 3 * 60 * 1000;
+  } else if (ny.phase === 'greeting' || ny.phase === 'after') {
+    if (!nextVolley) nextVolley = Date.now() + 20 * 1000;
+    if (Date.now() >= nextVolley) {
+      seasonFx.fireworks(2 + Math.floor(Math.random() * 3), 90);
+      nextVolley = Date.now() + (3 + Math.random() * 4) * 60 * 1000;
+    }
+  }
+  nyPhase = ny.phase;
+}
+
+onSeason((s) => {
+  season = s;
+  seasonFx.setSnow(s === 'winter' || s === 'silvester');
+  clearInterval(nyTick);
+  $('season-countdown').hidden = true;
+  nyPhase = null;
+  nextVolley = 0;
+  if (s === 'silvester') { newYearTick(); nyTick = setInterval(newYearTick, 1000); }
+});
+</script>
+</body>
+</html>
