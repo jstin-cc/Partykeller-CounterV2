@@ -273,3 +273,7 @@ Anleitung in [deploy/PI-SETUP.md](deploy/PI-SETUP.md): systemd-Service
 ([deploy/partykeller.service](deploy/partykeller.service)), mDNS-Name
 `partykeller.local`, TV im Chromium-Kiosk-Modus auf `/tv`, Backup der
 `data/partykeller.db`. Konfiguration über `.env` (siehe `.env.example`).
+
+## Lizenz
+
+[MIT](LICENSE) — frei verwendbar, auch für den eigenen Keller.

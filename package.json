@@ -2,6 +2,7 @@
   "name": "partykeller-counter",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Getränke-Counter für den Partykeller: Handy-Zähler + TV-Rangliste im lokalen WLAN",
   "type": "module",
   "main": "server/index.js",
