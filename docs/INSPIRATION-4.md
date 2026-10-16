@@ -1,6 +1,6 @@
 # Inspiration, Runde 4: Entwürfe L30–L38 (Stand 2026-10-16)
 
-**Status:** Vorschläge, nichts davon ist umgesetzt. Mockups im echten Theme
+**Status:** L33 umgesetzt (D-106), der Rest sind Vorschläge. Mockups im echten Theme
 (mit Animationen): [inspiration/l30-l38.html](inspiration/l30-l38.html).
 Was schon in den Runden davor steht ([INSPIRATION-LANDO.md](INSPIRATION-LANDO.md),
 [INSPIRATION-LANDO-2.md](INSPIRATION-LANDO-2.md), [INSPIRATION-3.md](INSPIRATION-3.md),
@@ -72,7 +72,7 @@ kleine Zahl hochgestellt. Stufen steigen nacheinander ein. Fußzeile mit Gästen
 Getränken und letzter Uhrzeit.
 Daten: Rangliste des Abends. Aufwand: klein.
 
-## L33 – Geisterspur beim Überholen
+## L33 – Geisterspur beim Überholen ✅ umgesetzt (D-106)
 Wenn jemand in der TV-Rangliste nach oben rückt, ziehen vier Umriss-Kopien
 seines Namens hinterher und verblassen; die Überholten dimmen kurz ab. Ergänzt
 den Timing-Tower (L18), der bisher nur gleitet.

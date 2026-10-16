@@ -7,6 +7,9 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16 (D-106): **Geisterspur auf dem TV** (L33) — wer in der
+Rangliste überholt, zieht Umriss-Kopien seines Namens hinter sich her, die
+Überholten dimmen kurz ab. In der Demo-Instanz per WS-Testskript geprüft.
 Seit 2026-10-16: **Inspiration Runde 4** (L30–L38, `docs/INSPIRATION-4.md`,
 Mockups in `docs/inspiration/l30-l38.html`) — Bierdeckel-Strichliste,
 Abend-Bon, Line-up des Abends, Geisterspur, Stempelkarte, Serie, Schwappen,

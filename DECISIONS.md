@@ -2473,3 +2473,20 @@ ist kein harter Schnitt mit neuer Einblendung mehr. Beide Seiten stehen kurz
 **Begründung:** Wunsch des Nutzers — die Übergänge innerhalb des Rückblicks
 wirkten langweilig. Geprüft in der Demo-Instanz in Handybreite (Zwischenbilder
 der Übergänge, Vor/Zurück, schnelles Tippen, keine Konsolenfehler).
+
+## D-106 (2026-10-16): Geisterspur beim Überholen auf dem TV (L33)
+
+**Entscheidung:** Rückt jemand in der TV-Rangliste (Plätze ab 4) an einer
+anderen Zeile vorbei, ziehen vier Umriss-Kopien von Name und Gesamtzahl
+(orange Kontur, abnehmende Deckkraft) zeitversetzt hinter seiner Zeile her
+und verblassen am Ziel; die Überholten dimmen währenddessen kurz ab. Die
+FLIP-Bewegung aller Zeilen dauert dafür 0,9 s mit `--ease` statt 0,6 s.
+Als Überholen zählt nur, wer an einer Zeile vorbeizieht, die vorher über ihm
+stand — nicht das Aufrücken, wenn jemand aufs Podest wechselt, und nicht der
+Versatz durch die laufende Rotation. Bei `prefers-reduced-motion` keine
+Geister und kein Abdunkeln.
+
+**Begründung:** Wunsch des Nutzers aus Inspiration Runde 4 (L33, Codrops
+„Ghost Trails“). Macht Überholmanöver auf dem Fernseher aus der Entfernung
+sichtbar. Geprüft in der Demo-Instanz per WS-Testskript (echte Überholungen
+mit und ohne laufende Rotation, keine Konsolenfehler).
