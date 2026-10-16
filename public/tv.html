@@ -184,7 +184,9 @@ try {
   }
   .season-countdown b { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; color: var(--accent-text); }
 
-  /* QR-Code: helle Kerbenkarte, das Etikett steht in der Stufe auf dem Grund */
+  /* QR-Code: helle Kerbenkarte, der Code steht freigestellt direkt auf ihrem
+     Grund (der Kartenrand ist die Ruhezone, die Scanner brauchen); das
+     Etikett steht in der Stufe auf dem Grund */
   .qr-card {
     position: relative; flex: none;
     width: 300px; height: 132px;
@@ -195,11 +197,9 @@ try {
   .qr-card #qr {
     position: absolute; left: 14px; top: 14px;
     width: 96px; height: 96px;
-    background: #fff;                /* Scanner brauchen hellen Grund + Ruhezone */
-    overflow: hidden;
   }
-  .qr-copy { position: absolute; left: 128px; right: 16px; top: 16px; display: flex; flex-direction: column; gap: 8px; }
-  .qr-copy .eyebrow { color: color-mix(in srgb, var(--accent-2-ink) 62%, transparent); font-size: 12px; }
+  /* Titel mittig neben dem Code */
+  .qr-copy { position: absolute; left: 128px; right: 16px; top: 14px; height: 96px; display: flex; flex-direction: column; justify-content: center; }
   .qr-title { font-weight: 800; text-transform: uppercase; font-size: 30px; line-height: 0.86; letter-spacing: -0.03em; }
   .qr-title .t-serif { display: block; text-transform: none; font-size: 1.08em; letter-spacing: -0.01em; }
   .qr-card .notch-tag { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; }
@@ -585,13 +585,12 @@ try {
           <div id="totals" class="eyebrow tv-totals">0 Bier · 0 Shots gesamt</div>
           <div id="pace-pill" class="pace-pill" hidden>🔥 Auf Rekordkurs!</div>
         </div>
-        <div class="qr-card" data-notch="tabW:176;tabH:34;r:14;slant:20">
+        <div class="qr-card" data-notch="tabW:124;tabH:34;r:14;slant:20">
           <div id="qr"></div>
           <div class="qr-copy">
-            <span class="eyebrow">Mitmachen</span>
-            <span class="qr-title">Zählen <span class="t-serif">am Handy</span></span>
+            <span class="qr-title">Scan <span class="t-serif">zum Beitreten</span></span>
           </div>
-          <span class="notch-tag">Scan zum Beitreten</span>
+          <span class="notch-tag">Mitmachen</span>
         </div>
       </div>
     </header>
@@ -744,7 +743,11 @@ function renderQr(url) {
   qr.addData(url);
   qr.make();
   $('qr').innerHTML = qr.createSvgTag({ cellSize: 3, margin: 2, scalable: true });
-  $('qr').firstElementChild.style.cssText = 'width:100%;height:100%;display:block;';
+  const svg = $('qr').firstElementChild;
+  svg.style.cssText = 'width:100%;height:100%;display:block;';
+  // Freistellen: kein eigener weißer Grund, Module in der Kartentinte
+  svg.querySelector('rect')?.setAttribute('fill', 'transparent');
+  svg.querySelector('path')?.setAttribute('fill', 'currentColor');
 }
 
 // „1 Mische", ab zwei „Mischen"
