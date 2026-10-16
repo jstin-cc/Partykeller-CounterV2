@@ -2,7 +2,7 @@
 
 **Status:** L33 (D-106) und L34 (nur im Jahresrückblick, D-108) umgesetzt, der Rest sind Vorschläge. Mockups im echten Theme
 (mit Animationen): [inspiration/l30-l38.html](inspiration/l30-l38.html).
-Was schon in den Runden davor steht ([INSPIRATION-LANDO.md](INSPIRATION-LANDO.md),
+Was schon in den Runden davor steht (INSPIRATION-LANDO.md, inzwischen entfernt,
 [INSPIRATION-LANDO-2.md](INSPIRATION-LANDO-2.md), [INSPIRATION-3.md](INSPIRATION-3.md),
 [INSPIRATION-DESIGN.md](INSPIRATION-DESIGN.md)) oder in der App läuft, wird
 hier nicht noch einmal vorgeschlagen. Diesmal bewusst weg von F1: Kneipe,

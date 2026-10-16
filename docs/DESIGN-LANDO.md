@@ -146,7 +146,7 @@ Weitere Klassen: `.card` (flache Karte, 14 px Radius, Haarlinie), `.chip`
 `.marquee`, `.emblem`/`.laurel`, `.pk-pop`, `.pk-flash`. Bereichsabhängiges nur über
 `html[data-area="youngstars"]` (z. B. kein `.pk-logo`, D-110).
 
-`lando.js` exportiert: `initLando()`, `initReveal()`, `revealNow()`,
+`lando.js` exportiert: `initLando()`, `initReveal()`,
 `initScribbles()`, `scribble()`, `drawScribble()`, `notch()`, `notchPath()`,
 `initNotches()`, `initMenu()`, `initSurfaceMorph()`, `initSpotlight()`,
 `initMagnetic()`, `initMarquee()`, `countUp()`, `reducedMotion()`,
