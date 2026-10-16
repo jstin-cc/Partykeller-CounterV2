@@ -7,6 +7,11 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16 (D-104): **Keine Zähler-Korrekturen mehr in der
+Kontenliste** — Bier/Shots/Mischen dort nur zur Ansicht, korrigiert wird nur
+im Getränke-Protokoll; Server lehnt Admin-`increment` ab, `setCounter`
+entfällt; Seed schreibt echte Protokolleinträge. Rückblick-Titel fliegt nach
+dem Übergang nicht mehr ein zweites Mal herein.
 Seit 2026-10-16: **Prospekt** (`docs/prospekt/`, A4-PDF aus `prospekt.html`)
 mit aktuellen Screenshots aus der Demo-Instanz neu erzeugt; die schwarzen
 Streifen unten auf jeder Seite sind weg (die Theme-Klasse `.sheet` begrenzte

@@ -1341,6 +1341,7 @@ if (!token || !playerId) {
     rvSlides.forEach((sl, k) => {
       sl.hidden = k !== rvIdx;
       sl.classList.remove('is-in');
+      sl.querySelector('.rv-morph')?.classList.remove('rv-morph');   // „Nochmal": wieder normal einblenden
     });
     void rvSlides[rvIdx].offsetWidth;   // Einblendung neu starten
     rvSlides[rvIdx].classList.add('is-in');
@@ -1401,11 +1402,15 @@ if (!token || !playerId) {
     $('review-kicker').textContent = `Rückblick · ${reviewName}`;
     const frames = reviewFrames();
     const title = rvSlides[0].querySelector('.rv-title');
-    if (frames) title.classList.add('rv-morph');   // keine eigene Einblendung
     document.documentElement.style.overflow = 'hidden';
     enter($('review'));
     showSlide(0);
     if (!frames) return;
+    // Der Titel kommt aus der Kachel, nicht per Einblendung. Die Klasse bleibt
+    // stehen, bis die Seite neu gezeigt wird (showSlide) — würde sie nach dem
+    // Übergang entfernt, startete die Einblendung neu und der Titel flöge
+    // ein zweites Mal herein.
+    title.classList.add('rv-morph');
     rvAnim($('review'), frames, { duration: 750, easing: RV_EASE });
     for (const p of titlePairs()) {
       p.el.style.transformOrigin = '0 0';
@@ -1417,7 +1422,6 @@ if (!token || !playerId) {
     // Alles andere kommt erst, wenn die Fläche fast steht
     const rest = [$('review-segs'), document.querySelector('.review-top'), ...[...rvSlides[0].children].filter((c) => c !== title)];
     for (const c of rest) rvAnim(c, [{ opacity: 0 }, { opacity: 1 }], { duration: 350, delay: 420, fill: 'backwards' });
-    setTimeout(() => title.classList.remove('rv-morph'), 800);
   }
   let reviewClosing = false;
   function closeReview() {

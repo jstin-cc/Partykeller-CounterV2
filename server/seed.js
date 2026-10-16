@@ -24,12 +24,18 @@ for (const { name, beers, shots, mixes } of demo) {
     continue;
   }
   const p = db.createPlayer(name, pinHash);
-  db.setCounter(p.id, 'beer', beers);
-  db.setCounter(p.id, 'shot', shots);
-  db.setCounter(p.id, 'mix', mixes);
-  // ein paar Einträge für "heute", damit Dashboard und Fun-Facts etwas zeigen
-  db.addLogEntry(p.id, 'beer');
-  if (shots > 0) db.addLogEntry(p.id, 'shot');
-  if (mixes > 0) db.addLogEntry(p.id, 'mix');
+  // Alles als echte Protokolleinträge (D-104: Zähler = Protokoll): verteilt
+  // auf die letzten drei Samstage ab 21 Uhr, dazu je eins für „heute"
+  const counts = { beer: beers, shot: shots, mix: mixes };
+  const sat = new Date();
+  sat.setDate(sat.getDate() - ((sat.getDay() + 1) % 7 || 7));
+  sat.setHours(21, 0, 0, 0);
+  let i = 0;
+  for (const [drink, n] of Object.entries(counts)) {
+    for (let k = 1; k < n; k++, i++) {
+      db.logDrink(p.id, drink, sat.getTime() - (i % 3) * 7 * 86400000 + i * 4 * 60000);
+    }
+    if (n > 0) db.logDrink(p.id, drink);
+  }
   console.log(`angelegt: ${name} (PIN 1111, ${beers} Bier / ${shots} Shots / ${mixes} Mischen)`);
 }

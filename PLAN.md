@@ -147,11 +147,10 @@ Spieler gedrosselt (Token-Bucket ~1/s, Burst 5), Admins ungedrosselt.
 
 | Nachricht | Wer | Regel |
 |---|---|---|
-| `increment(playerId, drink, delta)` | Nutzer/Admin | Nutzer: nur eigene `playerId`, nur `delta = +1` (Design hat bewusst keinen Minus-Button, schreibt zusätzlich ins `drink_log`). Admin: beliebiges delta, Zähler nie < 0. |
+| `increment(playerId, drink, delta)` | Nutzer | nur eigene `playerId`, nur `delta = +1` (Design hat bewusst keinen Minus-Button, schreibt zusätzlich ins `drink_log`). Admins korrigieren seit D-104 nur im Getränke-Protokoll (`editLog`/`deleteLog`/`addLog`). |
 | `addPlayer(name, pin)` | Admin | Nutzer legen sich selbst per REST an |
 | `renamePlayer(id, name)` | Admin | Name bleibt unique |
 | `setPin(id, pin)` | Admin | PIN-Reset für Nutzer, die sie vergessen |
-| `setCounter(id, drink, value)` | Admin | Zähler direkt setzen (Admin-Dashboard) |
 | `deletePlayer(id)` | Admin | inkl. Log (CASCADE) |
 | `reset(confirm)` | Admin | Komplett-Reset, nur mit `confirm: "RESET"` |
 | `setHidden(id, hidden)` | Admin | Sichtbarkeit in der All-Time-Ansicht (D-013/D-015) |
