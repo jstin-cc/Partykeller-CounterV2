@@ -114,6 +114,11 @@ try {
     left: -20%; top: -17%; width: 142%; height: 132%;
   }
   .hero-jump { align-self: flex-start; }
+  /* „Anmeldung" aus dem Menü einer anderen Seite gleitet in diese Zeile
+     (D-103); sie steht dafür sofort da, statt einzublenden */
+  .morph-login { display: inline-block; }
+  html[data-morph="login"] .morph-login { view-transition-name: morph-login; }
+  html[data-morph="login"] .hero-eyebrow[data-reveal] { opacity: 1; transform: none; transition: none; }
 
   /* --- rechte Spalte: Fehler, Konten, Registrierung --- */
   .side { display: flex; flex-direction: column; gap: 44px; min-width: 0; }
@@ -387,7 +392,7 @@ try {
           <span class="eyebrow">SV Partykeller</span>
         </span>
       </div>
-      <p class="eyebrow hero-eyebrow" data-reveal="up">Anmeldung</p>
+      <p class="eyebrow hero-eyebrow" data-reveal="up"><span class="morph-login">Anmeldung</span></p>
       <h1 id="hero-title" class="t-impact hero-title" data-reveal="words">Wer bist <span class="scribbled"><span class="t-serif t-accent">du?</span><svg class="scribble scribble--circle" data-draw="750" viewBox="0 0 260 130" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M176 14C128 1 58 6 24 34-4 58 12 104 88 118c64 12 150 0 164-40 11-32-26-64-92-72-40-5-80 1-104 12" pathLength="1"/></svg></span></h1>
       <a class="btn btn--ghost btn--sm hero-jump" href="#register" data-reveal="up" data-delay="420">Konto anlegen <span class="i-arrow" style="rotate:90deg"></span></a>
     </section>
@@ -462,8 +467,8 @@ try {
       <span class="eyebrow">SV Partykeller</span>
     </div>
     <nav class="foot-links" aria-label="Weitere Seiten">
-      <a href="abende">Abend-Archiv</a>
-      <a href="admin">Admin-Zugang</a>
+      <a href="abende" data-morph="archive" data-morph-self>Abend-Archiv</a>
+      <a href="admin" data-morph="admin" data-morph-self>Admin-Zugang</a>
     </nav>
   </footer>
 </div>

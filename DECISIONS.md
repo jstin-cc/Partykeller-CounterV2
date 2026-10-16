@@ -2391,3 +2391,32 @@ Platz" zum Fernseher passt; Konto löschen über einen eigenen Dialog statt
 **Begründung:** Wunsch des Nutzers („überall das gleiche Menü"). Vorher hatte
 jede Seite eigene Einträge („Archiv" vs. „Abend-Archiv", TV nur im Archiv,
 Admin ganz ohne Menü). In Handybreite auf allen vier Seiten geprüft.
+
+## D-103 (2026-10-16): Mehr Übergänge — Menüpunkte werden zu Überschriften
+
+**Entscheidung:** Das Muster „Admin" aus dem Menü → Admin-Titel gilt jetzt
+für alle Menüpunkte und ein paar Wege innerhalb der Seiten:
+- **Seitenwechsel (View Transitions / Firefox-FLIP wie D-085/D-087):**
+  „Abend-Archiv" → Zeile über der Archiv-Headline, „Zählen"/„Profil" →
+  Tab-Knöpfe im Dashboard, „Anmeldung" → Zeile über „Wer bist du?",
+  „Abmelden" auf Archiv/Admin → der Name aus „Angemeldet als …" gleitet in
+  die eigene Zeile der Anmeldeliste (das Menü bleibt dafür stehen), Knopf
+  „Protokoll" an einer Abendkarte → „Getränke-Protokoll" im Admin, Onboarding
+  Schritt 3 „Los geht's" → die Ranglisten-Karte an ihren Platz im Profil.
+  Die Zielelemente stehen dafür sofort da statt einzublenden.
+- Damit die Ziele im ersten Bild stehen: `dashboard#profil` öffnet den
+  Profil-Tab per Inline-Skript (der Render-Blocker `rel="expect"` wartet auf
+  `#tab-start` dahinter), `admin?protokoll=<tag>` schaltet das Protokoll schon
+  im Inline-Skript ein.
+- **Innerhalb der Seite (Web Animations):** Der Jahresrückblick wächst aus
+  der orangen Karte ins Vollbild (Ausschnitt und Farbe, der Kartentitel
+  fliegt an den Platz des Titels der ersten Seite) und schrumpft beim
+  Schließen zurück. „Ganze Rangliste ansehen": „Dein Platz" fliegt in die
+  eigene markierte Zeile des Blatts, die erst danach mit kleinem Federn
+  erscheint.
+
+**Begründung:** Wunsch des Nutzers nach mehr Übergängen wie beim
+Admin-Menü. Geprüft in der Demo-Instanz in Handybreite: Übergangsnamen auf
+Quell- und Zielseite (der eingebaute Test-Browser bricht View Transitions
+grundsätzlich ab, auch auf einer leeren Seite), Rückblick und Platz-Flug mit
+Zwischenbildern, Onboarding Schritt 3 landet im Profil.

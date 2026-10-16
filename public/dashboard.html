@@ -55,9 +55,10 @@ try {
 <meta name="theme-color" content="#0f131c">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <link rel="stylesheet" href="css/theme.css">
-<!-- Erstes Bild erst, wenn der Kopf mit Namen steht — sonst hat der Übergang
-     von der Anmeldung kein Ziel (D-068) -->
-<link rel="expect" href="#main-tabs" blocking="render">
+<!-- Erstes Bild erst, wenn Kopf mit Namen und der richtige Tab stehen — sonst
+     haben die Übergänge von Anmeldung, Menü und Onboarding kein Ziel (D-068,
+     D-103) -->
+<link rel="expect" href="#tab-start" blocking="render">
 <style>
   /* ==========================================================================
      Dashboard im Lando-Stil (D-078): Wortmarke + Menü, riesiger Name, riesige
@@ -259,6 +260,13 @@ try {
   html[data-morph="drinks"] #add-shot { view-transition-name: morph-drink-shot; }
   html[data-morph="drinks"] #add-mix { view-transition-name: morph-drink-mix; }
   html[data-morph="drinks"] #tab-count > .drink { animation: none; }
+  /* Menü einer anderen Seite: „Zählen"/„Profil" gleiten in die Tab-Knöpfe;
+     Onboarding Schritt 3: die Ranglisten-Karte gleitet an ihren Platz im
+     Profil (D-103) — sie steht dafür sofort da, statt einzublenden */
+  html[data-morph="tab-count"] #tab-btn-count { view-transition-name: morph-tab-count; }
+  html[data-morph="tab-profile"] #tab-btn-profile { view-transition-name: morph-tab-profile; }
+  html[data-morph="rank"] #tab-profile > .rank-card { view-transition-name: morph-rank-card; }
+  html[data-morph="rank"] #tab-profile > .rank-card[data-reveal] { opacity: 1; transform: none; transition: none; }
   .drink:not(:disabled):active { transform: scale(0.97); }
   .drink:focus-visible { outline-offset: 3px; }
   .drink-topo {
@@ -893,6 +901,18 @@ try {
         </aside>
 
       </div><!-- /#tab-profile -->
+      <script>
+        // dashboard#profil (Menü einer anderen Seite, Onboarding): der
+        // Profil-Tab ist schon im ersten Bild offen — Ziel des Übergangs (D-103)
+        if (location.hash === '#profil') {
+          document.getElementById('tab-count').hidden = true;
+          document.getElementById('tab-profile').hidden = false;
+          document.getElementById('tab-btn-count').classList.remove('active');
+          document.getElementById('tab-btn-profile').classList.add('active');
+          document.getElementById('main-tabs').dataset.pos = '1';
+        }
+      </script>
+      <span id="tab-start" hidden></span>
 
       <div id="ws-error" class="error-msg" role="status"></div>
     </div>
@@ -1102,9 +1122,10 @@ if (!token || !playerId) {
   }
   $('tab-btn-count').addEventListener('click', () => showTab(false));
   $('tab-btn-profile').addEventListener('click', () => showTab(true));
-  // „Profil" aus dem Menü einer anderen Seite (dashboard#profil, D-102)
+  // „Profil" aus dem Menü einer anderen Seite (dashboard#profil, D-102): der
+  // Tab steht schon (Inline-Skript vor #tab-start), hier nur Menü und Adresse
   if (location.hash === '#profil') {
-    showTab(true);
+    syncMenu(true);
     history.replaceState(null, '', location.pathname + location.search);
   }
 
@@ -1331,19 +1352,74 @@ if (!token || !playerId) {
     if (rvIdx < rvSlides.length - 1) rvTimer = setTimeout(() => showSlide(rvIdx + 1), rvLeft);
     else $('review-segs').lastChild?.classList.replace('on', 'done');
   }
+  // Übergang (D-103): Die Story wächst aus der orangen Karte ins Vollbild
+  // (Ausschnitt und Farbe), der Kartentitel fliegt dabei an den Platz des
+  // Titels der ersten Seite. Beim Schließen schrumpft sie zurück in die Karte.
+  const RV_EASE = 'cubic-bezier(0.65, 0.05, 0, 1)';
+  function reviewFrames() {
+    const r = $('review-open').getBoundingClientRect();
+    if (reducedMotion() || !r.width) return null;
+    const cs = getComputedStyle($('review'));
+    return [
+      { clipPath: `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px round 14px)`, backgroundColor: cs.getPropertyValue('--accent').trim() },
+      { clipPath: 'inset(0px 0px 0px 0px round 0px)', backgroundColor: cs.getPropertyValue('--bg').trim() },
+    ];
+  }
+  function flyReviewTitle() {
+    const from = document.querySelector('.review-card-title');
+    const to = rvSlides[0]?.querySelector('.rv-title');
+    if (!from || !to) return;
+    const a = from.getBoundingClientRect();
+    const b = to.getBoundingClientRect();
+    const fly = from.cloneNode(true);
+    const cs = getComputedStyle(from);
+    Object.assign(fly.style, {
+      position: 'fixed', left: `${a.left}px`, top: `${a.top}px`, width: `${a.width}px`, margin: '0',
+      zIndex: '91', pointerEvents: 'none', transformOrigin: '0 0', color: cs.color, fontSize: cs.fontSize,
+    });
+    fly.setAttribute('aria-hidden', 'true');
+    fly.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
+    document.body.append(fly);
+    const s = parseFloat(getComputedStyle(to).fontSize) / parseFloat(cs.fontSize);
+    const anim = fly.animate([
+      { transform: 'none', opacity: 1, color: cs.color },
+      { transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${s})`, opacity: 1, color: getComputedStyle(to).color, offset: 0.75 },
+      { transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${s})`, opacity: 0, color: getComputedStyle(to).color },
+    ], { duration: 900, easing: RV_EASE });
+    anim.finished.then(() => fly.remove(), () => fly.remove());
+  }
   function openReview() {
     if (!review?.total) return;
     rvSlides = reviewSlides(review);
     $('review-slides').replaceChildren(...rvSlides);
     $('review-kicker').textContent = `Rückblick · ${reviewName}`;
+    const frames = reviewFrames();
     document.documentElement.style.overflow = 'hidden';
     enter($('review'));
     showSlide(0);
+    if (!frames) return;
+    $('review').animate(frames, { duration: 750, easing: RV_EASE });
+    for (const c of $('review').children) {
+      if (!c.classList.contains('topo')) c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350, delay: 380, fill: 'backwards' });
+    }
+    flyReviewTitle();
   }
+  let reviewClosing = false;
   function closeReview() {
+    if (reviewClosing || $('review').hidden) return;
     clearTimeout(rvTimer);
-    document.documentElement.style.overflow = '';
-    leave($('review'));
+    const done = () => {
+      reviewClosing = false;
+      $('review').hidden = true;
+      $('review').getAnimations().forEach((a) => a.cancel());
+      document.documentElement.style.overflow = '';
+    };
+    const frames = reviewFrames();
+    if (!frames) { done(); return; }
+    reviewClosing = true;
+    for (const c of $('review').children) c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: 'forwards' });
+    $('review').animate([...frames].reverse(), { duration: 550, easing: RV_EASE, fill: 'forwards' })
+      .finished.then(done, done);
   }
   $('review-open').addEventListener('click', openReview);
   $('review-close').addEventListener('click', closeReview);
@@ -1653,6 +1729,48 @@ if (!token || !playerId) {
   function openBoard(scope) {
     enter($('board-modal'));
     setBoardScope(scope, true);
+    flyRankToRow();
+  }
+
+  // Übergang (D-103): „Dein Platz" aus der Karte fliegt in die eigene,
+  // markierte Zeile des Blatts, während es von unten hereinfährt. Gemessen
+  // wird, nachdem renderBoard die Zeile in die Mitte gescrollt hat; das Ziel
+  // ist ihre Lage nach dem Hereinfahren (aktuelle Verschiebung abgezogen).
+  function flyRankToRow() {
+    const src = $('prof-rank');
+    if (reducedMotion() || !/\d/.test(src.textContent)) return;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const target = $('board-list').querySelector('.board-row.me .rank');
+      if (!target) return;
+      const shift = new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.board-sheet')).transform).m42;
+      const a = src.getBoundingClientRect();
+      const b = target.getBoundingClientRect();
+      const cs = getComputedStyle(src);
+      const fly = src.cloneNode(true);
+      fly.removeAttribute('id');
+      fly.setAttribute('aria-hidden', 'true');
+      Object.assign(fly.style, {
+        position: 'fixed', left: `${a.left}px`, top: `${a.top}px`, margin: '0', zIndex: '86',
+        pointerEvents: 'none', transformOrigin: '0 0', fontSize: cs.fontSize, lineHeight: cs.lineHeight, color: cs.color,
+      });
+      document.body.append(fly);
+      const s = (b.height * 0.9) / a.height;
+      const dx = b.left + b.width / 2 - (a.left + (a.width * s) / 2);
+      const dy = b.top - shift + b.height / 2 - (a.top + (a.height * s) / 2);
+      target.style.opacity = '0';
+      const end = `translate(${dx}px, ${dy}px) scale(${s})`;
+      const anim = fly.animate([
+        { transform: 'none', opacity: 1 },
+        { transform: end, opacity: 1, offset: 0.8 },
+        { transform: end, opacity: 0 },
+      ], { duration: 800, easing: 'cubic-bezier(0.65, 0.05, 0, 1)' });
+      const done = () => {
+        fly.remove();
+        target.style.opacity = '';
+        target.animate([{ transform: 'scale(1.35)' }, { transform: 'none' }], { duration: 350, easing: 'cubic-bezier(0.32, 1.15, 0.4, 1)' });
+      };
+      anim.finished.then(done, done);
+    }));
   }
 
   const closeBoard = () => leave($('board-modal'));
