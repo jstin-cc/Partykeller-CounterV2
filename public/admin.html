@@ -944,7 +944,7 @@ try {
 <script>
   // Schon angemeldet: die Zentrale steht im ersten Bild (nicht kurz die
   // Anmeldung) — sonst landet ein hereinkommender Übergang im falschen Titel
-  if (sessionStorage.getItem('pk_admin_token')) {
+  if (sessionStorage.getItem((location.pathname.indexOf('/youngstars') === 0 ? 'ys' : 'pk') + '_admin_token')) {
     document.getElementById('login-view').hidden = true;
     document.getElementById('dash-view').hidden = false;
     // admin?protokoll=<tag> (aus dem Archiv): das Protokoll steht schon im
@@ -1240,7 +1240,7 @@ function enterDashboard() {
 }
 
 // --- Kopf: Bereich, Anzahl Konten, Getränke gesamt ---
-const AREA_LABEL = 'Partykeller';
+const AREA_LABEL = AREA.label;
 function renderHeader() {
   const n = players.length;
   const sum = players.reduce((acc, p) => acc + p.total, 0);

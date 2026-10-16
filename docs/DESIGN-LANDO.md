@@ -83,8 +83,8 @@ liest. In neuem Code die neuen Namen verwenden.
 <!-- Kopfleiste: Wortmarke links, Aktionen rechts -->
 <header class="topbar">
   <a class="wordmark" href="./">
-    <span class="wm-top only-pk">Party</span><span class="wm-bottom only-pk">Keller</span>
-    <span class="wm-top only-ys">Young</span><span class="wm-bottom only-ys">Stars</span>
+    <!-- immer genau so; für /youngstars/ tauscht der Server Party/Keller gegen Young/Stars (D-110) -->
+    <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
   </a>
   <div class="topbar-actions">
     <a class="btn btn--sm" href="…">Archiv <span class="i-arrow"></span></a>
@@ -143,7 +143,8 @@ Weitere Klassen: `.card` (flache Karte, 14 px Radius, Haarlinie), `.chip`
 `.tabs`/`.tab-btn`/`.tab-indicator` (Lime-Balken, `data-pos`, `--tabs`),
 `.field`, `.sec`/`.sec-title` (Abschnittszeile mit Lime-Quadrat), `.split`/`.cell`,
 `.avatar` (Initiale in der Serif), `.sheet`/`.sheet-scrim`/`.sheet-grip`,
-`.marquee`, `.emblem`/`.laurel`, `.only-pk`/`.only-ys`, `.pk-pop`, `.pk-flash`.
+`.marquee`, `.emblem`/`.laurel`, `.pk-pop`, `.pk-flash`. Bereichsabhängiges nur über
+`html[data-area="youngstars"]` (z. B. kein `.pk-logo`, D-110).
 
 `lando.js` exportiert: `initLando()`, `initReveal()`, `revealNow()`,
 `initScribbles()`, `scribble()`, `drawScribble()`, `notch()`, `notchPath()`,
@@ -198,7 +199,12 @@ Weitere Klassen: `.card` (flache Karte, 14 px Radius, Haarlinie), `.chip`
 
 ## 6. Seiten
 
-- **Start** (`/`): helle Creme-Fläche, Hero-Headline, Bereichskarten mit Kerbe.
+- **Start** (`/`, D-110): dunkler Grund mit Höhenlinien, „Wo wird *heute*
+  gezählt?“, zwei gleich gebaute Kerbenkarten mit riesiger Wortmarke und
+  Live-Zeile (nach „On Track / Off Track“ auf landonorris.com). Maus: Karte
+  wächst, Linien leuchten, Strich unter der Wortmarke. Tipp: Karte füllt die
+  Bühne, ihre Wortmarke morpht als `site-wordmark` in die Kopfleiste der
+  Zielseite; zurück über „Bereich wechseln“ (Schlüssel `pick`) umgekehrt.
 - **Anmeldung / Onboarding**: dunkler Bereichsgrund, große Statement-Titel,
   Kontenliste als Versal-Zeilen mit Haarlinien, Menü mit Archiv/Admin/Bereich.
 - **Dashboard**: Wortmarke + Menü, großer Name, riesige Tageszahl, drei

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SV Partykeller – Bereich wählen</title>
+<script>document.documentElement.classList.add('js-motion');
+// Auswahlseite (D-110). Wer schon in einem Bereich angemeldet ist, landet
+// direkt in seinem Dashboard (bei beiden im zuletzt genutzten); /?wahl zeigt
+// die Auswahl trotzdem (Menü „Bereich wechseln").
+try {
+  var h = document.documentElement, ss = sessionStorage, ls = localStorage;
+  var KP = { partykeller: 'pk', youngstars: 'ys' };
+  var signedIn = function (id) { return !!(ls.getItem(KP[id] + '_token') && ls.getItem(KP[id] + '_player_id')); };
+  var last = ls.getItem('last_area');
+  if (!KP[last]) last = '';
+  if (!/[?&]wahl\b/.test(location.search)) {
+    var target = last && signedIn(last) ? last : signedIn('partykeller') ? 'partykeller' : signedIn('youngstars') ? 'youngstars' : '';
+    if (target) {
+      h.style.visibility = 'hidden';
+      location.replace('/' + target + '/dashboard');
+      throw 0;
+    }
+  }
+  if (last) h.dataset.last = last;
+  // Seitenwechsel (D-085/D-087) wie auf den übrigen Seiten: Morph-Schlüssel
+  // vor dem ersten Bild setzen, in Firefox unsichtbar starten (FLIP)
+  var m = ss.getItem('pk-morph');
+  ss.removeItem('pk-morph');
+  var vt = 'CSSViewTransitionRule' in window, flip = null;
+  try { flip = JSON.parse(ss.getItem('pk-flip')); } catch (e) {}
+  var flipOn = !vt && !!flip && Date.now() - flip.t < 10000 && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!flipOn) ss.removeItem('pk-flip');
+  if (flipOn) { h.dataset.flip = '1'; setTimeout(function () { delete h.dataset.flip; }, 1500); }
+  // Das Kaltstart-Bild gehört zur Wortmarke in der Kopfleiste; die gibt es
+  // hier nicht. Von hier aus spielt es auch auf der Anmeldung nicht mehr.
+  ss.setItem('pk-booted', '1');
+  if (m && (vt || flipOn)) {
+    h.dataset.morph = m;
+    h.pkMorphDone = new Promise(function (res) {
+      var done = function () { delete h.dataset.morph; res(); };
+      h.pkMorphEnd = done;
+      setTimeout(done, 2000);
+      if (vt) addEventListener('pagereveal', function (e) {
+        if (e.viewTransition) { e.viewTransition.ready.catch(function () {}); e.viewTransition.finished.then(done, done); } else done();
+      }, { once: true });
+    });
+  }
+} catch (e) {}</script>
+<link rel="icon" href="assets/cones-flat.png">
+<meta name="theme-color" content="#0f131c">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="css/theme.css">
+<style>
+  /* Auswahlseite im Lando-Stil (D-110), nach „On Track / Off Track" auf
+     landonorris.com: zwei gleich gebaute Kerbenkarten mit riesiger
+     Wortmarke und Live-Zeile. Beide Bereiche sehen gleich aus. Mit Maus
+     wächst die Karte unter dem Zeiger, die andere tritt zurück. Beim Tipp
+     füllt die Karte die Bühne, dann gleitet ihre Wortmarke in die
+     Kopfleiste der Anmeldung (site-wordmark). */
+  .pick {
+    position: relative; z-index: 1;
+    min-height: 100vh; min-height: 100dvh;
+    max-width: 1440px; margin: 0 auto;
+    padding: max(14px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; gap: 22px;
+  }
+  @media (min-width: 960px) { .pick { padding: 22px 40px 28px; gap: 28px; } }
+  .pick-top .eyebrow b { color: var(--ink); font-weight: 700; }
+  .pick-clock { display: inline-flex; align-items: center; gap: 7px; min-width: 9.5em; justify-content: flex-end; }
+  .pick-clock::before {
+    content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+    animation: live-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes live-pulse { 50% { opacity: 0.25; } }
+
+  .pick-title { font-size: clamp(42px, 11.5vw, 112px); }
+  .pick-title .scribbled { margin-left: 0.12em; }
+  .pick-title .scribble--circle { left: -8%; width: 116%; }
+
+  .split { flex: 1; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  @media (min-width: 960px) { .split { flex-direction: row; gap: 18px; min-height: 460px; } }
+  .tile {
+    --notch-fill: var(--surface);
+    --notch-tag-ink: var(--ink);
+    flex: 1 1 0; min-height: 250px; min-width: 0;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
+    padding: 20px 20px 54px;
+    color: var(--ink); text-decoration: none; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: flex-grow 0.85s var(--ease), opacity 0.5s var(--ease);
+  }
+  @media (min-width: 960px) { .tile { padding: 28px 30px 64px; } }
+  a.tile:hover { color: var(--ink); }
+  .tile .topo { transition: background-color 0.6s var(--ease); }
+  .tile-head { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 26px; }
+  .tile-no { color: var(--accent-text); }
+  .tile-last { display: none; }
+  html[data-last="partykeller"] .tile[data-area="partykeller"] .tile-last,
+  html[data-last="youngstars"] .tile[data-area="youngstars"] .tile-last { display: inline-flex; }
+  .tile-mark { position: relative; font-size: clamp(64px, 19vw, 150px); align-self: flex-start; }
+  @media (min-width: 960px) { .tile-mark { font-size: clamp(88px, 9.6vw, 168px); } }
+  .tile-mark .wm-top, .tile-mark .wm-bottom { display: block; transition: transform 0.85s var(--ease), color 0.4s var(--ease); }
+  .tile-mark .wm-bottom { position: relative; }
+  .tile-mark .scribble--underline { position: absolute; left: -2%; width: 104%; bottom: -0.16em; height: 0.2em; }
+  .tile-mark .scribble:not(.is-drawn) { visibility: hidden; }
+  .tile-stats { position: relative; display: flex; gap: 22px; flex-wrap: wrap; }
+  .tile-stat { display: flex; flex-direction: column; gap: 4px; min-width: 2.5em; }
+  .tile-stat .num, .tile-stat .t-serif { font-size: 30px; line-height: 0.9; }
+  .tile-stat .t-serif { color: var(--accent-text); max-width: 9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile .notch-tag { font-size: 12px; }
+  @media (hover: hover) and (pointer: fine) {
+    .split:not(.is-chosen):has(.tile:hover) .tile:not(:hover) { flex-grow: 0.72; opacity: 0.5; }
+    .split:not(.is-chosen) .tile:hover { flex-grow: 1.28; }
+    .tile:hover .topo { background: color-mix(in srgb, var(--accent) 34%, var(--topo-line)); }
+    .tile:hover .wm-top { color: var(--accent-text); transform: translateX(0.12em); }
+    .tile:hover .wm-bottom { transform: translateX(-0.04em); }
+  }
+  /* Gewählt: die Karte füllt die Bühne, die andere klappt weg */
+  .split.is-chosen .tile:not(.is-chosen) { flex-grow: 0.0001; opacity: 0; min-height: 0; padding: 0; overflow: hidden; white-space: nowrap; }
+  @media (max-width: 959px) { .split.is-chosen .tile:not(.is-chosen) { height: 0; } }
+  .split.is-chosen .tile.is-chosen { flex-grow: 1; }
+  .split.is-chosen .tile.is-chosen .topo { background: color-mix(in srgb, var(--accent) 34%, var(--topo-line)); }
+  .pick.is-leaving :is(.pick-title, .pick-top, .pick-foot) {
+    opacity: 0; transform: translateY(-14px);
+    transition: opacity 0.4s var(--ease), transform 0.6s var(--ease);
+  }
+
+  .pick-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .pick-foot .emblem { flex-direction: row; gap: 10px; }
+  .pick-foot .emblem .laurel { width: 30px; height: 30px; }
+  @media (max-width: 599px) { .pick-hint { display: none; } }
+
+  /* Übergänge (D-085): die Wortmarke der gewählten Karte gleitet in die
+     Kopfleiste der Zielseite; kommt man über „Bereich wechseln" zurück,
+     gleitet die Kopfleisten-Wortmarke in die Karte des Bereichs und der
+     Menüpunkt in „Bereich wählen" */
+  .tile.is-chosen .tile-mark,
+  html[data-morph="pick"][data-last="partykeller"] .tile[data-area="partykeller"] .tile-mark,
+  html[data-morph="pick"][data-last="youngstars"] .tile[data-area="youngstars"] .tile-mark { view-transition-name: site-wordmark; }
+  html[data-morph="pick"] .pick-label { view-transition-name: morph-pick; }
+  /* Gegenstücke stehen im ersten Bild (kein Einblenden) */
+  html[data-morph="pick"] .tile[data-reveal] { opacity: 1 !important; transform: none !important; }
+</style>
+</head>
+<body>
+<div class="topo" aria-hidden="true"></div>
+<div class="topo-spot" aria-hidden="true"></div>
+
+<main class="pick">
+  <header class="topbar pick-top">
+    <span class="eyebrow">SV Partykeller · <b class="pick-label">Bereich wählen</b></span>
+    <span class="eyebrow pick-clock" id="clock"></span>
+  </header>
+
+  <h1 class="t-impact pick-title" data-reveal="words">Wo wird <span class="scribbled"><span class="t-serif t-accent">heute</span><svg class="scribble scribble--circle" data-draw="700" viewBox="0 0 260 130" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M176 14C128 1 58 6 24 34-4 58 12 104 88 118c64 12 150 0 164-40 11-32-26-64-92-72-40-5-80 1-104 12" pathLength="1"/></svg></span> gezählt?</h1>
+
+  <div class="split" id="split">
+    <a class="tile" data-area="partykeller" href="/partykeller/" aria-label="Partykeller" data-notch="tabW:200;tabH:40;r:14;slant:22" data-reveal="up" data-delay="250">
+      <span class="topo topo--abs notch-clip" aria-hidden="true"></span>
+      <span class="tile-head"><span class="eyebrow tile-no">01</span><span class="chip chip--accent tile-last">Zuletzt hier</span></span>
+      <span class="wordmark tile-mark"><span class="wm-top">Party</span><span class="wm-bottom">Keller</span></span>
+      <span class="tile-stats">
+        <span class="tile-stat"><span class="num" data-stat="drinks">–</span><span class="eyebrow" data-stat="drinks-word">Getränke heute</span></span>
+        <span class="tile-stat"><span class="num" data-stat="active">–</span><span class="eyebrow">Dabei</span></span>
+        <span class="tile-stat" data-stat="leader-cell" hidden><span class="t-serif" data-stat="leader"></span><span class="eyebrow">Vorne</span></span>
+      </span>
+      <span class="notch-tag"><span data-stat="go">Zur Anmeldung</span> <span class="i-arrow"></span></span>
+    </a>
+    <a class="tile" data-area="youngstars" href="/youngstars/" aria-label="Youngstars" data-notch="tabW:200;tabH:40;r:14;slant:22" data-reveal="up" data-delay="340">
+      <span class="topo topo--abs notch-clip" aria-hidden="true"></span>
+      <span class="tile-head"><span class="eyebrow tile-no">02</span><span class="chip chip--accent tile-last">Zuletzt hier</span></span>
+      <span class="wordmark tile-mark"><span class="wm-top">Young</span><span class="wm-bottom">Stars</span></span>
+      <span class="tile-stats">
+        <span class="tile-stat"><span class="num" data-stat="drinks">–</span><span class="eyebrow" data-stat="drinks-word">Getränke heute</span></span>
+        <span class="tile-stat"><span class="num" data-stat="active">–</span><span class="eyebrow">Dabei</span></span>
+        <span class="tile-stat" data-stat="leader-cell" hidden><span class="t-serif" data-stat="leader"></span><span class="eyebrow">Vorne</span></span>
+      </span>
+      <span class="notch-tag"><span data-stat="go">Zur Anmeldung</span> <span class="i-arrow"></span></span>
+    </a>
+  </div>
+
+  <footer class="pick-foot">
+    <div class="emblem"><span class="laurel" aria-hidden="true"></span><span class="eyebrow">SV Partykeller</span></div>
+    <span class="eyebrow pick-hint">Zwei Bereiche · eigene Listen und Logins</span>
+  </footer>
+</main>
+
+<script type="module">
+import { initLando, drawScribble, scribble, go, reducedMotion } from './js/lando.js';
+
+const KP = { partykeller: 'pk', youngstars: 'ys' };
+const tiles = [...document.querySelectorAll('.tile')];
+const split = document.getElementById('split');
+const page = document.querySelector('.pick');
+
+// Angemeldet (nur über /?wahl hier): die Karte führt direkt ins Dashboard
+const signedIn = (id) => {
+  try { return !!(localStorage.getItem(`${KP[id]}_token`) && localStorage.getItem(`${KP[id]}_player_id`)); } catch { return false; }
+};
+for (const t of tiles) {
+  if (!signedIn(t.dataset.area)) continue;
+  t.href = `/${t.dataset.area}/dashboard`;
+  t.querySelector('[data-stat="go"]').textContent = 'Zum Zähler';
+}
+
+// Strich unter dem unteren Teil der Wortmarke, zeichnet sich beim Hover
+for (const t of tiles) {
+  const bottom = t.querySelector('.wm-bottom');
+  bottom.insertAdjacentHTML('beforeend', scribble('underline'));
+  const s = bottom.querySelector('.scribble');
+  t.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') drawScribble(s, { restart: true }); });
+  t.addEventListener('pointerleave', () => { if (!t.classList.contains('is-chosen')) s.classList.remove('is-drawn'); });
+}
+
+// Tipp: die Karte füllt die Bühne, die andere klappt weg; dann geht es
+// weiter, die Wortmarke gleitet dabei in die Kopfleiste der Zielseite
+let leaving = false;
+for (const t of tiles) {
+  t.addEventListener('click', (e) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    if (leaving) return;
+    leaving = true;
+    try { localStorage.setItem('last_area', t.dataset.area); } catch { /* egal */ }
+    if (reducedMotion()) { location.assign(t.href); return; }
+    split.classList.add('is-chosen');
+    t.classList.add('is-chosen');
+    page.classList.add('is-leaving');
+    drawScribble(t.querySelector('.scribble--underline'), { restart: true });
+    setTimeout(() => go(t.href), 620);
+  });
+}
+// Zurück aus dem bfcache: Auswahl wieder zeigen
+addEventListener('pageshow', (e) => {
+  if (!e.persisted) return;
+  leaving = false;
+  split.classList.remove('is-chosen');
+  page.classList.remove('is-leaving');
+  tiles.forEach((t) => t.classList.remove('is-chosen'));
+});
+
+// Uhr wie auf dem TV
+const clock = document.getElementById('clock');
+const tick = () => {
+  const d = new Date();
+  const day = d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace(',', '');
+  clock.textContent = `${day} · ${d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
+};
+tick();
+setInterval(tick, 15_000);
+
+// Live-Zeile je Bereich (Getränke heute, dabei, vorne); alle 20 s neu
+async function loadSummary(t) {
+  const set = (k, v) => { t.querySelector(`[data-stat="${k}"]`).textContent = v; };
+  try {
+    const res = await fetch(`/${t.dataset.area}/api/summary`);
+    if (!res.ok) throw new Error(res.status);
+    const s = await res.json();
+    set('drinks', s.drinksToday.toLocaleString('de-DE'));
+    set('drinks-word', s.drinksToday === 1 ? 'Getränk heute' : 'Getränke heute');
+    set('active', s.activeToday.toLocaleString('de-DE'));
+    set('leader', s.leader ?? '');
+    t.querySelector('[data-stat="leader-cell"]').hidden = !s.leader;
+  } catch {
+    set('drinks', '–');
+    set('active', '–');
+  }
+}
+const refresh = () => { if (!document.hidden) tiles.forEach(loadSummary); };
+refresh();
+setInterval(refresh, 20_000);
+document.addEventListener('visibilitychange', refresh);
+
+initLando();
+</script>
+</body>
+</html>

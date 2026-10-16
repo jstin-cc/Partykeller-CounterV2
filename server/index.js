@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
@@ -46,6 +47,21 @@ function createApiRouter(area) {
   const db = area.db;
 
   router.get('/state', (_req, res) => res.json(db.getState()));
+
+  // Kurzstand für die Auswahlseite (D-110): Getränke heute, wer heute dabei
+  // ist und wer vorne liegt (ohne Ausgeblendete, Tiebreak wie auf dem TV)
+  router.get('/summary', (_req, res) => {
+    const today = db.rankedPlayers()
+      .filter((p) => !p.hidden)
+      .map((p) => ({ name: p.name, n: p.beersToday + p.shotsToday + p.mixesToday, ts: p.lastDrinkTsToday ?? Infinity }))
+      .filter((p) => p.n > 0)
+      .sort((a, b) => b.n - a.n || a.ts - b.ts || a.name.localeCompare(b.name, 'de'));
+    res.json({
+      drinksToday: today.reduce((sum, p) => sum + p.n, 0),
+      activeToday: today.length,
+      leader: today[0]?.name ?? null,
+    });
+  });
 
   // Nur die Konten für die Anmeldeliste (D-047): id, Name, ausgeblendet, PIN
   // gesetzt — in Ranglisten-Reihenfolge, ohne den Rest des States.
@@ -238,32 +254,65 @@ function createApiRouter(area) {
 
 const [partykeller] = areas;
 
-// API: /partykeller/api/*; der Alt-Pfad /api/* bleibt als Alias erhalten
-// (bestehende Geräte/Links).
-app.use(['/api', `${partykeller.base}/api`], createApiRouter(partykeller));
+// Seiten eines Bereichs (D-110): dieselben HTML-Dateien für beide Bereiche,
+// beim Ausliefern bekommen sie den Bereich (html[data-area]), dessen
+// Wortmarke und den Fenstertitel. So steht schon im ersten Bild die richtige
+// Wortmarke (kein Umschalten per Skript, Kaltstart-Bild und Morphs greifen).
+// Jedes Mal frisch gelesen (wie vorher sendFile): ein Update der Dateien
+// wirkt ohne Neustart, und die Seiten sind klein.
+function renderPage(area, file) {
+  const [top, bottom] = area.mark;
+  return fs.readFileSync(path.join(publicDir, file), 'utf8')
+    .replace('<html lang="de"', `<html lang="de" data-area="${area.id}"`)
+    .replace('<title>SV Partykeller –', `<title>${area.title} –`)
+    .replaceAll('<span class="wm-top">Party</span><span class="wm-bottom">Keller</span>',
+      `<span class="wm-top">${top}</span><span class="wm-bottom">${bottom}</span>`);
+}
+const sendPage = (area, file) => (_req, res) => res.type('html').send(renderPage(area, file));
+
+// Installierbare App je Bereich: eigenes Manifest mit eigenem Start-Pfad,
+// damit beide nebeneinander auf dem Handy liegen können
+function manifest(area) {
+  const base = JSON.parse(fs.readFileSync(path.join(publicDir, 'manifest.webmanifest'), 'utf8'));
+  if (area === partykeller) return base;
+  return {
+    ...base,
+    name: `${area.label} Counter`,
+    short_name: area.label,
+    description: `Getränke-Counter für die ${area.name} – Bier, Shots und Mischen zählen.`,
+    start_url: `${area.base}/`,
+    scope: `${area.base}/`,
+  };
+}
+
+// API: /<bereich>/api/*; der Alt-Pfad /api/* bleibt als Partykeller-Alias
+// erhalten (bestehende Geräte/Links).
+for (const area of areas) {
+  app.use(area === partykeller ? ['/api', `${area.base}/api`] : `${area.base}/api`, createApiRouter(area));
+}
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
-// Seit D-080 gibt es nur noch den Partykeller: die Wurzel führt direkt dorthin,
-// alte Youngstars-Links (QR-Codes, Lesezeichen, installierte PWA) ebenso.
-app.get('/', (_req, res) => res.redirect(`${partykeller.base}/`));
-app.use('/youngstars', (req, res) => res.redirect(`${partykeller.base}${req.url}`));
+// Wurzel: Auswahlseite der beiden Bereiche (D-110). Angemeldete Handys
+// springen dort per Kopf-Skript direkt in ihren Bereich.
+app.get('/', (_req, res) => res.sendFile(path.join(publicDir, 'start.html')));
 
-// /partykeller -> /partykeller/ (mit Slash lösen relative Links korrekt auf);
-// Express behandelt beide Schreibweisen gleich, daher req.path prüfen.
-app.get(partykeller.base, (req, res, next) => {
-  if (req.path.endsWith('/')) return next();
-  res.redirect(`${partykeller.base}/`);
-});
-app.get(`${partykeller.base}/dashboard`, (_req, res) => res.sendFile(path.join(publicDir, 'dashboard.html')));
-app.get(`${partykeller.base}/onboarding`, (_req, res) => res.sendFile(path.join(publicDir, 'onboarding.html')));
-app.get(`${partykeller.base}/tv`, (_req, res) => res.sendFile(path.join(publicDir, 'tv.html')));
-app.get(`${partykeller.base}/admin`, (_req, res) => res.sendFile(path.join(publicDir, 'admin.html')));
-app.get(`${partykeller.base}/abende`, (_req, res) => res.sendFile(path.join(publicDir, 'abende.html')));
-
-// Statics unter dem Präfix (Assets/CSS/JS sind in den Seiten relativ
-// verlinkt) und weiterhin an der Wurzel (Alt-Links).
-app.use(partykeller.base, express.static(publicDir));
+for (const area of areas) {
+  // /<bereich> -> /<bereich>/ (mit Slash lösen relative Links korrekt auf);
+  // Express behandelt beide Schreibweisen gleich, daher req.path prüfen.
+  app.get(area.base, (req, res) => {
+    if (!req.path.endsWith('/')) return res.redirect(`${area.base}/`);
+    sendPage(area, 'index.html')(req, res);
+  });
+  app.get(`${area.base}/index.html`, sendPage(area, 'index.html'));
+  for (const page of ['dashboard', 'onboarding', 'tv', 'admin', 'abende']) {
+    app.get(`${area.base}/${page}`, sendPage(area, `${page}.html`));
+  }
+  const mf = JSON.stringify(manifest(area));
+  app.get(`${area.base}/manifest.webmanifest`, (_req, res) => res.type('application/manifest+json').send(mf));
+  // Statics unter dem Präfix (Assets/CSS/JS sind in den Seiten relativ verlinkt)
+  app.use(area.base, express.static(publicDir, { index: false }));
+}
 
 // Alt-Pfade aus der Zeit vor der Auswahlseite -> Partykeller-Bereich
 // (gespeicherte QR-Codes, Lesezeichen, TV-Kiosk auf dem Pi).

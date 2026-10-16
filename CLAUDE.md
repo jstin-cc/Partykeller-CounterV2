@@ -4,10 +4,15 @@
 
 Getränke-Counter für einen Partykeller: Gäste zählen Biere/Shots/Mischen am
 Handy, ein TV zeigt die All-Time-Rangliste. Läuft als **ein Node.js-Prozess** auf
-einem Laptop oder Raspberry Pi im lokalen WLAN, **ohne Internet**. Es gibt seit
-D-080 **nur noch einen Bereich**: **Partykeller** (`/partykeller/*`) in den
-früheren Youngstars-Farben (Fast-Schwarz/Orange); `/` und alte
-`/youngstars/*`-Links leiten dorthin. Vollständiger Plan in
+einem Laptop oder Raspberry Pi im lokalen WLAN, **ohne Internet**. Seit D-110
+gibt es wieder **zwei Bereiche im gleichen Design** (Fast-Schwarz/Orange,
+D-080): **Partykeller** (`/partykeller/*`) und **Youngstars**
+(`/youngstars/*`), getrennt nach Datenbank, Tokens und Admin-Passwort; sie
+unterscheiden sich nur über die Wortmarke (und das SV-Logo, das nur der
+Partykeller zeigt). `/` ist die Auswahlseite (`public/start.html`). Dieselben
+HTML-Dateien bedienen beide Bereiche: der Server setzt beim Ausliefern
+`html[data-area]`, Wortmarke und Titel (`server/index.js` `renderPage`),
+`public/js/area.js` erkennt den Bereich am Pfad. Vollständiger Plan in
 [PLAN.md](PLAN.md), Entscheidungen in [DECISIONS.md](DECISIONS.md), Stand in
 [PROGRESS.md](PROGRESS.md).
 
@@ -15,8 +20,8 @@ früheren Youngstars-Farben (Fast-Schwarz/Orange); `/` und alte
 
 - Node.js, Express (Statics + REST), `ws` (WebSockets), `better-sqlite3`, `dotenv`
 - Frontend: statisches HTML/CSS/Vanilla-JS (ES-Module), **kein Build-Step, kein Framework**
-- DB: SQLite (WAL), `data/partykeller.db`; Schema in PLAN.md §3
-  (`data/youngstars.db` wird seit D-080 nicht mehr gelesen)
+- DB: SQLite (WAL), je Bereich eine Datei: `data/partykeller.db`,
+  `data/youngstars.db`; Schema in PLAN.md §3
 
 ## Harte Regeln
 
@@ -28,12 +33,12 @@ früheren Youngstars-Farben (Fast-Schwarz/Orange); `/` und alte
 3. README.md und CLAUDE.md bei relevanten Änderungen sofort mitziehen.
 4. **Keine CDN-/Internet-Ressourcen im Frontend** — alles wird in `public/`
    vendored (Fonts, Libs). Die App muss offline im WLAN funktionieren.
-5. Keine Secrets im Repo: `ADMIN_PASSWORD`, `RESET_PASSWORD` und
-   `TOKEN_SECRET` nur über `.env` (Vorlage:
+5. Keine Secrets im Repo: `ADMIN_PASSWORD`, `YOUNGSTARS_ADMIN_PASSWORD`,
+   `RESET_PASSWORD` und `TOKEN_SECRET` nur über `.env` (Vorlage:
    `.env.example`). Der Design-Prototyp-Wert `keller2026` wird nie übernommen.
 6. Server validiert jede Mutation (Token, Rolle, Wertebereiche); Nutzer dürfen
    nur den eigenen Zähler um +1 erhöhen, alles andere ist Admin (D-004).
-   Tokens sind bereichsgestempelt (D-019); alte Youngstars-Tokens gelten nicht.
+   Tokens sind bereichsgestempelt (D-019) und gelten nur im eigenen Bereich.
 7. Persistenz ist zwingend: Ein Server-Neustart darf keine Daten und keine
    Logins verlieren (D-006).
 

@@ -4,9 +4,11 @@ Gäste zählen ihre Biere und Shots über das Handy, ein Fernseher zeigt die
 dauerhafte All-Time-Rangliste. Läuft komplett im lokalen WLAN auf einem
 Laptop oder Raspberry Pi — keine Internet-Abhängigkeit.
 
-Die App läuft unter `/partykeller` (Fast-Schwarz mit Orange, Partykeller-Logo);
-`/` leitet direkt dorthin. Den früheren zweiten Bereich *Youngstars* gibt es
-seit D-080 nicht mehr — alte `/youngstars/…`-Links leiten in den Partykeller.
+Die App hat zwei Bereiche im gleichen Design (Fast-Schwarz mit Orange):
+**Partykeller** unter `/partykeller` und **Youngstars** unter `/youngstars`
+(seit D-110 wieder da), mit getrennten Konten, Ranglisten, TVs und
+Admin-Passwörtern. `/` ist die Auswahlseite; wer auf dem Handy schon
+angemeldet ist, landet dort direkt in seinem Dashboard.
 Das Design folgt seit D-078 der Designsprache von
 [landonorris.com](https://landonorris.com/) — siehe [Design](#design).
 
@@ -49,7 +51,8 @@ npm start                     # http://localhost:3000
 ```
 
 > Die `.env` muss `ADMIN_PASSWORD` und `TOKEN_SECRET` enthalten (Vorlage: `.env.example`), sonst startet der Server
-> bewusst nicht. Ein sicheres `TOKEN_SECRET` erzeugst du z. B. mit
+> bewusst nicht. Für den Youngstars-Admin `YOUNGSTARS_ADMIN_PASSWORD` setzen
+> (leer gilt `ADMIN_PASSWORD`); deren Daten liegen in `data/youngstars.db`. Ein sicheres `TOKEN_SECRET` erzeugst du z. B. mit
 > `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
 
 ### Windows: `npm` wird von PowerShell blockiert
@@ -199,9 +202,9 @@ unrelated histories“ ab. `data/` und `.env` sind gitignored und bleiben
 unangetastet. Ab dann reicht für jedes Update wieder `git pull` wie unter
 [Auf neue Version aktualisieren](#auf-neue-version-aktualisieren--neustart).
 
-In der `.env` können `YOUNGSTARS_ADMIN_PASSWORD` und `YOUNGSTARS_DB_PATH`
-raus; `data/youngstars.db` wird nicht mehr gelesen und kann gelöscht werden.
-Alte `/youngstars/…`-Links und -QR-Codes leiten in den Partykeller.
+`YOUNGSTARS_ADMIN_PASSWORD` in der `.env` und `data/youngstars.db` bleiben
+stehen: Seit D-110 nutzt der Youngstars-Bereich beide wieder, mit allen
+alten Konten und Abenden.
 
 **Zurück zur alten Version**, falls etwas schiefgeht: Server stoppen,
 `data` und `.env` aus `..\partykeller-sicherung-v1` zurückkopieren, dann
@@ -210,12 +213,13 @@ Alte `/youngstars/…`-Links und -QR-Codes leiten in den Partykeller.
 
 ## Screens
 
-Alle Routen liegen unter `/partykeller/…` (in der Tabelle `/<bereich>/`).
-Alte Links ohne Präfix (z. B. `/tv`) und `/youngstars/…` leiten dorthin.
+Alle Routen gibt es je Bereich unter `/partykeller/…` und `/youngstars/…`
+(in der Tabelle `/<bereich>/`). Alte Links ohne Präfix (z. B. `/tv`) leiten
+in den Partykeller.
 
 | Route | Screen |
 |---|---|
-| `/` | Weiterleitung auf `/partykeller/` |
+| `/` | Auswahlseite (D-110): „Wo wird heute gezählt?“ mit zwei Kerbenkarten (Wortmarke, Getränke heute, wer dabei ist, wer vorne liegt, alle 20 s neu; „Zuletzt hier“ am zuletzt genutzten Bereich). Mit Maus wächst die Karte unter dem Zeiger; ein Tipp lässt sie die Seite füllen, dann gleitet ihre Wortmarke in die Kopfleiste der Anmeldung. Angemeldete Handys springen direkt ins Dashboard (bei beiden in den zuletzt genutzten Bereich); `/?wahl` zeigt die Auswahl trotzdem, im Menü als „Bereich wechseln“ |
 | `/<bereich>/` | Nutzer-Login (Name wählen/anlegen; PIN optional, rate-limitiert). Das Konto, mit dem sich dieses Handy zuletzt angemeldet hat, steht oben. Beim Anmelden gleiten Namenskreis und Name in den Dashboard-Kopf (View Transitions; ältere Browser wechseln hart). Wer auf diesem Handy schon angemeldet ist, landet direkt im Dashboard. Auf Anmeldung, Dashboard, Archiv und Admin steht dasselbe Vollbild-Menü (Zählen, Profil, Abend-Archiv, TV, Admin, Abmelden bzw. ohne Anmeldung „Anmeldung“); jeder Menüpunkt gleitet auf der Zielseite in sein Gegenstück (D-103) |
 | `/<bereich>/onboarding` | Drei Willkommens-Seiten nach dem Anlegen eines Kontos (Getränke tracken, Rangliste auf dem Fernseher, Profil-Tab) mit Punkten, „Weiter“ und „Überspringen“; danach das Dashboard. Nur für neue Konten, beim Anmelden kommt sie nicht |
 | `/<bereich>/dashboard` | Nutzer-Dashboard (im Kopf ab dem ersten Abendsieg ein Lorbeer um den Namenskreis und „n× Tagessieger“; beim Scrollen schrumpft der Name und dockt als Pille in einer fixierten Kopfleiste an) mit zwei Tabs — **Zählen** (oben „Getränke heute“, rechts daneben ▲/▼ mit dem Abstand zum eigenen Schnitt der früheren Abende bis zur gleichen Uhrzeit; darunter drei große Kerben-Karten in der Getränkefarbe — antippen zählt +1, mit der Heute-Zahl auf der Fläche und „Gesamt“ im Etikett) und **Profil** (eine Ranglisten-Karte, oben umschaltbar zwischen heute und all-time, inkl. wer direkt vor/hinter einem liegt und **„Ganze Rangliste ansehen"** als Blatt von unten mit markierter eigener Zeile, Abende, bester Abend, Ø pro Abend, Verteilung, Anteil am Haus, Abzeichen als Umriss-Kerbenkarten mit eigenen Strich-Icons und Zähler in der Kerbe — gefüllt, wenn heute erreicht, Akzent-Linie, wenn schon einmal erreicht; u. a. Tagessieger und das Treue-Abzeichen ab 10 Abenden). Beim Zählen rutscht der alte Stand als Umriss weg (Echo-Zahl); im Profil steht der All-Time-Stand mit dem Stand nach den letzten Abenden darunter und die Karte **„Dein Jahr“**: ein Jahresrückblick als Story-Seiten zum Durchtippen, die letzte speichert ein Bild 1080 × 1920. |

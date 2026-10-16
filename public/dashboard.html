@@ -720,8 +720,9 @@ try {
         // Namenskreis muss im ersten Bild stehen, damit er von der Anmeldung
         // herübergleiten kann (D-068). Den Rest übernimmt das Modul unten.
         (() => {
-          const name = localStorage.getItem('pk_player_name');
-          if (!localStorage.getItem('pk_token') || !name) return;
+          const kp = location.pathname.indexOf('/youngstars') === 0 ? 'ys' : 'pk';
+          const name = localStorage.getItem(kp + '_player_name');
+          if (!localStorage.getItem(kp + '_token') || !name) return;
           document.getElementById('user-view').hidden = false;
           document.getElementById('player-name').textContent = name;
           document.getElementById('player-name').style.setProperty('--chars', Math.max(4, name.length));
@@ -2082,7 +2083,7 @@ if (!token || !playerId) {
       updateProfile(players, me);
       lastPlayers = players;
       if (!$('board-modal').hidden) renderBoard();
-      document.title = `SV Partykeller – ${me.name}`;
+      document.title = `${AREA.title} – ${me.name}`;
 
       // Statistik nachladen, wenn heute irgendwo etwas dazukam (Achievements
       // wie „Erster Trinker" hängen auch von den anderen ab) oder beim Start.

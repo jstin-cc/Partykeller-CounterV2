@@ -20,10 +20,16 @@ if (!tokenSecret || tokenSecret.length < 16) fail('TOKEN_SECRET fehlt oder ist z
 // Nicht gesetzt => fällt auf ADMIN_PASSWORD zurück (bestehende Setups bleiben lauffähig).
 const resetPassword = process.env.RESET_PASSWORD || adminPassword;
 
+// Youngstars (D-110): eigenes Admin-Passwort; nicht gesetzt => es gilt
+// ADMIN_PASSWORD (bestehende Setups starten ohne neue Pflichtangabe).
+const youngstarsAdminPassword = process.env.YOUNGSTARS_ADMIN_PASSWORD || adminPassword;
+
 export const config = {
   port,
   adminPassword,
   resetPassword,
   tokenSecret,
   dbPath: process.env.DB_PATH ?? 'data/partykeller.db',
+  youngstarsAdminPassword,
+  youngstarsDbPath: process.env.YOUNGSTARS_DB_PATH ?? 'data/youngstars.db',
 };
