@@ -18,7 +18,7 @@ export function verifyPin(pin, stored) {
 }
 
 // Stateless HMAC-Token (D-006): base64url(payload).base64url(hmac)
-export function signToken(payload) {
+function signToken(payload) {
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const sig = crypto.createHmac('sha256', config.tokenSecret).update(body).digest('base64url');
   return `${body}.${sig}`;

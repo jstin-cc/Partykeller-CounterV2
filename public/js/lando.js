@@ -93,15 +93,6 @@ export function initReveal(root = document) {
   if (boot) boot.then(() => setTimeout(run, 280)); else run();
 }
 
-// Sofort einblenden (z. B. nach dem Umschalten eines Tabs, wenn der Inhalt
-// schon im Bild ist).
-export function revealNow(root = document) {
-  root.querySelectorAll('[data-reveal]').forEach((el) => {
-    if (el.dataset.reveal === 'words' && !el.dataset.split) splitWords(el);
-    el.classList.add('is-in');
-  });
-}
-
 export function splitWords(el) {
   el.dataset.split = '1';
   let i = 0;

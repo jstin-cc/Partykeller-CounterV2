@@ -409,11 +409,6 @@ a.wordmark:hover { color: var(--ink); }
 }
 .topbar-actions { display: flex; align-items: center; gap: 8px; }
 
-/* Altlasten: Zapfen-Wasserzeichen und Baum-Footer gibt es im Lando-Look
-   nicht mehr — falls noch Markup existiert, bleibt es unsichtbar. */
-.watermark, .login-watermark, .admin-watermark, .archive-watermark, .tv-mark { display: none !important; }
-.footer-woods { display: none !important; }
-
 /* ==========================================================================
    Knöpfe — Akzent-Fläche, 7 px Radius, Versalien, Pfeil ↗ der beim Hover
    hinaus- und wieder hineinfliegt
@@ -621,7 +616,6 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 .split > .cell { text-align: center; flex: 1; }
 .split > .sep { width: 1px; background: var(--line); }
 .cell .value { font-size: 34px; line-height: 1; color: var(--ink); }
-.cell .value--gold { color: var(--accent-text); }
 .cell .label {
   margin-top: 6px;
   font-size: 10.5px;
@@ -693,9 +687,6 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 
 .error-msg { color: var(--danger); font-size: 13.5px; min-height: 1.2em; }
 
-/* Haarlinien-Liste (Anmeldeliste, Menü, Tabellen) */
-.rule-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
-.rule-list > li, .rule-list > .row { border-bottom: 1px solid var(--line); }
 
 /* ==========================================================================
    Handgezeichnete Kringel (siehe lando.js scribble())

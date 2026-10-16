@@ -547,7 +547,7 @@ function hasCurve(timeline) {
   return counts.length >= 3 && Math.max(...counts) > Math.min(...counts);
 }
 
-export async function buildStoryBlob(night, top) {
+async function buildStoryBlob(night, top) {
   const c = themeColors();
   await Promise.all([
     document.fonts.load(`800 80px ${SANS}`),
@@ -650,7 +650,7 @@ export async function downloadStory(night) {
 // Riesenzahl, darunter Mischung und vier Kennzahlen.
 const DRINK_NAMES = { beer: 'Bier', shot: 'Shots', mix: 'Mischen' };
 
-export async function buildReviewBlob(r, name) {
+async function buildReviewBlob(r, name) {
   const c = themeColors();
   await Promise.all([
     document.fonts.load(`800 80px ${SANS}`),

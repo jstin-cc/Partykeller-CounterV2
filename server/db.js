@@ -15,7 +15,7 @@ export function partyDayStartMs(now = Date.now()) {
 // 'YYYY-MM-DD' -> [startMs, endMs) des Party-Tags (06:00 bis 06:00 Folgetag).
 // Das Ende als eigene Uhrzeit rechnen, nicht als Start + 24 h: In der Nacht
 // der Zeitumstellung hat der Party-Tag 23 bzw. 25 Stunden.
-export function partyDayRangeMs(day) {
+function partyDayRangeMs(day) {
   const [y, m, d] = day.split('-').map(Number);
   return [new Date(y, m - 1, d, 6, 0, 0, 0).getTime(), new Date(y, m - 1, d + 1, 6, 0, 0, 0).getTime()];
 }
@@ -30,7 +30,7 @@ export function validDayString(day) {
 }
 
 // Aktueller Party-Tag als 'YYYY-MM-DD' (Datum des 06:00-Starts)
-export function partyDayString(now = Date.now()) {
+function partyDayString(now = Date.now()) {
   const d = new Date(partyDayStartMs(now));
   const p = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
