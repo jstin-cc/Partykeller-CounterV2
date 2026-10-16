@@ -2281,3 +2281,46 @@ nur der Wechsel am Ende.
 
 **Begründung:** Rückmeldung des Nutzers: Übergang soll sauber sein. In der
 Demo-Instanz als Video (Hin- und Rückweg) sowie in Firefox 158 geprüft.
+
+## D-099 (2026-10-16): Effekt-Demo im Admin
+
+**Entscheidung:** Neue Karte „Effekt-Demo" im Admin (Reiter *TV*). Jeder
+Knopf schickt `demoEffect` über den WebSocket; der Server prüft Admin-Token
+und eine feste Effekt-Liste und reicht `{type: 'demo', effect[, season]}` an
+alle Clients des Bereichs weiter — nur `tv.html` reagiert darauf. Es ändert
+sich nichts an Daten oder Einstellungen, deshalb gibt der Handler `false`
+zurück und es folgt kein State-Broadcast. Der TV spielt den Effekt so ab wie
+im echten Moment, mit Namen und Zahlen aus dem aktuellen Stand: Namens-Plakat,
+Meilenstein-Bild (letzte 500er-Marke des Hauses), Konfetti, Fledermaus,
+Bierbläschen (jeweils mit Band-Meldung), Feuerwerk, Schneefall für 20 s,
+Silvester-Countdown im Schnelldurchlauf (10 s, dann Feuerwerk und Gruß; an
+echtem Silvester gesperrt, dort gehört die Pille dem echten Countdown) und
+die Saison-Deko jedes Anlasses für 45 s (`previewSeason` in season.js, gilt
+auch bei abgeschalteten Saison-Akzenten, danach wieder das Datum).
+
+**Begründung:** Wunsch des Nutzers, die Effekte vorführen zu können, ohne
+auf den Anlass zu warten oder am TV die Adresse (`?jetzt=`, `?moment=`) zu
+ändern. Über den Server, damit ein Klick am Handy auf dem echten Fernseher
+landet. In der Demo-Instanz (Admin + TV) geprüft, Validierung per
+WS-Testskript.
+
+## D-100 (2026-10-16): Effekte beenden, Raketen platzen sicher, Meilenstein-Kacheln in 2D
+
+**Entscheidung:**
+- Effekt-Demo bekommt „Alle Effekte beenden" (`demoEffect` mit `effect:
+  'clear'`): Der TV räumt laufenden Moment samt Warteschlange, Canvas-Effekte
+  (Konfetti, Feuerwerk, Bläschen, Fledermaus), Demo-Schnee, Band-Meldung,
+  Demo-Countdown und Saison-Vorschau sofort ab; noch ausstehende Demo-Timer
+  werden gelöscht. Stehende Deko nach Datum bleibt.
+- Feuerwerk: Eine Rakete platzt am Ziel **oder sobald ihr der Schwung
+  ausgeht** (vy > −2). Vorher bremste eine langsame Rakete (vy −12, Bremse
+  1,5 %/Bild, Reichweite ≈ 800 px) vor einem hohen Ziel aus und hing für
+  immer als Leuchtspur in der Luft — die „Striemen", die besonders im Winter
+  (Schnee hält die Zeichenschleife wach) auffielen.
+- Meilenstein-Bild: Kacheln klappen per `scaleY` statt `rotateX` mit
+  `perspective` auf. Mit der 3D-Variante malte ein Browser die Kacheln über
+  die Zahlkarte, trotz z-index.
+
+**Begründung:** Rückmeldungen des Nutzers (Screenshots). In der Demo-Instanz
+geprüft: Feuerwerk zeichnet und hinterlässt danach keinen Pixel, „Beenden"
+räumt Meilenstein, Konfetti, Countdown und Winter-Vorschau sofort ab.

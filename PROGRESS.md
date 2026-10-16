@@ -7,6 +7,19 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16 (D-099): **Effekt-Demo** im Admin (Reiter TV) — Plakat,
+Meilenstein, Konfetti, Fledermaus, Bläschen, Feuerwerk, Schnee,
+Silvester-Countdown und Saison-Deko auf Knopfdruck auf allen Fernsehern.
+In der Demo-Instanz (Admin + TV) geprüft, Server-Validierung per Testskript.
+Dazu (D-100) „Alle Effekte beenden", Feuerwerk ohne hängende Raketen-Striemen
+und Meilenstein-Kacheln in 2D (Karte lag in einem Browser hinter den Kacheln).
+Seit 2026-10-16: Dashboard-Kopf ohne „Dabei seit … · N Abende" — „Dabei
+seit" steht jetzt rechts im Kopf von „Deine Statistik", die Abende nur noch
+in der Statistik-Zelle (in der Demo-Instanz in Handybreite geprüft).
+TV-QR-Karte: Titel „Scan / zum Beitreten" statt „Zählen am Handy", neben
+dem Code mittig; „Mitmachen" steht im Kerben-Etikett. QR-Code freigestellt
+(keine eigene weiße Fläche, Module in Kartentinte) — nur noch ein Weißton
+(1600 × 900 und 800 × 450 geprüft).
 Seit 2026-10-15 (D-097/D-098): **Name dockt an** (D3) — beim Scrollen fliegen
 Initiale und Name im Dashboard stufenlos in eine Pille der fixierten Kopfleiste. Handy,
 Desktop und Firefox geprüft. Offen aus INSPIRATION-DESIGN: D1, D2, D4–D9.

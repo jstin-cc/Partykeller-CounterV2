@@ -79,6 +79,8 @@ export const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${Str
 // Die Klasse .season-deco gehört allein diesem Modul (decorate() räumt alle ab).
 let enabled = null;   // bis der erste State da ist, bleibt alles aus
 let current = null;
+let preview = null;   // Effekt-Demo (D-099): Anlass auf Zeit, auch wenn abgeschaltet
+let previewTimer = null;
 const listeners = new Set();
 
 export function onSeason(cb) { listeners.add(cb); cb(current); }
@@ -88,8 +90,22 @@ export function setSeasonEnabled(on) {
   refresh();
 }
 
+// Zeigt den Anlass s für ms Millisekunden, danach gilt wieder das Datum
+export function previewSeason(s, ms) {
+  clearTimeout(previewTimer);
+  preview = s;
+  refresh();
+  previewTimer = setTimeout(endPreview, ms);
+}
+
+export function endPreview() {
+  clearTimeout(previewTimer);
+  preview = null;
+  refresh();
+}
+
 function refresh() {
-  const s = enabled ? seasonAt() : null;
+  const s = preview ?? (enabled ? seasonAt() : null);
   if (s === current) return;
   current = s;
   if (s) document.documentElement.dataset.season = s;

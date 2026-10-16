@@ -521,11 +521,12 @@ try {
   @keyframes poster-pop { from { opacity: 0; transform: scale(0.6) rotate(-12deg); } }
   @keyframes poster-rise { from { opacity: 0; transform: translateY(30px); } }
 
-  /* Meilenstein-Bild: Kacheln klappen nacheinander auf, Pfeile fahren ein */
+  /* Meilenstein-Bild: Kacheln klappen nacheinander auf, Pfeile fahren ein.
+     Das Aufklappen ist bewusst 2D (scaleY): mit rotateX und perspective
+     malte Firefox die Kacheln über die Karte, trotz z-index */
   .ms-tiles {
     position: absolute; inset: 0; z-index: 0; display: grid; gap: 12px; padding: 12px;
     grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 1fr);
-    perspective: 1600px;
   }
   .ms-tile {
     display: grid; place-items: center; border-radius: 16px;
@@ -534,7 +535,7 @@ try {
   }
   .ms-tile.o { background: var(--accent); color: var(--accent-ink); }
   .ms-tile.d { background: var(--bg); color: transparent; -webkit-text-stroke: 2.5px var(--accent); }
-  @keyframes ms-flip { from { opacity: 0; transform: rotateX(90deg); } }
+  @keyframes ms-flip { from { opacity: 0; transform: scaleY(0); } }
   /* Die Karte springt deckend auf (nur Skalierung, keine Durchsicht) — halb
      durchsichtig sah sie aus, als läge sie hinter dem Raster */
   .ms-card {
@@ -679,7 +680,7 @@ try {
 import { AREA } from './js/area.js';
 import { connectState } from './js/ws-client.js';
 import { factList, fmtDay } from './js/facts.js';
-import { onSeason, setSeasonEnabled, newYear, mmss } from './js/season.js';
+import { onSeason, setSeasonEnabled, previewSeason, endPreview, newYear, mmss, now } from './js/season.js';
 import { createSeasonFx } from './js/seasonfx.js';
 import { initReveal, initNotches, notch, scribble, drawScribble } from './js/lando.js';
 
@@ -1335,6 +1336,7 @@ const weekdayOf = (iso) => { const [y, m, d] = iso.split('-').map(Number); retur
 
 const momentQueue = [];
 let momentBusy = false;
+let momentTimer = null;
 function moment(build, ms) {
   momentQueue.push([build, ms]);
   if (!momentBusy) nextMoment();
@@ -1348,10 +1350,19 @@ function nextMoment() {
   el.textContent = '';
   item[0](el);
   el.hidden = false;
-  setTimeout(() => {
+  momentTimer = setTimeout(() => {
     el.classList.add('is-leaving');
-    setTimeout(() => { el.hidden = true; el.textContent = ''; nextMoment(); }, reduced() ? 0 : 620);
+    momentTimer = setTimeout(() => { el.hidden = true; el.textContent = ''; nextMoment(); }, reduced() ? 0 : 620);
   }, item[1]);
+}
+// Laufenden Moment und Warteschlange sofort abräumen (Effekt-Demo, D-099)
+function clearMoments() {
+  momentQueue.length = 0;
+  clearTimeout(momentTimer);
+  momentBusy = false;
+  const el = $('takeover');
+  el.hidden = true;
+  el.textContent = '';
 }
 
 function posterMoment({ name, total, label, kicker }) {
@@ -1425,7 +1436,9 @@ function checkMoments(state, mode, switched) {
 
 connectState({
   onFact({ index }) { setFactIndex(index); },
+  onDemo(msg) { playDemo(msg); },
   onState(state) {
+    demoState = state;
     const { joinUrl, boardMode } = state;
     setSeasonEnabled(state.seasonal);   // Saison-Akzente (D-071), im Admin abschaltbar
     seasonFirstBeer(state.players);
@@ -1603,6 +1616,95 @@ onSeason((s) => {
   nextVolley = 0;
   if (s === 'silvester') { newYearTick(); nyTick = setInterval(newYearTick, 1000); }
 });
+
+// --- Effekt-Demo aus dem Admin (D-099) ---
+// Jeder Effekt läuft einmal so, wie er im echten Moment käme — mit Namen und
+// Zahlen aus dem aktuellen Stand. Daten und Einstellungen bleiben unberührt.
+let demoState = null;
+let demoNyTimer = null;
+const demoTimers = new Set();
+// setTimeout, das „Beenden" mit abräumt
+function demoLater(fn, ms) {
+  const id = setTimeout(() => { demoTimers.delete(id); fn(); }, ms);
+  demoTimers.add(id);
+}
+
+// Alles Laufende sofort beenden; stehende Saison-Deko nach Datum bleibt
+function clearDemo() {
+  for (const id of demoTimers) clearTimeout(id);
+  demoTimers.clear();
+  clearInterval(demoNyTimer);
+  clearMoments();
+  seasonFx.clear();
+  seasonFx.setSnow(season === 'winter' || season === 'silvester');
+  clearTimeout(bandTimer);
+  if (bandMoment) {
+    bandMoment = null;
+    if (facts.length) showFact(currentFact());
+  }
+  if (season !== 'silvester') $('season-countdown').hidden = true;
+  endPreview();
+}
+
+function playDemo({ effect, season: s }) {
+  if (effect === 'clear') { clearDemo(); return; }
+  const players = demoState?.players ?? [];
+  const today = boardRows(players, 'today')[0];
+  const top = today ?? boardRows(players, 'alltime')[0];
+  const name = top?.name ?? 'Brocky';
+  if (effect === 'poster') {
+    posterMoment(today
+      ? { name: today.name, total: today.total, label: 'Führt heute', kicker: 'Neue Nummer 1' }
+      : { name, total: top?.total ?? 9, label: 'All-Time-Spitze', kicker: 'Platz 1' });
+  } else if (effect === 'milestone') {
+    const house = players.reduce((n, p) => n + p.total, 0);
+    milestoneMoment(Math.max(500, Math.floor(house / 500) * 500), 'Getränk im Keller');
+  } else if (effect === 'confetti') {
+    seasonFx.confetti();
+    showMoment('Helau', `${name} ist die neue Nummer 1.`);
+  } else if (effect === 'bat') {
+    seasonFx.bat();
+    showMoment('Führungswechsel', `${name} übernimmt Platz 1.`);
+  } else if (effect === 'bubbles') {
+    const band = $('funfacts');
+    seasonFx.bubbles(band.offsetTop + band.parentElement.offsetTop);
+    showMoment('Oktoberfest', `O’zapft is! ${name} hat das erste Bier des Abends gezählt.`);
+  } else if (effect === 'fireworks') {
+    for (let wave = 0; wave < 2; wave++) demoLater(() => seasonFx.fireworks(7, 150), wave * 3500);
+  } else if (effect === 'snow') {
+    seasonFx.setSnow(true);
+    demoLater(() => seasonFx.setSnow(season === 'winter' || season === 'silvester'), 20 * 1000);
+  } else if (effect === 'countdown') {
+    demoNewYear();
+  } else if (effect === 'season') {
+    previewSeason(s, 45 * 1000);
+  }
+}
+
+// Silvester im Schnelldurchlauf: zehn Sekunden Countdown, dann Feuerwerk und
+// Gruß. An echtem Silvester gehört die Pille dem echten Countdown.
+function demoNewYear() {
+  if (season === 'silvester') return;
+  clearInterval(demoNyTimer);
+  const pill = $('season-countdown');
+  const year = now().getFullYear() + 1;
+  let left = 10;
+  const tick = () => {
+    if (left > 0) {
+      pill.innerHTML = `noch <b>${mmss(left)}</b> bis ${year}`;
+      pill.hidden = false;
+      left--;
+      return;
+    }
+    clearInterval(demoNyTimer);
+    pill.innerHTML = `<b>${year}</b> Frohes neues Jahr`;
+    for (let wave = 0; wave < 4; wave++) demoLater(() => seasonFx.fireworks(7, 150), wave * 3500);
+    showMoment('Neujahr', `Frohes neues Jahr! Prost auf ${year}.`, 15 * 1000);
+    demoLater(() => { if (season !== 'silvester') pill.hidden = true; }, 15 * 1000);
+  };
+  tick();
+  demoNyTimer = setInterval(tick, 1000);
+}
 </script>
 </body>
 </html>
