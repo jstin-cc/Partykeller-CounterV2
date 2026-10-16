@@ -1,6 +1,6 @@
 # Inspiration, Runde 4: Entwürfe L30–L38 (Stand 2026-10-16)
 
-**Status:** L33 umgesetzt (D-106), der Rest sind Vorschläge. Mockups im echten Theme
+**Status:** L33 (D-106) und L34 (nur im Jahresrückblick, D-108) umgesetzt, der Rest sind Vorschläge. Mockups im echten Theme
 (mit Animationen): [inspiration/l30-l38.html](inspiration/l30-l38.html).
 Was schon in den Runden davor steht ([INSPIRATION-LANDO.md](INSPIRATION-LANDO.md),
 [INSPIRATION-LANDO-2.md](INSPIRATION-LANDO-2.md), [INSPIRATION-3.md](INSPIRATION-3.md),
@@ -79,7 +79,7 @@ den Timing-Tower (L18), der bisher nur gleitet.
 Daten: vorhanden. Aufwand: klein (CSS-Animation, Kopien nur während der
 Bewegung).
 
-## L34 – Stempelkarte der Abende
+## L34 – Stempelkarte der Abende ✅ umgesetzt im Jahresrückblick (D-108)
 Im Profil ein Raster aller Party-Abende der Saison: dabei = Stempel mit Datum,
 leicht schräg, Abendsiege gefüllt in Orange; verpasst = gestrichelter Kreis.
 Der neueste Stempel schlägt mit Federn auf. Belohnt Dabeisein statt Trinken.

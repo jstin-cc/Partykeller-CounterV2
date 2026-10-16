@@ -837,8 +837,17 @@ export function createDb(dbPath) {
       rival = { name: stmts.getPlayer.get(other.pid)?.name ?? '—', total: other.n, ahead: pos > 0 };
     }
 
+    // Stempelkarte (L34): alle Party-Abende des Jahres — dabei = Stempel,
+    // gewonnen = gefüllter Stempel
+    const stamps = [];
     let wins = 0;
-    for (const [day, w] of getDayWinners()) if (w.playerId === id && day.startsWith(`${y}-`)) wins += 1;
+    for (const [day, w] of getDayWinners()) {
+      if (!day.startsWith(`${y}-`)) continue;
+      const win = w.playerId === id;
+      if (win) wins += 1;
+      stamps.push({ day, on: perDay.has(day), win });
+    }
+    stamps.sort((a, b) => a.day.localeCompare(b.day));
 
     const days = [...perDay.keys()].sort();
     return {
@@ -854,6 +863,7 @@ export function createDb(dbPath) {
       of: board.length,
       rival,
       wins,
+      stamps,
     };
   }
 

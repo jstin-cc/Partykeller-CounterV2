@@ -398,11 +398,25 @@ try {
   .rv-center { text-align: center; }
   .rv-cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
   .rv-cells .num { display: block; font-size: 40px; line-height: 0.9; }
+  /* Stempelkarte (L34) */
+  .rv-stamps { display: grid; grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr)); gap: 10px 6px; }
+  .rv-stamp {
+    position: relative; width: 100%; max-width: 72px; aspect-ratio: 1; margin: 0 auto;
+    display: grid; place-items: center; border-radius: 50%; container-type: inline-size;
+    font-weight: 800; letter-spacing: -0.02em;
+  }
+  .rv-stamp span { font-size: 23cqw; line-height: 1; }
+  .rv-stamp.on { color: var(--accent-text); border: 2.5px solid currentColor; transform: rotate(var(--r)); }
+  .rv-stamp.on::before { content: ''; position: absolute; inset: 9%; border-radius: 50%; border: 1px dashed currentColor; opacity: 0.7; }
+  .rv-stamp.win { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .rv-stamp.off { border: 1.5px dashed var(--line-strong); color: var(--ink-faint); font-weight: 700; }
+  .rv-slide:not([hidden]) .rv-stamp.on { animation: rv-stamp 0.55s var(--ease-spring) both; animation-delay: calc(var(--i) * var(--step) + 350ms); }
+  @keyframes rv-stamp { from { opacity: 0; transform: rotate(var(--r)) scale(1.8); } }
   .rv-actions { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
   .rv-actions .btn { width: 100%; justify-content: center; min-height: 52px; }
   .rv-actions .i-arrow { transform: rotate(135deg); }
   @media (prefers-reduced-motion: reduce) {
-    .rv-slide.is-in > * { animation: none; }
+    .rv-slide.is-in > *, .rv-slide .rv-stamp.on { animation: none; }
   }
 
   /* „+1" steigt beim Antippen auf (rein optisch, pointerdown) */
@@ -1282,6 +1296,25 @@ if (!token || !playerId) {
       const sub = el('div', 'rv-sub');
       sub.append(el('span', 't-h3', WEEKDAY[new Date(y, m - 1, d).getDay()]), el('span', 'num', `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`));
       add(rvTitle('Dein', '|bester|', 'Abend'), bigNum(r.best.total), sub, rvCurve(r.best.timeline));
+    }
+
+    // Stempelkarte (L34): jeder Party-Abend des Jahres ein Kreis — dabei =
+    // Stempel mit Datum, gewonnen = gefüllt; die Stempel schlagen nacheinander auf
+    if (r.stamps?.length > 1) {
+      const n = r.stamps.length;
+      const grid = el('div', 'rv-stamps');
+      grid.style.setProperty('--cols', n <= 12 ? 4 : n <= 20 ? 5 : n <= 30 ? 6 : n <= 42 ? 7 : 8);
+      grid.style.setProperty('--step', `${Math.min(60, Math.round(1500 / n))}ms`);
+      let k = 0;
+      for (const s of r.stamps) {
+        const [, m, d] = s.day.split('-').map(Number);
+        const st = el('div', `rv-stamp ${s.win ? 'on win' : s.on ? 'on' : 'off'}`);
+        st.append(el('span', '', `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.`));
+        st.style.setProperty('--r', `${((d * 53 + m * 29) % 31) - 15}deg`);
+        if (s.on) st.style.setProperty('--i', k++);
+        grid.append(st);
+      }
+      add(rvTitle('Dein+e', '|Abende|'), bigNum(r.nights, `von ${n}`), grid);
     }
 
     if (r.topHour) {

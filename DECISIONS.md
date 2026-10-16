@@ -2505,3 +2505,20 @@ mehr benutzt.
 hatte er ausdrücklich freigegeben. Die Liste gewinnt dadurch Platz für die
 Namen. Geprüft in der Demo-Instanz (Überholen per WS-Testskript: ▲▼
 erscheinen, keine Abstands- oder Bestwert-Elemente, keine Konsolenfehler).
+
+## D-108 (2026-10-16): Stempelkarte im Jahresrückblick (L34)
+
+**Entscheidung:** Der Jahresrückblick bekommt nach „Dein bester Abend“ die
+Seite „Deine Abende“: die Zahl der Abende, an denen man dabei war („5 von
+7“), darunter jeder Party-Abend des Jahres als Kreis mit Datum — dabei =
+Stempel (Kontur, leicht schräg), gewonnen = gefüllt in Orange, verpasst =
+gestrichelt. Die Stempel schlagen nacheinander auf. Das Raster passt die
+Spaltenzahl an die Zahl der Abende an (4 bis 8). Der Server liefert dafür in
+`/players/:id/review` neu `stamps: [{ day, on, win }]` (alle Party-Abende des
+Jahres, aus den Abendsiegern). Die Seite erscheint ab zwei Abenden im Jahr.
+Bewusst nicht im Profil und ohne die Serie (L35).
+
+**Begründung:** Wunsch des Nutzers — das Profil soll nicht voller werden;
+im Rückblick belohnt die Karte das Dabeisein statt der Menge. Geprüft in der
+Demo-Instanz in Handybreite (Daten, Übergang von „Dein bester Abend“,
+keine Konsolenfehler).

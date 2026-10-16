@@ -7,6 +7,9 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16 (D-108): **Stempelkarte im Rückblick** (L34) — neue Seite
+„Deine Abende“ mit jedem Party-Abend des Jahres als Stempel (gewonnen =
+gefüllt, verpasst = gestrichelt); Server liefert `stamps` im Review.
 Seit 2026-10-16 (D-107): **TV ohne Abstand und Bestwert-Etiketten** — die
 Spalte „Abstand“, das +X am Podest sowie „Bestwert“/„Hausrekord“ (samt
 Grün/Lila an der Gesamtzahl) sind weg; ▲▼ bei Positionswechseln bleibt.
