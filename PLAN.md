@@ -112,6 +112,7 @@ CREATE TABLE facts (                       -- eigene Fun-Facts/Meldungen (D-015)
 | `GET /api/export/backup` | – | Vollsicherung des Bereichs als JSON, `Content-Disposition: attachment`; **nur Admin** (D-034) |
 | `POST /api/import/backup` | `{password, backup}` | Sicherung einspielen — ersetzt den ganzen Bereich; **nur Admin** und nur mit `RESET_PASSWORD` (D-034) |
 | `GET /api/players/:id/stats` | – | persönliche Statistik + Achievements fürs Dashboard (D-015) |
+| `GET /api/session` | – | gilt das Spieler-Token (Bearer) noch? `{player}` oder 401 — das Dashboard meldet sich bei 401 ab (D-101) |
 | `GET /health` | – | `{ok: true}` |
 
 Die Login-Endpunkte sind rate-limitiert (D-015): nach 5 Fehlversuchen binnen
@@ -132,7 +133,10 @@ Spieler gedrosselt (Token-Bucket ~1/s, Burst 5), Admins ungedrosselt.
       "rank": 1, "beersToday": 3, "shotsToday": 1, "createdAt": "…" }
   ]
 }
-// Fehler an den Verursacher: { "type": "error", "message": "…" }
+// Fehler an den Verursacher: { "type": "error", "message": "…", "code"?: "auth", "ref"?: "…" }
+// code 'auth' = Token ungültig/Konto weg → neu anmelden (D-101)
+// Quittung, wenn die Client-Nachricht ein "ref" trug (D-101):
+// { "type": "ack", "ref": "reset" }
 // Stand des Fun-Fact-Bands (D-043), eigene Nachricht statt im State:
 // { "type": "fact", "index": 7, "since": 1788879291585, "seconds": 30 }
 // Effekt-Demo aus dem Admin (D-099), nur der TV reagiert:

@@ -1,6 +1,7 @@
 import { WebSocketServer } from 'ws';
 import { config } from './config.js';
-import { verifyToken, tokenArea, hashPin } from './auth.js';
+import { verifyToken, tokenArea, hashPin, checkPassword } from './auth.js';
+import { loginLimiter } from './ratelimit.js';
 import { validName, validPin, validFactTitle, validFactText, validNightName, normalizeJoinUrl } from './validate.js';
 import { validDayString } from './db.js';
 
@@ -172,12 +173,19 @@ function createHandlers(area) {
       if (!db.deletePlayer(id)) throw new Error('Nutzer nicht gefunden');
     },
 
-    reset(auth, { confirm, password }) {
+    reset(auth, { confirm, password }, { ip }) {
       requireAdmin(auth);
       if (confirm !== 'RESET') throw new Error('Reset braucht confirm: "RESET"');
-      // Eigenes Lösch-Passwort (RESET_PASSWORD, getrennt vom Admin-Login);
-      // gilt für beide Bereiche, löscht aber nur die DB dieses Bereichs (D-019).
-      if (password !== config.resetPassword) throw new Error('Falsches Passwort');
+      // Eigenes Lösch-Passwort (RESET_PASSWORD, getrennt vom Admin-Login),
+      // zeitkonstant verglichen und mit demselben Fehlversuch-Limit wie die
+      // Logins und der Backup-Import.
+      const wait = loginLimiter.blockedFor(ip);
+      if (wait !== null) throw new Error(`Zu viele Fehlversuche – bitte ${wait} Sekunden warten.`);
+      if (!checkPassword(password, config.resetPassword)) {
+        loginLimiter.fail(ip);
+        throw new Error('Falsches Passwort');
+      }
+      loginLimiter.clear(ip);
       db.resetAll();
     },
 
@@ -220,6 +228,14 @@ function checkLogFields(playerId, drink, ts) {
 
 function requireAdmin(auth) {
   if (auth?.role !== 'admin') throw new Error('Nur für Admins erlaubt');
+}
+
+// Fehler und Quittungen an den Absender. `ref` ist eine frei wählbare Kennung
+// aus der Nachricht: Damit ordnet der Client Antwort und Aktion einander zu
+// (z. B. „Reset geklappt" statt irgendeines State-Broadcasts, D-101).
+// `code: 'auth'` heißt: Token taugt nicht, neu anmelden.
+function reply(ws, msg) {
+  if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
 }
 
 // Increment-Throttle pro SPIELER (nicht pro Verbindung), damit Neu-Verbinden den
@@ -342,7 +358,8 @@ export function setupWs(server, areas) {
     }, HEARTBEAT_MS);
     heartbeat.unref?.();
 
-    wss.on('connection', (ws) => {
+    wss.on('connection', (ws, req) => {
+      const ip = req?.socket?.remoteAddress ?? '';
       // Ohne 'error'-Listener wirft Node bei einem kaputten Frame (ungültiges
       // UTF-8, zu große Nachricht) eine unbehandelte Exception und der ganze
       // Server stirbt (D-046). ws schließt die Verbindung danach selbst.
@@ -358,38 +375,51 @@ export function setupWs(server, areas) {
         try {
           msg = JSON.parse(raw);
         } catch {
-          ws.send(JSON.stringify({ type: 'error', message: 'Ungültiges JSON' }));
+          reply(ws, { type: 'error', message: 'Ungültiges JSON' });
           return;
         }
+        if (!msg || typeof msg !== 'object') {
+          reply(ws, { type: 'error', message: 'Ungültige Nachricht' });
+          return;
+        }
+        const ref = typeof msg.ref === 'string' ? msg.ref.slice(0, 40) : undefined;
+        const fail = (message, code) => reply(ws, { type: 'error', message, code, ref });
 
-        const handler = handlers[msg?.type];
+        // Nur eigene Handler, keine geerbten Objekt-Methoden (toString & Co.)
+        const handler = typeof msg.type === 'string' && Object.hasOwn(handlers, msg.type) ? handlers[msg.type] : null;
         if (!handler) {
-          ws.send(JSON.stringify({ type: 'error', message: `Unbekannter Nachrichtentyp: ${msg?.type}` }));
+          fail(`Unbekannter Nachrichtentyp: ${msg.type}`);
           return;
         }
 
         const auth = verifyToken(msg.token);
         if (!auth) {
-          ws.send(JSON.stringify({ type: 'error', message: 'Nicht angemeldet oder Token ungültig' }));
+          fail('Nicht angemeldet oder Token ungültig', 'auth');
           return;
         }
         // Bereichs-Stempel prüfen: fremde Tokens gelten hier nicht (D-019)
         if (tokenArea(auth) !== area.id) {
-          ws.send(JSON.stringify({ type: 'error', message: 'Token gehört zum anderen Bereich' }));
+          fail('Token gehört zum anderen Bereich', 'auth');
+          return;
+        }
+        // Spieler-Token eines gelöschten Kontos: neu anmelden
+        if (auth.role === 'player' && !area.db.getPlayer(auth.sub)) {
+          fail('Konto nicht gefunden', 'auth');
           return;
         }
 
         // Spieler-Increments drosseln (pro Spieler; Admins bleiben ungedrosselt)
         if (msg.type === 'increment' && auth.role === 'player' && !allowIncrement(auth.sub)) {
-          ws.send(JSON.stringify({ type: 'error', message: 'Immer mit der Ruhe – gleich geht’s weiter. 🍺' }));
+          fail('Immer mit der Ruhe – gleich geht’s weiter. 🍺');
           return;
         }
 
         try {
           // false = Handler hat nichts am Zustand geändert (Effekt-Demo)
-          if (handler(auth, msg) !== false) area.broadcast();
+          if (handler(auth, msg, { ip }) !== false) area.broadcast();
+          if (ref) reply(ws, { type: 'ack', ref });
         } catch (err) {
-          ws.send(JSON.stringify({ type: 'error', message: err.message }));
+          fail(err.message);
         }
       });
     });

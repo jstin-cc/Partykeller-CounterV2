@@ -9,7 +9,7 @@ import { validName, validPin } from './validate.js';
 import { validDayString } from './db.js';
 import { archiveCsv } from './csv.js';
 import { parseBackup } from './backup.js';
-import { createLoginLimiter, createRateLimiter } from './ratelimit.js';
+import { loginLimiter, createRateLimiter } from './ratelimit.js';
 
 // Datum fürs Dateinamens-Suffix der Sicherung (lokal, nicht UTC)
 function todayStamp() {
@@ -31,8 +31,7 @@ app.use((req, res, next) =>
 
 // Rate-Limit gegen PIN-Raten: max. 5 Fehlversuche pro Minute und IP,
 // danach 60 Sekunden Sperre. Erfolgreicher Login setzt zurück.
-// Gemeinsam für beide Bereiche (die IP ist dieselbe Person).
-const loginLimiter = createLoginLimiter();
+// Geteilt mit dem Reset über den WebSocket (ratelimit.js).
 
 // Missbrauchsschutz für die offene Kontoerstellung: max. 6 neue Konten pro
 // Minute und IP, und ein harter Gesamt-Deckel pro Bereich (verhindert
@@ -190,6 +189,16 @@ function createApiRouter(area) {
       player: { id: player.id, name: player.name },
       token: playerToken(player.id, area.id),
     });
+  });
+
+  // Gilt das Token auf diesem Handy noch? Das Dashboard fragt beim Öffnen
+  // nach — nach einem neuen TOKEN_SECRET oder einem gelöschten Konto meldet es
+  // sich dann ab, statt jeden Tipp still zu verwerfen.
+  router.get('/session', (req, res) => {
+    const auth = verifyToken((req.get('authorization') ?? '').replace(/^Bearer /, ''));
+    const player = auth?.role === 'player' && tokenArea(auth) === area.id ? db.getPlayer(auth.sub) : null;
+    if (!player) return res.status(401).json({ error: 'Nicht angemeldet' });
+    res.json({ player: { id: player.id, name: player.name } });
   });
 
   router.post('/login', (req, res) => {
