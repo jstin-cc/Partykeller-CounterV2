@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Partykeller – Prospekt</title>
+<link rel="stylesheet" href="../../public/css/theme.css">
+<style>
+  @page { size: A4; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #05070b; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 9.6pt; line-height: 1.45; }
+
+  .sheet {
+    position: relative; width: 210mm; height: 297mm; overflow: hidden;
+    padding: 15mm 15mm 0; background: var(--bg); color: var(--ink);
+    display: flex; flex-direction: column; break-after: page; isolation: isolate;
+    /* theme.css hat ein gleichnamiges Blatt von unten (max-height 88vh, runde
+       Ecken oben) — das hier ist eine volle A4-Seite */
+    max-height: none; inset: auto; z-index: auto; border: 0; border-radius: 0;
+  }
+  .sheet::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: var(--topo-line);
+    -webkit-mask: url('../../public/assets/topo-portrait.svg') center / cover no-repeat;
+    mask: url('../../public/assets/topo-portrait.svg') center / cover no-repeat;
+  }
+  .sheet.cream { background: #f4f4ed; color: #0f131c; --ink: #0f131c; --ink-2: #2a2f3a; --ink-muted: #5f6254; --ink-faint: #8c8f80; --line: rgb(40 44 32 / 0.14); --line-strong: rgb(40 44 32 / 0.3); --accent-text: #c24f00; --topo-line: #dcdfd6; --surface: #ebeee0; }
+  .foot {
+    margin-top: auto; display: flex; justify-content: space-between; align-items: center;
+    padding: 4mm 0 7mm; border-top: 0.3mm solid var(--line); font-size: 7pt;
+  }
+  .foot .eyebrow { font-size: 6.6pt; }
+  .pn { font-weight: 800; font-size: 8pt; color: var(--accent-text); }
+
+  /* Typo (feste Druckgrößen statt vw) */
+  .kick { display: flex; align-items: center; gap: 3mm; margin-bottom: 4mm; }
+  .kick::before { content: ''; width: 7mm; height: 0.5mm; background: var(--accent); }
+  .kick .eyebrow { font-size: 7.4pt; color: var(--accent-text); }
+  .h1 { font: 800 25mm/0.98 var(--font-sans); text-transform: uppercase; letter-spacing: -0.035em; margin: 0; }
+  .h2 { font: 800 15mm/0.94 var(--font-sans); text-transform: uppercase; letter-spacing: -0.03em; margin: 0; }
+  .h3 { font: 800 5.2mm/1 var(--font-sans); text-transform: uppercase; letter-spacing: -0.02em; margin: 0 0 1.6mm; }
+  .s { font-family: var(--font-serif); font-weight: 400; color: var(--accent-text); text-transform: uppercase; letter-spacing: -0.01em; -webkit-text-stroke: 0.022em currentColor; paint-order: stroke fill; }
+  .lead { font-size: 11pt; line-height: 1.45; color: var(--ink-2); max-width: 150mm; margin: 5mm 0 0; }
+  p { margin: 0; color: var(--ink-2); }
+  .muted { color: var(--ink-muted); }
+
+  /* Rahmen */
+  .ph { position: relative; flex: none; border-radius: 7.5mm; padding: 1.4mm; background: #05070b; border: 0.35mm solid rgb(244 244 237 / 0.22); }
+  .ph img { display: block; width: 100%; border-radius: 6.2mm; }
+  .cream .ph { border-color: rgb(40 44 32 / 0.25); }
+  .tvf { position: relative; border-radius: 3mm; padding: 1.2mm; background: #05070b; border: 0.35mm solid rgb(244 244 237 / 0.22); }
+  .tvf img { display: block; width: 100%; border-radius: 2mm; }
+  .shot { display: block; width: 100%; border-radius: 3mm; border: 0.35mm solid var(--line-strong); }
+  .cap { margin-top: 2.4mm; font-size: 6.8pt; }
+
+  /* Listen und Karten */
+  .feats { display: grid; gap: 3.2mm 6mm; }
+  .feat { padding-left: 4.4mm; position: relative; }
+  .feat::before { content: ''; position: absolute; left: 0; top: 1.4mm; width: 2mm; height: 2mm; border-radius: 0.4mm; background: var(--accent); }
+  .feat b { display: block; font: 800 8.6pt/1.15 var(--font-sans); text-transform: uppercase; letter-spacing: 0.01em; color: var(--ink); margin-bottom: 0.8mm; }
+  .card { position: relative; padding: 5mm 5mm 11mm; --notch-fill: var(--surface); }
+  .card .notch-tag { font-size: 7pt; height: 8mm; }
+  .card.acc { --notch-fill: var(--accent); color: var(--accent-ink); }
+  .card.acc p, .card.acc .eyebrow { color: var(--accent-ink); }
+  .bignum { font: 800 20mm/0.8 var(--font-sans); letter-spacing: -0.05em; }
+  .row { display: flex; gap: 6mm; align-items: flex-start; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
+  .chip { font-size: 6.6pt; }
+  table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+  th { text-align: left; font: 700 6.6pt/1 var(--font-sans); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); padding: 0 0 2mm; border-bottom: 0.3mm solid var(--line-strong); }
+  td { padding: 2.2mm 2mm 2.2mm 0; border-bottom: 0.3mm solid var(--line); vertical-align: top; color: var(--ink-2); }
+  td:first-child { font-weight: 800; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+  code, .code { font-family: ui-monospace, Consolas, monospace; font-size: 7.6pt; }
+  .code { display: block; white-space: pre; padding: 4mm 5mm; border-radius: 2.4mm; background: #05070b; color: #f4f4ed; line-height: 1.6; border: 0.3mm solid rgb(244 244 237 / 0.14); }
+  .code .c { color: #8c93a6; }
+
+  /* Titelseite */
+  .cover { padding-top: 13mm; }
+  .cover .wm { font-size: 9mm; }
+  .cover-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .cover-logo { width: 26mm; aspect-ratio: 1200 / 1000; background: var(--ink); -webkit-mask: url('../../public/assets/logo.png') center / contain no-repeat; mask: url('../../public/assets/logo.png') center / contain no-repeat; }
+  .cover-title { margin-top: 15mm; }
+  .cover-title .h1 { font-size: 31mm; }
+  .collage { position: relative; height: 128mm; margin-top: 8mm; }
+  .collage .tvf { position: absolute; right: -24mm; top: 4mm; width: 168mm; transform: rotate(-4deg); }
+  .collage .ph { position: absolute; left: 4mm; top: 6mm; width: 43mm; transform: rotate(3deg); box-shadow: 0 6mm 14mm rgb(0 0 0 / 0.55); }
+  .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; margin-top: 6mm; }
+  .pillars div { border-top: 0.5mm solid var(--accent); padding-top: 2.6mm; }
+  .pillars b { display: block; font: 800 9pt/1.1 var(--font-sans); text-transform: uppercase; margin-bottom: 1mm; }
+
+  /* Design-Seite */
+  .sw { border-radius: 2.4mm; height: 26mm; padding: 3mm; display: flex; flex-direction: column; justify-content: flex-end; font-size: 7pt; border: 0.3mm solid var(--line); }
+  .sw b { font: 800 8pt/1 var(--font-sans); text-transform: uppercase; display: block; margin-bottom: 0.8mm; }
+  .spec { border-top: 0.3mm solid var(--line-strong); padding-top: 3mm; }
+  .scribble-u { position: relative; display: inline-block; }
+  .scribble-u svg { position: absolute; left: -2%; right: -2%; bottom: -1.6mm; width: 104%; height: 4mm; }
+  .laurel-mark { width: 14mm; height: 14mm; background: var(--accent-text); -webkit-mask: url('../../public/assets/laurel.svg') center / contain no-repeat; mask: url('../../public/assets/laurel.svg') center / contain no-repeat; }
+  .sig { width: 90mm; height: 47mm; }
+  .sig path { fill: none; stroke: var(--accent-text); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body class="area-pk">
+
+<!-- 1 Titel -->
+<section class="sheet cover">
+  <div class="cover-top">
+    <span class="wordmark wm"><span class="wm-top">Party</span><span class="wm-bottom">Keller</span></span>
+    <span class="cover-logo" role="img" aria-label="SV Partykeller Logo"></span>
+  </div>
+  <div class="cover-title">
+    <div class="kick"><span class="eyebrow">SV Partykeller · Getränke-Counter</span></div>
+    <h1 class="h1">Der Abend<br><span class="s scribble-u">zählt.<svg viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" stroke="#ff6b00" stroke-width="4" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></span></h1>
+  </div>
+  <div class="collage">
+    <div class="tvf"><img src="screens/tv.png" alt=""></div>
+    <div class="ph"><img src="screens/m-count.png" alt=""></div>
+  </div>
+  <div class="pillars">
+    <div><b>Am Handy zählen</b><p>Ein Tipp aufs Getränk, fertig. Kein App-Store, läuft im Browser.</p></div>
+    <div><b>Auf dem TV feiern</b><p>Live-Rangliste mit Podest, Timing-Tower und großen Momenten.</p></div>
+    <div><b>Offline im Keller</b><p>Ein Laptop oder Raspberry Pi im WLAN. Kein Internet, keine Cloud.</p></div>
+  </div>
+  <div class="foot"><span class="eyebrow">Prospekt · Funktionen, Benutzung und Design</span><span class="eyebrow">Stand Oktober 2026</span></div>
+</section>
+
+<!-- 2 So funktioniert's -->
+<section class="sheet">
+  <div class="kick"><span class="eyebrow">01 · Überblick</span></div>
+  <h2 class="h2">So<br><span class="s">funktioniert's</span></h2>
+  <p class="lead">Gäste zählen ihre Getränke am eigenen Handy, der Fernseher im Keller zeigt live, wer vorne liegt. Alles läuft auf einem einzigen Rechner im eigenen WLAN – die Daten bleiben im Keller.</p>
+  <div class="grid3" style="margin-top:10mm">
+    <div class="card acc" data-notch="tabW:70;tabH:30;r:14;slant:18"><span class="bignum">01</span><h3 class="h3" style="margin-top:5mm">Starten</h3><p>Laptop oder Raspberry Pi ans WLAN, Server starten, am TV die Rangliste öffnen.</p><span class="notch-tag">Ein Befehl</span></div>
+    <div class="card" data-notch="tabW:70;tabH:30;r:14;slant:18"><span class="bignum">02</span><h3 class="h3" style="margin-top:5mm">Beitreten</h3><p>QR-Code auf dem TV scannen, Namen eintragen, PIN nach Wunsch. Drei kurze Willkommensseiten.</p><span class="notch-tag">10 Sekunden</span></div>
+    <div class="card" data-notch="tabW:70;tabH:30;r:14;slant:18"><span class="bignum">03</span><h3 class="h3" style="margin-top:5mm">Zählen</h3><p>Bier, Shot oder Mische antippen. Der TV zieht im selben Moment nach.</p><span class="notch-tag">Live</span></div>
+  </div>
+  <div class="grid2" style="margin-top:12mm">
+    <div class="feats">
+      <div class="feat"><b>Live für alle</b><p>Jeder Tipp geht per WebSocket sofort an alle Handys und den TV.</p></div>
+      <div class="feat"><b>Ohne Installation</b><p>Läuft in jedem Handy-Browser und lässt sich als App auf den Startbildschirm legen.</p></div>
+      <div class="feat"><b>Dauerhaft gespeichert</b><p>SQLite-Datenbank auf dem Rechner. Ein Neustart verliert weder Getränke noch Logins.</p></div>
+    </div>
+    <div class="feats">
+      <div class="feat"><b>Ein Abend bis 6 Uhr</b><p>Alles nach Mitternacht zählt noch zum Abend davor – so wie man feiert.</p></div>
+      <div class="feat"><b>Fair und geschützt</b><p>Jeder zählt nur sich selbst und nur nach oben. Korrekturen macht der Admin.</p></div>
+      <div class="feat"><b>Mit Gedächtnis</b><p>Jeder Abend landet im Archiv: Sieger, Verlauf, Story-Bild, Jahresrückblick.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span class="eyebrow">SV Partykeller · Getränke-Counter</span><span class="pn">02</span></div>
+</section>
+
+<!-- 3 Handy: Anmeldung & Zählen -->
+<section class="sheet">
+  <div class="kick"><span class="eyebrow">02 · Am Handy</span></div>
+  <h2 class="h2">Anmelden<br>und <span class="s">zählen</span></h2>
+  <div class="row" style="margin-top:9mm">
+    <div style="width:54mm"><div class="ph"><img src="screens/m-login.png" alt=""></div><div class="eyebrow cap">Anmeldung</div></div>
+    <div style="width:54mm"><div class="ph"><img src="screens/m-onboarding.png" alt=""></div><div class="eyebrow cap">Willkommen für neue Konten</div></div>
+    <div style="width:54mm"><div class="ph"><img src="screens/m-count.png" alt=""></div><div class="eyebrow cap">Zählen</div></div>
+  </div>
+  <div class="grid3" style="margin-top:8mm">
+    <div class="feats">
+      <div class="feat"><b>Wer bist du?</b><p>Alle Konten als Liste, das zuletzt genutzte steht oben. Neues Konto mit Name und optionaler 4-stelliger PIN.</p></div>
+    </div>
+    <div class="feats">
+      <div class="feat"><b>Drei Willkommensseiten</b><p>Getränke zählen, Rangliste am TV, Profil – mit „Weiter" und „Überspringen".</p></div>
+    </div>
+    <div class="feats">
+      <div class="feat"><b>Drei Getränkekarten</b><p>Bier, Shots, Mischen. Antippen zählt +1, die alte Zahl hallt als Umriss nach. Oben „Getränke heute" mit ▲▼ zum eigenen Schnitt um diese Uhrzeit.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span class="eyebrow">SV Partykeller · Getränke-Counter</span><span class="pn">03</span></div>
+</section>
+
+<!-- 4 Profil -->
+<section class="sheet">
+  <div class="kick"><span class="eyebrow">03 · Profil</span></div>
+  <h2 class="h2">Dein<br><span class="s">Profil</span></h2>
+  <div class="row" style="margin-top:9mm">
+    <div style="width:54mm"><div class="ph"><img src="screens/m-profile.png" alt=""></div><div class="eyebrow cap">Rangliste und Rückblick</div></div>
+    <div style="width:54mm"><div class="ph"><img src="screens/m-stats.png" alt=""></div><div class="eyebrow cap">Statistik · Name in der Kopfleiste</div></div>
+    <div style="width:54mm"><div class="ph"><img src="screens/m-badges.png" alt=""></div><div class="eyebrow cap">Abzeichen</div></div>
+  </div>
+  <div class="grid2" style="margin-top:8mm">
+    <div class="feats">
+      <div class="feat"><b>Dein Platz</b><p>Heute oder All-Time umschaltbar, mit „Vor dir" und „Hinter dir" samt Abstand. Die ganze Rangliste öffnet sich als Blatt von unten.</p></div>
+      <div class="feat"><b>Statistik</b><p>All-Time-Stand mit den Ständen der letzten Abende, Abende, bester Abend, Schnitt, eigene Mischung und Anteil am Haus.</p></div>
+    </div>
+    <div class="feats">
+      <div class="feat"><b>Abzeichen</b><p>Tagessieger, Erster Trinker, Mitternachtsbier, Drei in einer Stunde, Mischmeister und Stammgast-Stufen ab 10 Abenden.</p></div>
+      <div class="feat"><b>Name dockt an</b><p>Beim Scrollen fliegen Initiale und Name stufenlos in die Kopfleiste – ein Tipp darauf, und es geht nach oben.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span class="eyebrow">SV Partykeller · Getränke-Counter</span><span class="pn">04</span></div>
+</section>
+
+<!-- 5 Jahresrückblick -->
+<section class="sheet">
+  <div class="kick"><span class="eyebrow">04 · Rückblick</span></div>
+  <h2 class="h2">Dein<br><span class="s">Jahr</span></h2>
+  <p class="lead">Sechs Story-Seiten wie in den großen Musik-Apps: Summe, Lieblingsgetränk, bester Abend mit Verlauf, stärkste Stunde, Rivale und Platz. Rechts tippen blättert, links zurück, Halten pausiert.</p>
+  <div class="row" style="margin-top:8mm">
+    <div style="width:44mm"><div class="ph"><img src="screens/m-review-1.png" alt=""></div><div class="eyebrow cap">Dein Jahr</div></div>
+    <div style="width:44mm"><div class="ph"><img src="screens/m-review-2.png" alt=""></div><div class="eyebrow cap">Dein Getränk</div></div>
+    <div style="width:44mm"><div class="ph"><img src="screens/m-review-5.png" alt=""></div><div class="eyebrow cap">Dein Rivale</div></div>
+    <div style="width:42mm; margin-top:4mm"><img class="shot" src="screens/story-jahr.png" alt=""><div class="eyebrow cap">Als Bild 1080 × 1920</div></div>
+  </div>
+  <div class="grid2" style="margin-top:8mm">
+    <div class="feat"><b>Zum Teilen</b><p>Die letzte Seite speichert den Rückblick als Story-Bild fürs Handy – direkt aus dem Browser, ohne Server und ohne Internet.</p></div>
+    <div class="feat"><b>Jahr nach Party-Tagen</b><p>Gezählt wird das Kalenderjahr; ein Abend bis 6 Uhr früh gehört zum Vortag.</p></div>
+  </div>
+  <div class="foot"><span class="eyebrow">SV Partykeller · Getränke-Counter</span><span class="pn">05</span></div>
+</section>
+
+<!-- 6 TV -->
+<section class="sheet">
+  <div class="kick"><span class="eyebrow">05 · Am Fernseher</span></div>
+  <h2 class="h2">Die<br><span class="s">Rangliste</span></h2>
+  <div class="tvf" style="margin-top:9mm"><img src="screens/tv.png" alt=""></div>
+  <div class="grid2" style="margin-top:8mm">
+    <div class="feats">
+      <div class="feat"><b>Drei Ansichten</b><p>All-Time, Heute oder ein Abend aus dem Archiv – der Admin schaltet um, der TV wechselt mit einer Schiebe-Animation.</p></div>
+      <div class="feat"><b>Podest und Liste</b><p>Top 3 als Kerbenkarten in Orange, Creme und Navy, ab Platz 4 eine durchlaufende Liste mit Bier, Shots, Mischen und Gesamt.</p></div>
+      <div class="feat"><b>QR-Code zum Mitmachen</b><p>Oben rechts – scannen, Namen eintragen, mitzählen.</p></div>
+    </div>
+    <div class="feats">
+      <div class="feat"><b>Timing-Tower wie in der F1</b><p>Abstand zum Vordermann, ▲▼ bei Platzwechseln, „Bestwert" in Grün und „Hausrekord" in Lila.</p></div>
+      <div class="feat"><b>Fun-Facts und Rekordkurs</b><p>Unten laufen Rekorde, Bestleistungen, runde Marken und eigene Meldungen. 🔥 zeigt, wenn der Abend schneller läuft als der Rekordabend.</p></div>
+      <div class="feat"><b>Auf jedem Bildschirm gleich</b><p>Gebaut als 1080p-Bühne, die sich auf jede Auflösung skaliert.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span class="eyebrow">SV Partykeller · Getränke-Counter</span><span class="pn">06</span></div>
+</section>
+
+<!-- 7 TV-Momente -->
+<section class="sheet">
+  <div class="kick"><span class="eyebrow">06 · Große Momente</span></div>
+  <h2 class="h2">Wenn's<br><span class="s">knallt</span></h2>
+  <div class="grid2" style="margin-top:9mm">
+    <div><div class="tvf"><img src="screens/tv-plakat.png" alt=""></div><h3 class="h3" style="margin-top:4mm">Namens-Plakat</h3><p>Der Name riesig als Umriss, davor die Initiale im Lorbeer – wenn jemand die Führung übernimmt oder ein Abend auf den TV gelegt wird.</p></div>
+    <div><div class="tvf"><img src="screens/tv-meilenstein.png" alt=""></div><h3 class="h3" style="margin-top:4mm">Meilenstein</h3><p>Bei runden Marken klappt ein Raster aus „PROST"-Kacheln auf: alle 500 Getränke im Haus, 100er pro Person, 50er je Sorte.</p></div>
+  </div>
+  <h3 class="h3" style="margin-top:10mm">Saison-Akzente</h3>
+  <table>
+    <tr><th>Anlass</th><th>Zeitraum</th><th>Am Handy und TV</th><th>Moment auf dem TV</th></tr>
+    <tr><td>Oktoberfest</td><td>Wiesn-Zeit</td><td>Blau-weiße Wimpelkette</td><td>„O'zapft is!" beim ersten Bier</td></tr>
+    <tr><td>Halloween</td><td>31.10.</td><td>Kürbis-Laternen an der Unterkante</td><td>Fledermaus bei Führungswechsel</td></tr>
+    <tr><td>Winter</td><td>1.12. bis 6.1.</td><td>Schneewehe, am TV leiser Schneefall</td><td>–</td></tr>
+    <tr><td>Silvester</td><td>31.12. ab 18 Uhr</td><td>Countdown in der letzten Stunde</td><td>Feuerwerk um Mitternacht</td></tr>
+    <tr><td>Fasching</td><td>Weiberfastnacht bis Dienstag</td><td>Luftschlangen</td><td>Konfetti bei Führungswechsel</td></tr>
+  </table>
+  <p class="muted" style="margin-top:3mm;font-size:7.6pt">Alles schaltet sich nach Datum selbst ein, ist im Admin abschaltbar und bei „Bewegung reduzieren" ruhig.</p>
+  <div class="foot"><span class="eyebrow">SV Partykeller · Getränke-Counter</span><span class="pn">07</span></div>
+</section>
+
+<!-- 8 Archiv -->
+<section class="sheet cream">
+  <div class="kick"><span class="eyebrow">07 · Abend-Archiv</span></div>
+  <h2 class="h2">Alle<br><span class="s">Abende</span></h2>
+  <div class="grid2" style="margin-top:9mm; grid-template-columns: 1.15fr 1fr; align-items:start">
+    <div><img class="shot" src="screens/d-archiv-hero.png" alt=""><div class="eyebrow cap">Die Kennzahlen als Headline</div></div>
+    <div><img class="shot" src="screens/d-archiv-hof.png" alt=""><div class="eyebrow cap">Hall of Fame der Abendsieger</div></div>
+  </div>
+  <div class="row" style="margin-top:6mm">
+    <div style="flex:1"><img class="shot" src="screens/d-archiv-deck.png" alt=""><div class="eyebrow cap">Jeder Abend als Karte im 3D-Register</div></div>
+    <div style="width:38mm"><img class="shot" src="screens/story-abend.png" alt=""><div class="eyebrow cap">Story-Bild eines Abends</div></div>
+  </div>
+  <div class="grid3" style="margin-top:6mm">
+    <div class="feat"><b>3D-Register</b><p>Wischen, ziehen oder Pfeile: Die Karten drehen sich wie auf einer Trommel weg.</p></div>
+    <div class="feat"><b>Verlauf und Sieger</b><p>Getränke pro Stunde mit Spitzenstunde, Bilanz und Abendsieger je Karte.</p></div>
+    <div class="feat"><b>Story, CSV, TV</b><p>Story-Bild für alle; für den Admin CSV-Export, Abend benennen und „Auf den TV".</p></div>
+  </div>
+  <div class="foot"><span class="eyebrow">SV Partykeller · Getränke-Counter</span><span class="pn">08</span></div>
+</section>
+
+<!-- 9 Admin -->
+<section class="sheet">
+  <div class="kick"><span class="eyebrow">08 · Admin</span></div>
+  <h2 class="h2">Die<br><span class="s">Zentrale</span></h2>
+  <img class="shot" src="screens/d-admin.png" alt="" style="margin-top:9mm">
+  <div class="grid3" style="margin-top:8mm">
+    <div class="feats">
+      <div class="feat"><b>Konten und Zähler</b><p>Suchen, filtern, Zahlen direkt eintippen; umbenennen, PIN setzen, ausblenden oder löschen.</p></div>
+      <div class="feat"><b>Getränke-Protokoll</b><p>Jedes Getränk eines Abends einzeln: ändern, löschen mit Rückgängig, nachtragen, Doppeltipps erkennen.</p></div>
+    </div>
+    <div class="feats">
+      <div class="feat"><b>TV steuern</b><p>Ansicht, Archiv-Abend, Rotationstempo und Fun-Fact-Takt; alle Fun-Facts sehen und weiterschalten.</p></div>
+      <div class="feat"><b>Eigene Meldungen</b><p>Ansagen fürs Fun-Fact-Band schreiben und bearbeiten, QR-Adresse setzen.</p></div>
+    </div>
+    <div class="feats">
+      <div class="feat"><b>Sicherung</b><p>Komplettes Backup als Datei herunterladen und im Notfall wieder einspielen.</p></div>
+      <div class="feat"><b>Geschützt</b><p>Admin-Passwort nur in der Konfiguration, Reset mit eigenem Lösch-Passwort, Logins mit Sperre nach Fehlversuchen.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span class="eyebrow">SV Partykeller · Getränke-Counter</span><span class="pn">09</span></div>
+</section>
+
+<!-- 10 Design -->
+<section class="sheet">
+  <div class="kick"><span class="eyebrow">09 · Design</span></div>
+  <h2 class="h2">Look<br>und <span class="s">Gefühl</span></h2>
+  <p class="lead">Die Designsprache ist von der Website des Formel-1-Fahrers Lando Norris inspiriert: riesige Versalien, Serif-Akzente, Höhenlinien, Kerbenkarten und viel Bewegung – flach, ohne Fotos, ohne Effekthascherei.</p>
+  <h3 class="h3" style="margin-top:8mm">Farben</h3>
+  <div class="grid3" style="grid-template-columns: repeat(5, 1fr); gap: 3mm">
+    <div class="sw" style="background:#0f131c;color:#f4f4ed"><b>Fast-Schwarz</b>#0F131C · Grund</div>
+    <div class="sw" style="background:#f4f4ed;color:#0f131c"><b>Off-White</b>#F4F4ED · Schrift, Shots</div>
+    <div class="sw" style="background:#ff6b00;color:#140a02"><b>Orange</b>#FF6B00 · Akzent, Bier</div>
+    <div class="sw" style="background:#2c3650;color:#f4f4ed"><b>Navy-Grau</b>#2C3650 · Mischen</div>
+    <div class="sw" style="background:#efefe5;color:#0f131c"><b>Creme</b>#EFEFE5 · helle Kapitel</div>
+  </div>
+  <div class="grid2" style="margin-top:8mm">
+    <div class="spec"><div class="eyebrow">Grotesk · Mona Sans</div><div style="font:800 15mm/0.9 var(--font-sans);letter-spacing:-0.04em;text-transform:uppercase;margin-top:3mm">Prost 123</div><p class="muted" style="margin-top:2mm;font-size:7.6pt">Variabel in Breite und Gewicht: Versal-Headlines, Zahlen, Fließtext.</p></div>
+    <div class="spec"><div class="eyebrow">Serif · Instrument Serif</div><div style="font:400 17mm/0.9 var(--font-serif);color:var(--accent-text);margin-top:3mm">Abende.</div><p class="muted" style="margin-top:2mm;font-size:7.6pt">Für Akzentwörter in jeder Überschrift – wie eine Unterschrift.</p></div>
+  </div>
+  <div class="grid3" style="margin-top:8mm; align-items:end">
+    <div><div class="card" data-notch="tabW:62;tabH:26;r:12;slant:16" style="height:26mm"><span class="eyebrow">Kerbenkarte</span><span class="notch-tag">Etikett</span></div><p class="muted cap">Karten mit Stufe und Etikett unten rechts</p></div>
+    <div><div style="height:26mm;display:flex;align-items:center;justify-content:center"><span class="scribble-u" style="font:400 12mm/1 var(--font-serif);color:var(--ink)">Kringel<svg viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" stroke="#ff6b00" stroke-width="4" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></span></div><p class="muted cap">Handgezeichnete Striche, die sich selbst zeichnen</p></div>
+    <div><div style="height:26mm;display:flex;align-items:center;justify-content:center"><span class="laurel-mark" style="width:22mm;height:22mm"></span></div><p class="muted cap">Lorbeer für Sieger und Rekorde</p></div>
+  </div>
+  <h3 class="h3" style="margin-top:8mm">Bewegung</h3>
+  <div class="grid3">
+    <div class="feat"><b>Einblendungen</b><p>Wörter und Zeilen gleiten aus Masken, Zahlen zählen hoch.</p></div>
+    <div class="feat"><b>Übergänge</b><p>Ein Menü auf allen Seiten; der angetippte Punkt gleitet in die Überschrift der neuen Seite, der Rückblick wächst aus seiner Kachel.</p></div>
+    <div class="feat"><b>Ruhig, wenn gewünscht</b><p>Mit „Bewegung reduzieren" am Gerät bleibt alles still.</p></div>
+  </div>
+  <div class="foot"><span class="eyebrow">SV Partykeller · Getränke-Counter</span><span class="pn">10</span></div>
+</section>
+
+<!-- 11 Einrichtung -->
+<section class="sheet">
+  <div class="kick"><span class="eyebrow">10 · Einrichtung</span></div>
+  <h2 class="h2">In fünf<br><span class="s">Minuten</span></h2>
+  <div class="grid2" style="margin-top:9mm; align-items:start">
+    <div>
+      <h3 class="h3">Was man braucht</h3>
+      <div class="feats" style="margin-top:3mm">
+        <div class="feat"><b>Einen Rechner im WLAN</b><p>Laptop oder Raspberry Pi mit Node.js 20 oder neuer.</p></div>
+        <div class="feat"><b>Einen Fernseher</b><p>Mit Browser oder angeschlossenem Rechner, im Vollbild.</p></div>
+        <div class="feat"><b>Handys der Gäste</b><p>Jeder aktuelle Browser – Android oder iPhone.</p></div>
+      </div>
+    </div>
+    <div>
+      <h3 class="h3">Installieren und starten</h3>
+      <span class="code" style="margin-top:3mm">git clone https://github.com/
+  jstin-cc/Partykeller-CounterV2.git
+cd Partykeller-CounterV2
+npm install
+cp .env.example .env   <span class="c"># Passwort setzen</span>
+npm start</span>
+      <p class="muted" style="margin-top:2.6mm;font-size:7.6pt">In der <code>.env</code> stehen Admin-Passwort und ein geheimer Schlüssel für die Logins.</p>
+    </div>
+  </div>
+  <div class="grid3" style="margin-top:10mm">
+    <div class="card" data-notch="tabW:58;tabH:26;r:12;slant:16"><h3 class="h3">Handy</h3><p><code>/partykeller/</code><br>QR-Code am TV scannen</p><span class="notch-tag">Gäste</span></div>
+    <div class="card" data-notch="tabW:58;tabH:26;r:12;slant:16"><h3 class="h3">Fernseher</h3><p><code>/partykeller/tv</code><br>im Vollbild, z. B. F11</p><span class="notch-tag">Keller</span></div>
+    <div class="card" data-notch="tabW:58;tabH:26;r:12;slant:16"><h3 class="h3">Admin</h3><p><code>/partykeller/admin</code><br>mit dem Admin-Passwort</p><span class="notch-tag">Gastgeber</span></div>
+  </div>
+  <div class="grid2" style="margin-top:9mm">
+    <div class="feat"><b>Raspberry Pi als Dauerlösung</b><p>Als Systemdienst, erreichbar unter <code>partykeller.local</code>, TV im Kiosk-Modus. Anleitung liegt im Projekt unter <code>deploy/</code>.</p></div>
+    <div class="feat"><b>Daten sichern</b><p>Nach dem Abend im Admin ein Backup ziehen – eine Datei mit allem, auf jedem Rechner wieder einspielbar.</p></div>
+  </div>
+  <div class="foot"><span class="eyebrow">SV Partykeller · Getränke-Counter</span><span class="pn">11</span></div>
+</section>
+
+<!-- 12 Rückseite -->
+<section class="sheet" style="justify-content:center">
+  <div style="margin-top:auto">
+    <div class="kick"><span class="eyebrow">Bis zum nächsten Abend</span></div>
+    <h2 class="h1" style="font-size:27mm">Prost<br>auf den<br><span class="s">nächsten.</span></h2>
+    <svg class="sig" viewBox="0 0 268 141" aria-hidden="true" style="margin-top:6mm"><path d="M 33.3 80.9 C 38.1 91.8 58.4 82.1 58.9 68.3 C 59.3 57.7 39.8 64.2 47.2 46.1 C 53 32.1 69 25.5 74.1 32.7 C 70.4 50.1 68.3 65.4 66.4 80 C 76.8 58.9 88.6 37 102.8 17.1 C 89.2 53 72.5 97 57.4 136.9 C 71.5 96.5 89.3 50.5 104.1 18.7 C 141.6 -4.7 149.1 23.2 118.2 42.9 C 108.1 49.1 101.2 46.6 99 39.2 C 102.6 46.3 106.9 52.3 107.3 55.9 C 105.1 53.8 99 62.7 99.7 69.8 C 99.9 73.2 103.3 69.1 107 57.2 C 106.6 63.7 103.1 71.4 107.5 69.7 C 108.4 65.4 110.5 57.9 112.4 55.7 C 112.3 58.9 114.5 56.8 116.4 54.3 C 115.2 60.5 114.2 65.6 115.9 67.9 C 116.7 63 122.7 47.5 128.1 31.9 C 123.2 48.5 118 63.3 120.4 66.7 C 121.9 64.7 122.9 57.2 125.6 53.8 C 122.4 62.3 123.6 65.8 125.6 63.8 C 127.7 60.9 129.7 54.9 131 51.3 C 125.8 69.3 122.7 81.9 118.7 82.9 C 116 86.2 119.3 77 124.6 71.4 C 126.5 69.8 129.1 66 130.4 64.9 C 135.4 53.9 140.1 38.1 146 19.3 C 140.5 38.4 134.9 55 131.4 65.8 C 135.9 55.6 140.5 48.9 141.1 51.3 C 141.2 56.2 136.7 58.8 135 57.1 C 136.5 60.6 137.5 65.2 139.9 65.1 C 142.2 62.3 146.3 54.7 145.7 50.7 C 146.9 46.8 141.7 53.5 141.5 57.6 C 139.7 65.9 142.4 64.9 146.3 60.9 C 149.7 52.2 154.7 37.6 157.2 28.6 C 157.2 24.2 155.5 24.6 152.1 38.8 C 147.7 52.2 145.5 64.1 148 63.4 C 153.5 52.6 157.5 41 160.2 32.4 C 160 27.4 157.5 29 154.5 40.4 C 150.9 53.2 150.4 63.3 151.8 62.6 C 154.8 60 158.3 54.4 157.9 50.9 C 158.7 48.3 154.7 54.6 154.2 56.6 C 153.5 63.3 156.1 61 158.3 57.2 C 159.5 55.2 161.3 51.1 161.3 50.6 C 162.1 52.1 163.9 50.7 166.8 46.8 C 163.9 51.5 164.5 56.5 165.4 55.2 C 197.5 50.7 231.7 29.1 252.8 11.1 C 260.2 4.9 258.7 1.4 251.7 6.4 C 204 38.4 116.6 88.6 12.2 126.2 C 1.5 130 1.2 135.6 11.5 131.3 C 70.3 112.9 152.6 82.8 210.6 58.3 C 236.3 47.6 252.6 39.7 264 33.4 M 120.8 48.7 C 128.7 44.8 137.8 40.7 149.5 33.1"/></svg>
+  </div>
+  <div class="grid2" style="margin-top:auto; margin-bottom:8mm; align-items:end">
+    <div><span class="wordmark" style="font-size:7mm"><span class="wm-top">Party</span><span class="wm-bottom">Keller</span></span></div>
+    <div style="text-align:right"><div class="eyebrow">Quellcode</div><div style="font:800 9pt/1.3 var(--font-sans);margin-top:1mm">github.com/jstin-cc/Partykeller-CounterV2</div><div class="eyebrow" style="margin-top:2mm">Frei verwendbar unter der MIT-Lizenz</div></div>
+  </div>
+  <div class="foot" style="margin-top:0"><span class="eyebrow">SV Partykeller · Getränke-Counter</span><span class="pn">12</span></div>
+</section>
+
+<script>
+// Kerbenkarten wie in der App (vereinfachte notchPath aus lando.js, Maße in px)
+function notchPath(w, h, { tabW = 140, tabH = 30, r = 12, slant = 18 } = {}) {
+  const yT = h - tabH, rr = Math.min(r, w / 2, yT / 2), c = Math.min(8, tabH / 3), xs = w - tabW;
+  return `M${rr} 0H${w - rr}Q${w} 0 ${w} ${rr}V${yT - rr}Q${w} ${yT} ${w - rr} ${yT}H${xs + c}Q${xs} ${yT} ${xs - c * 0.6} ${yT + c * 0.8}L${xs - slant + c * 0.6} ${h - c * 0.8}Q${xs - slant} ${h} ${xs - slant - c} ${h}H${rr}Q0 ${h} 0 ${h - rr}V${rr}Q0 0 ${rr} 0Z`;
+}
+document.querySelectorAll('[data-notch]').forEach((el) => {
+  const o = {};
+  el.dataset.notch.split(';').forEach((p) => { const [k, v] = p.split(':'); o[k] = Number(v); });
+  el.classList.add('is-notched');
+  el.style.setProperty('--notch-w', `${o.tabW * 1.6}px`);
+  el.style.setProperty('--notch-h', `${o.tabH}px`);
+  const bg = document.createElement('span');
+  bg.className = 'notch-bg';
+  el.prepend(bg);
+  const w = el.offsetWidth, h = el.offsetHeight;
+  bg.style.clipPath = `path('${notchPath(w, h, { ...o, tabW: o.tabW * 1.6 })}')`;
+});
+document.documentElement.dataset.ready = '1';
+</script>
+</body>
+</html>

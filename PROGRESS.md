@@ -7,6 +7,11 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16: **Prospekt** (`docs/prospekt/`, A4-PDF aus `prospekt.html`)
+mit aktuellen Screenshots aus der Demo-Instanz neu erzeugt; die schwarzen
+Streifen unten auf jeder Seite sind weg (die Theme-Klasse `.sheet` begrenzte
+die Seiten auf 88 % Höhe). Rückblick: Titel geht Teil für Teil genau aus der
+Kachel in die Story über.
 Seit 2026-10-16 (D-103): **Mehr Übergänge** — jeder Menüpunkt gleitet auf der
 Zielseite in sein Gegenstück (Archiv-Zeile, Tab-Knöpfe, „Anmeldung",
 Abmelden-Name in die Anmeldeliste), „Protokoll" im Archiv → Admin-Titel,
