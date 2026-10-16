@@ -154,7 +154,7 @@ try {
     text-decoration: none;
     transition: border-color 0.3s var(--ease), transform 0.5s var(--ease);
   }
-  .last-card:hover { color: var(--ink); border-color: var(--accent); transform: translateY(-3px); }
+  @media (hover: hover) and (pointer: fine) { .last-card:hover { color: var(--ink); border-color: var(--accent); transform: translateY(-3px); } }
   .last-card .lc-when, .last-card .lc-win { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0; max-width: 100%; }
   .last-card .lc-win { align-self: stretch; padding-top: 9px; border-top: 1px solid var(--line); }
   .last-card .lc-label { display: none; }
@@ -432,7 +432,7 @@ try {
   /* Unsichtbar etwas größere Tap-Fläche (44 px), ohne das Layout aufzublähen */
   .name-edit::after { content: ""; position: absolute; inset: -2px -4px; }
   .name-edit svg { width: 15px; height: 15px; flex: none; opacity: 0.5; transition: opacity 0.2s ease, transform 0.4s var(--ease); }
-  .name-edit:hover svg { opacity: 1; transform: rotate(-12deg); }
+  @media (hover: hover) and (pointer: fine) { .name-edit:hover svg { opacity: 1; transform: rotate(-12deg); } }
   .name-edit.empty {
     font-family: var(--font-sans);
     font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
@@ -441,7 +441,7 @@ try {
     transition: color 0.2s ease, border-color 0.2s ease;
   }
   .name-edit.empty svg { width: 12px; height: 12px; }
-  .name-edit.empty:hover { color: var(--ink); border-color: var(--ink); }
+  @media (hover: hover) and (pointer: fine) { .name-edit.empty:hover { color: var(--ink); border-color: var(--ink); } }
 
   /* Sieger als Zeile zwischen Haarlinien (D-044) */
   .night-winner {
@@ -630,7 +630,7 @@ try {
     text-decoration: none; text-align: left;
     transition: color 0.3s var(--ease), padding 0.5s var(--ease);
   }
-  .foot-links a:hover, .foot-links button:hover { color: var(--accent-text); padding-left: 10px; }
+  @media (hover: hover) and (pointer: fine) { .foot-links a:hover, .foot-links button:hover { color: var(--accent-text); padding-left: 10px; } }
   .foot-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; margin-top: 40px; }
 
   /* ---------------- Toast und Dialog ---------------- */
@@ -692,26 +692,8 @@ try {
 <div class="topo" aria-hidden="true"></div>
 <div class="topo-spot" aria-hidden="true"></div>
 
-<!-- Vollbild-Menü (lando.js initMenu). Bereichsfarben fest, damit es auch auf
-     der hellen Fläche dunkel bleibt. -->
-<nav id="site-menu" class="site-menu area-pk" aria-hidden="true" aria-label="Menü">
-  <div class="topo topo--abs" aria-hidden="true"></div>
-  <div class="topbar">
-    <span class="wordmark" aria-hidden="true">
-      <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
-    </span>
-    <button class="btn btn--ghost btn--icon" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="Menü schließen"><span class="i-menu"></span></button>
-  </div>
-  <div class="menu-nav">
-    <a class="menu-link" style="--i:0" href="./" data-home data-home-label>Anmeldung</a>
-    <a class="menu-link is-current" style="--i:1" href="#top" aria-current="page">Archiv<svg class="scribble scribble--strike" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 18c26-8 44 6 70-2s46-9 74-2 52 5 88-6" pathLength="1"/></svg></a>
-    <a class="menu-link" style="--i:2" href="tv">TV</a>
-    <a class="menu-link" style="--i:3" href="admin" data-morph="admin" data-morph-self>Admin</a>
-  </div>
-  <div class="menu-foot">
-    <div class="emblem"><span class="laurel"></span><span class="eyebrow">Abend-Archiv</span></div>
-  </div>
-</nav>
+<!-- Vollbild-Menü: gleich auf allen Seiten (js/site-menu.js, D-102) -->
+<nav id="site-menu" class="site-menu" aria-hidden="true" aria-label="Menü"></nav>
 
 <main class="page">
   <!-- 1) Hero: Kennzahlen-Satz (L2) -->
@@ -871,6 +853,7 @@ import { getSession } from './js/api.js';
 import {
   initLando, initReveal, notch, scribble, drawScribble, countUp, initMarquee, reducedMotion, leave, enter,
 } from './js/lando.js';
+import { renderSiteMenu } from './js/site-menu.js';
 
 const $ = (id) => document.getElementById(id);
 // Wer angemeldet ist, kommt aus dem Dashboard und will dorthin zurück —
@@ -890,7 +873,10 @@ let board = { mode: null, day: null };
 let nights = [];             // aktuelle Archiv-Liste
 let editDay = null;          // im Modal geöffneter Party-Tag
 
+// Fehler vom Server: im offenen Dialog dort, sonst als Meldung unten
+// (der Fehlertext im Dialog wäre bei geschlossenem Dialog unsichtbar)
 function showEditError(message) {
+  if ($('edit-modal').hidden) { showToast(message); return; }
   $('edit-error').textContent = message;
   setTimeout(() => { $('edit-error').textContent = ''; }, 4000);
 }
@@ -909,6 +895,12 @@ function send(msg) {
   ws?.send({ ...msg, token: adminToken });
 }
 
+// Admin-Token taugt nicht mehr (neues TOKEN_SECRET): Werkzeuge weg, Seite neu
+function adminSignedOut() {
+  sessionStorage.removeItem(`${AREA.keyPrefix}_admin_token`);
+  location.reload();
+}
+
 // Übergabedatei holen (nur Admin, D-027). Der Server prüft das Token im
 // Authorization-Header, ein einfacher Link könnte den nicht mitschicken —
 // deshalb per fetch laden und den Blob über einen Klick-Link speichern.
@@ -918,9 +910,8 @@ async function downloadCsv(path, filename) {
       headers: { Authorization: `Bearer ${adminToken}` },
     });
     if (!res.ok) {
-      showToast(res.status === 403
-        ? 'Download nur mit Admin-Login möglich – bitte neu anmelden.'
-        : 'Download fehlgeschlagen.');
+      if (res.status === 403) { adminSignedOut(); return; }
+      showToast('Download fehlgeschlagen.');
       return;
     }
     const url = URL.createObjectURL(await res.blob());
@@ -928,7 +919,8 @@ async function downloadCsv(path, filename) {
     a.href = url;
     a.download = filename;
     a.click();
-    URL.revokeObjectURL(url);
+    // Erst später freigeben: Safari bricht den Download sonst ab
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
   } catch {
     showToast('Download fehlgeschlagen.');
   }
@@ -1261,7 +1253,7 @@ function renderCards() {
   layoutDeck();
 }
 
-track.addEventListener('scroll', schedule, { passive: true });
+track.addEventListener('scroll', () => { lastSwipe = Date.now(); schedule(); }, { passive: true });
 addEventListener('resize', schedule);
 $('deck-prev').addEventListener('click', () => goTo(active - 1));
 $('deck-next').addEventListener('click', () => goTo(active + 1));
@@ -1485,12 +1477,41 @@ function renderHero() {
   }
 }
 
+// Archiv laden. Als Admin kommt nach jedem Getränk ein neuer Stand — dann
+// höchstens alle paar Sekunden nachladen, nur bei echter Änderung neu
+// zeichnen und nie mitten im Wischen durchs Register (sonst springt es).
+let shownKey = '';
+let loadSeq = 0;
+let lastSwipe = 0;
 async function load() {
-  const res = await fetch(`${AREA.base}/api/archive`);
-  ({ days: nights } = await res.json());
+  const seq = ++loadSeq;
+  let days;
+  try {
+    const res = await fetch(`${AREA.base}/api/archive`);
+    if (!res.ok) throw new Error();
+    ({ days } = await res.json());
+  } catch {
+    if (seq === loadSeq) showToast('Archiv konnte nicht geladen werden – Verbindung prüfen.');
+    return;
+  }
+  if (seq !== loadSeq) return;   // eine neuere Anfrage ist schon unterwegs
+  const key = JSON.stringify([days, board]);
+  if (key === shownKey) return;
+  shownKey = key;
+  nights = days;
+  renderWhenIdle();
+}
+function renderWhenIdle() {
+  const busy = drag || Date.now() - lastSwipe < 1200;
+  if (busy && slides.length) { setTimeout(renderWhenIdle, 600); return; }
   renderCards();
   renderHof();
   renderHero();
+}
+let reloadTimer = null;
+function scheduleLoad() {
+  if (reloadTimer) return;
+  reloadTimer = setTimeout(() => { reloadTimer = null; load(); }, 2000);
 }
 
 $('last-card').addEventListener('click', (e) => {
@@ -1515,11 +1536,11 @@ function openEdit(day) {
 }
 
 // Abend benennen (D-028); leeres Feld entfernt den Namen wieder
+// Erfolg meldet erst die Quittung des Servers (onAck, D-101)
 function saveNightName() {
   if (!editDay) return;
-  send({ type: 'setNightName', day: editDay, name: $('edit-name-input').value.trim() });
-  showToast($('edit-name-input').value.trim() ? 'Name gespeichert.' : 'Name entfernt.', true);
-  closeEdit();
+  const name = $('edit-name-input').value.trim();
+  send({ type: 'setNightName', day: editDay, name, ref: name ? 'name-set' : 'name-clear' });
 }
 function closeEdit() { leave($('edit-modal')); editDay = null; }
 
@@ -1531,7 +1552,9 @@ $('close-edit').addEventListener('click', closeEdit);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('edit-modal').hidden) closeEdit(); });
 $('tv-live').addEventListener('click', () => send({ type: 'setBoardMode', mode: 'alltime' }));
 
-// Lando-Bewegung: Einblendungen, Kringel, Kerben, Menü, Hintergrundwechsel
+// Menü wie auf allen Seiten (D-102), Lando-Bewegung: Einblendungen,
+// Kringel, Kerben, Menü, Hintergrundwechsel
+renderSiteMenu('archive');
 initLando();
 
 // Der Schimmer um die Fußkarte dreht sich nur, solange sie im Bild ist
@@ -1542,12 +1565,22 @@ if ('IntersectionObserver' in window) {
 
 // Admin: über den State-Broadcast bleiben TV-Status und Abend-Namen aktuell
 if (adminToken) {
+  let first = true;
   ws = connectState({
     onState(state) {
       board = { mode: state.boardMode ?? 'alltime', day: state.boardDay ?? null };
-      load();   // Archiv-Liste ändert sich durch neue Getränke und Namen
+      // Archiv-Liste ändert sich durch neue Getränke und Namen
+      if (first) { first = false; load(); } else scheduleLoad();
     },
-    onError: showEditError,
+    onAck(ref) {
+      if (ref !== 'name-set' && ref !== 'name-clear') return;
+      showToast(ref === 'name-set' ? 'Name gespeichert.' : 'Name entfernt.', true);
+      closeEdit();
+    },
+    onError(message, { code } = {}) {
+      if (code === 'auth') adminSignedOut();
+      else showEditError(message);
+    },
   });
 } else {
   load();

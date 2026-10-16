@@ -7,6 +7,14 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16 (D-101/D-102): **Code-Check umgesetzt** — ein gemeinsames
+Menü auf Anmeldung, Dashboard, Archiv und Admin (`js/site-menu.js`);
+Zeitumstellung im Party-Tag korrigiert; ungültiges Token meldet ab (statt
+Tipps still zu verwerfen), angemeldete Handys springen von der Anmeldung ins
+Dashboard; Admin-Dialoge (Reset, Neues Konto, PIN, Löschen) schließen erst
+auf Quittung des Servers; Reset-Passwort rate-limitiert; Hover nur mit Maus;
+Onboarding-Schritt 3 im Look des echten Profils. In der Demo-Instanz in
+Handybreite und per WS-Testskript geprüft.
 Seit 2026-10-16: Im Dashboard-Menü steht unter „Mehr" auch „Admin" (zwischen
 Abend-Archiv und Abmelden, mit Übergang in den Admin-Titel).
 Seit 2026-10-16 (D-099): **Effekt-Demo** im Admin (Reiter TV) — Plakat,

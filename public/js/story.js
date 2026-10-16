@@ -640,7 +640,8 @@ export async function downloadStory(night) {
   a.href = url;
   a.download = `${AREA.id}-abend-${night.day}.png`;
   a.click();
-  URL.revokeObjectURL(url);
+  // Erst später freigeben: Safari bricht den Download sonst ab
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
 // --- Jahresrückblick (L23, D-095) -------------------------------------------
@@ -772,5 +773,6 @@ export async function downloadReviewStory(r, name) {
   a.href = url;
   a.download = `${AREA.id}-jahr-${r.year}.png`;
   a.click();
-  URL.revokeObjectURL(url);
+  // Erst später freigeben: Safari bricht den Download sonst ab
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }

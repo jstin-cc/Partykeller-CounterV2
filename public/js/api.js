@@ -29,6 +29,10 @@ export function rememberName(name) {
   localStorage.setItem(NAME_KEY, name);
 }
 
+export function getPlayerName() {
+  return localStorage.getItem(NAME_KEY);
+}
+
 // Abmelden löscht die Sitzung, nicht die Erinnerung ans letzte Konto.
 export function clearSession() {
   localStorage.removeItem(TOKEN_KEY);

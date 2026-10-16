@@ -9,6 +9,14 @@
 // (die Seite benennt daraufhin ihr Gegenstück), nach dem Übergang lösen.
 try {
   var h = document.documentElement, ss = sessionStorage;
+  // Schon angemeldet (z. B. QR-Code am TV gescannt): direkt zum Zähler, ohne
+  // erst die Namensliste zu zeigen. Ein ungültiges Token meldet das Dashboard
+  // ab und schickt hierher zurück.
+  if (localStorage.getItem('pk_token') && localStorage.getItem('pk_player_id')) {
+    h.style.visibility = 'hidden';
+    location.replace('dashboard' + location.search);
+    throw 0;
+  }
   var m = ss.getItem('pk-morph');
   ss.removeItem('pk-morph'); ss.removeItem('pk-curtain');   // pk-curtain: Rest des alten Vorhangs (D-084)
   var vt = 'CSSViewTransitionRule' in window, flip = null;
@@ -335,9 +343,7 @@ try {
     background: linear-gradient(var(--accent), var(--accent)) left calc(100% - 12px) / 0 1px no-repeat;
     transition: color 0.3s ease, background-size 0.45s var(--ease);
   }
-  .foot-links a:hover { color: var(--ink); background-size: 100% 1px; }
-
-  .menu-foot .eyebrow { line-height: 1.4; }
+  @media (hover: hover) and (pointer: fine) { .foot-links a:hover { color: var(--ink); background-size: 100% 1px; } }
 
   /* --- Desktop: zweispaltig, Headline klebt links --- */
   @media (min-width: 960px) {
@@ -462,33 +468,19 @@ try {
   </footer>
 </div>
 
-<!-- Vollbild-Menü (lando.js initMenu) -->
-<nav id="site-menu" class="site-menu" aria-hidden="true" aria-label="Menü">
-  <div class="topo topo--abs" aria-hidden="true"></div>
-  <div class="topbar" style="position:relative;z-index:1;">
-    <span class="wordmark">
-      <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
-    </span>
-    <button class="btn btn--ghost btn--icon" type="button" data-menu-toggle aria-label="Menü schließen"><span class="i-menu"></span></button>
-  </div>
-  <div class="menu-nav">
-    <a class="menu-link is-current" style="--i:0" href="./" aria-current="page">Anmeldung<svg class="scribble scribble--strike" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 18c26-8 44 6 70-2s46-9 74-2 52 5 88-6" pathLength="1"/></svg></a>
-    <a class="menu-link" style="--i:1" href="abende">Abend-Archiv</a>
-    <a class="menu-link" style="--i:2" href="admin" data-morph="admin" data-morph-self>Admin</a>
-  </div>
-  <div class="menu-foot">
-    <div class="emblem"><span class="laurel" aria-hidden="true"></span><span class="eyebrow">SV Partykeller</span></div>
-  </div>
-</nav>
+<!-- Vollbild-Menü: gleich auf allen Seiten (js/site-menu.js, D-102) -->
+<nav id="site-menu" class="site-menu" aria-hidden="true" aria-label="Menü"></nav>
 
 
 <script type="module">
 import { post, fetchPlayers, setSession, getLastPlayerId } from './js/api.js';
 import { initLando, leave, enter, go } from './js/lando.js';
+import { renderSiteMenu } from './js/site-menu.js';
 
 const $ = (id) => document.getElementById(id);
 let selectedId = null;
 let firstRender = true;
+let busy = false;   // Anmeldung/Anlegen läuft gerade (Doppeltipp)
 
 // Übergang ins Dashboard (D-068): Namenskreis und Name der angetippten Zeile
 // bekommen die Übergangsnamen, die dort Kopf-Kreis und Kopf-Name tragen — der
@@ -504,6 +496,8 @@ function toDashboard(avatar, nameText) {
 addEventListener('pageshow', (e) => {
   if (!e.persisted) return;
   document.querySelectorAll('.user-row .avatar, .user-name > span').forEach((el) => { el.style.viewTransitionName = ''; });
+  busy = false;
+  document.querySelectorAll('#create-form .btn, .pin-row .btn').forEach((b) => { b.disabled = false; });
 });
 
 function showError(msg) {
@@ -565,12 +559,15 @@ function renderUsers(all) {
       showError('');
       // Konto ohne PIN (D-018): direkt anmelden, keine Eingabe nötig
       if (!p.hasPin) {
+        if (busy) return;   // Doppeltipp
+        busy = true;
         try {
           const { token, player } = await post('/api/login', { playerId: p.id });
           setSession(token, player.id, player.name);
           toDashboard(avatar, nameText);
         } catch (err) {
           showError(err.message);
+          busy = false;
         }
         return;
       }
@@ -614,12 +611,20 @@ function openPin(wrap, p, avatar, nameText) {
   pinRow.append(pin, ok);
   pinRow.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (busy) return;
+    busy = true;
+    ok.disabled = true;
     try {
       const { token, player } = await post('/api/login', { playerId: p.id, pin: pin.value });
       setSession(token, player.id, player.name);
       toDashboard(avatar, nameText);
     } catch (err) {
       showError(err.message === 'Name oder PIN falsch' ? 'Falsche PIN.' : err.message);
+      // Falsche PIN: Feld leeren, gleich neu tippen
+      pin.value = '';
+      pin.focus({ preventScroll: true });
+      busy = false;
+      ok.disabled = false;
     }
   });
   // Zielhöhe fürs Aufklappen ohne laufende Animation messen
@@ -640,6 +645,11 @@ function closePin(wrap) {
 
 $('create-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+  // Doppeltipp: sonst kommt für den zweiten Versuch „Name ist schon vergeben"
+  if (busy) return;
+  busy = true;
+  const btn = $('create-form').querySelector('.btn');
+  btn.disabled = true;
   try {
     const { token, player } = await post('/api/players', { name: $('create-name').value, pin: $('create-pin').value });
     setSession(token, player.id, player.name);
@@ -649,6 +659,8 @@ $('create-form').addEventListener('submit', async (e) => {
     go('onboarding', { morph: 'cta' });
   } catch (err) {
     showError(err.message);
+    busy = false;
+    btn.disabled = false;
   }
 });
 
@@ -683,6 +695,7 @@ fetchPlayers()
   .catch(() => { showError('Server nicht erreichbar.'); $('user-list').classList.add('is-error'); })
   .finally(() => $('user-list').classList.remove('is-loading'));
 
+renderSiteMenu('login');
 initLando();
 </script>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>

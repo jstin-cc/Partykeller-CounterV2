@@ -427,7 +427,7 @@ try {
     display: flex; flex-direction: column; align-items: flex-end; gap: 7px;
     padding-left: 16px; border-left: 1px solid var(--line); text-align: right;
   }
-  #prof-total { font-size: 46px; line-height: 0.82; }
+  #prof-total { font-size: 46px; line-height: 0.82; color: var(--accent-text); }
   .rivals { display: flex; flex-direction: column; }
   .rival {
     display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 10px;
@@ -451,7 +451,7 @@ try {
     font-family: inherit; font-size: 11px; font-weight: 700;
     transition: color 0.3s ease;
   }
-  .board-tag:hover { color: var(--accent-text); }
+  @media (hover: hover) and (pointer: fine) { .board-tag:hover { color: var(--accent-text); } }
 
   /* --- Abschnittstitel (Statistik, Abzeichen): Versal-Titel mit Serif-Wort --- */
   .block { display: flex; flex-direction: column; gap: 18px; }
@@ -512,7 +512,7 @@ try {
     font-family: inherit; font-size: 11px; font-weight: 700;
     transition: color 0.3s ease;
   }
-  .farewell-tag:hover { color: var(--accent-text); }
+  @media (hover: hover) and (pointer: fine) { .farewell-tag:hover { color: var(--accent-text); } }
 
   /* --- Fußzeile der Seite: nur Abmelden (Archiv steht im Menü, D-090) --- */
   .dash-foot {
@@ -547,15 +547,6 @@ try {
   /* --- Ohne Sitzung --- */
   .nouser { display: flex; flex-direction: column; align-items: flex-start; gap: 22px; margin-top: 8vh; }
   .nouser .t-impact { font-size: clamp(36px, 11vw, 96px); overflow-wrap: anywhere; }
-
-  /* --- Menü: Zählen/Profil riesig, die übrigen Ziele eine Stufe kleiner
-     (so passt „Abend-Archiv" in eine Zeile) --- */
-  .dash-menu .menu-link { font-size: clamp(40px, 12vw, 84px); }
-  .dash-menu .menu-link--sm { font-size: clamp(26px, 7.4vw, 48px); line-height: 1.02; padding: 8px 0; min-height: 44px; }
-  .dash-menu .menu-eyebrow { margin: 14px 0 6px; }
-  .dash-menu .menu-eyebrow:first-child { margin-top: 0; }
-  .dash-menu .menu-me { text-align: right; }
-  .dash-menu .menu-me b { color: var(--ink); font-weight: 700; }
 
   /* --- Ganze Rangliste: Blatt von unten (D-030), Zeilen wie auf dem TV --- */
   .board-modal {
@@ -924,29 +915,8 @@ try {
   <div class="deco-foot" data-deco-foot="phone" aria-hidden="true"></div>
 </div>
 
-<!-- Vollbild-Menü (lando.js initMenu) -->
-<nav id="site-menu" class="site-menu dash-menu" aria-hidden="true" aria-label="Menü">
-  <div class="topo topo--abs" aria-hidden="true"></div>
-  <div class="topbar">
-    <span class="wordmark">
-      <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
-    </span>
-    <button class="btn btn--ghost btn--icon" type="button" data-menu-toggle aria-label="Menü schließen"><span class="i-menu"></span></button>
-  </div>
-  <div class="menu-nav">
-    <span class="eyebrow menu-eyebrow">Dein Abend</span>
-    <button class="menu-link is-current" type="button" style="--i:0" data-menu-close data-go-tab="count">Zählen<svg class="scribble scribble--strike" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 18c26-8 44 6 70-2s46-9 74-2 52 5 88-6" pathLength="1"/></svg></button>
-    <button class="menu-link" type="button" style="--i:1" data-menu-close data-go-tab="profile">Profil<svg class="scribble scribble--strike" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 18c26-8 44 6 70-2s46-9 74-2 52 5 88-6" pathLength="1"/></svg></button>
-    <span class="eyebrow menu-eyebrow">Mehr</span>
-    <a class="menu-link menu-link--sm" style="--i:2" href="abende">Abend-Archiv</a>
-    <a class="menu-link menu-link--sm" style="--i:3" href="admin" data-morph="admin" data-morph-self>Admin</a>
-    <button class="menu-link menu-link--sm" type="button" style="--i:4" data-menu-close data-logout>Abmelden</button>
-  </div>
-  <div class="menu-foot">
-    <div class="emblem"><span class="laurel"></span><span class="eyebrow">SV Partykeller</span></div>
-    <span class="eyebrow menu-me" data-me-line hidden>Angemeldet als<br><b data-me-name></b></span>
-  </div>
-</nav>
+<!-- Vollbild-Menü: gleich auf allen Seiten (js/site-menu.js, D-102) -->
+<nav id="site-menu" class="site-menu" aria-hidden="true" aria-label="Menü"></nav>
 
 <!-- Ganze Rangliste (D-030): dasselbe Blatt für „heute" und „all-time",
      oben umschaltbar, die eigene Zeile ist markiert und wird angesteuert. -->
@@ -987,11 +957,13 @@ import { connectState } from './js/ws-client.js';
 import { onSeason, setSeasonEnabled, newYear, mmss, now as seasonNow } from './js/season.js';
 import { initLando, drawScribble, reducedMotion, leave, enter, replay, go } from './js/lando.js';
 import { buildCurve } from './js/curve.js';
+import { renderSiteMenu } from './js/site-menu.js';
 
 const { token, playerId } = getSession();
 const $ = (id) => document.getElementById(id);
 
-// Lando-Bewegung (D-078): Einblenden, Kerben, Kringel, Menü, Spotlight
+// Menü wie auf allen Seiten (D-102), dann Lando-Bewegung (D-078)
+renderSiteMenu('dashboard');
 initLando();
 
 // Menü: Zählen/Profil klicken die vorhandenen Tab-Knöpfe, Abmelden den
@@ -1000,7 +972,6 @@ document.querySelectorAll('[data-go-tab]').forEach((b) => b.addEventListener('cl
   $(b.dataset.goTab === 'profile' ? 'tab-btn-profile' : 'tab-btn-count').click();
   scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' });
 }));
-document.querySelector('[data-logout]').addEventListener('click', () => $('logout').click());
 // Fußkarte: „Weiter zählen" springt zurück auf den Zählen-Tab
 document.querySelector('[data-to-count]').addEventListener('click', () => {
   $('tab-btn-count').click();
@@ -1077,20 +1048,34 @@ function setName(name) {
   $('player-initial').textContent = name.charAt(0).toUpperCase();
   $('dock-initial').textContent = name.charAt(0).toUpperCase();
   document.querySelectorAll('[data-me-name]').forEach((el) => { el.textContent = name; });
-  document.querySelector('[data-me-line]').hidden = false;
+  const meLine = document.querySelector('[data-me-line]');
+  if (meLine) meLine.hidden = false;
 }
 
 // „Di 29.09." neben „Getränke heute" (ein Abend zählt bis 6 Uhr zum Vortag)
 function renderDate() {
-  const d = new Date(seasonNow().getTime() - 6 * 3600e3);
+  const d = seasonNow();
+  if (d.getHours() < 6) d.setDate(d.getDate() - 1);
   const wd = d.toLocaleDateString('de-DE', { weekday: 'short' }).replace('.', '');
   $('today-date').textContent = `${wd} ${d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`;
 }
 renderDate();
 
+// Ein Token, das der Server nicht (mehr) kennt — neues TOKEN_SECRET,
+// gelöschtes Konto —, meldet ab, statt jeden Tipp still zu verwerfen
+function signedOut() {
+  clearSession();
+  go('./', { replace: true });
+}
+
 if (!token || !playerId) {
   $('no-user-view').hidden = false;
+  document.querySelector('.dash-foot .foot-links').hidden = true;
 } else {
+  fetch(`${AREA.base}/api/session`, { headers: { Authorization: `Bearer ${token}` } })
+    .then((res) => { if (res.status === 401) signedOut(); })
+    .catch(() => { /* offline: der WebSocket meldet sich später */ });
+
   $('user-view').hidden = false;
 
   // Umschalter Zählen/Profil (bleibt über Reloads hinweg auf Zählen)
@@ -1117,6 +1102,11 @@ if (!token || !playerId) {
   }
   $('tab-btn-count').addEventListener('click', () => showTab(false));
   $('tab-btn-profile').addEventListener('click', () => showTab(true));
+  // „Profil" aus dem Menü einer anderen Seite (dashboard#profil, D-102)
+  if (location.hash === '#profil') {
+    showTab(true);
+    history.replaceState(null, '', location.pathname + location.search);
+  }
 
   const errEl = $('ws-error');
   let errTimer;
@@ -1275,7 +1265,8 @@ if (!token || !playerId) {
         };
         vs.append(side(reviewName, r.total, true), el('span', 'vs', 'vs'), side(r.rival.name, r.rival.total, false));
         const diff = Math.abs(r.rival.total - r.total);
-        parts.push(vs, el('div', 'eyebrow rv-center', r.rival.ahead ? `${diff} Getränke Rückstand` : `${diff} Getränke Vorsprung`));
+        const gap = diff === 0 ? 'Gleichstand' : `${fmtDrinks(diff)} ${r.rival.ahead ? 'Rückstand' : 'Vorsprung'}`;
+        parts.push(vs, el('div', 'eyebrow rv-center', gap));
       }
       parts.push(el('div', 'eyebrow rv-center', `Platz ${r.rank} von ${r.of} im Jahr ${r.year}`));
       add(...parts);
@@ -1595,8 +1586,9 @@ if (!token || !playerId) {
         .map((p) => ({ id: p.id, name: p.name, total: todayTotal(p), ts: p.lastDrinkTsToday }))
         .sort((a, b) => b.total - a.total || (a.ts ?? Infinity) - (b.ts ?? Infinity) || a.name.localeCompare(b.name, 'de'));
     }
-    // All-Time kommt vom Server fertig sortiert (inkl. Tiebreak D-020)
-    return lastPlayers.map((p) => ({ id: p.id, name: p.name, total: p.total }));
+    // All-Time kommt vom Server fertig sortiert (inkl. Tiebreak D-020);
+    // dieselbe Liste wie im Profil (ohne Ausgeblendete, D-102)
+    return profLists.alltime;
   }
 
   function renderBoard(scrollToMe = false) {
@@ -1699,7 +1691,6 @@ if (!token || !playerId) {
     const list = profLists[profScope];
     const total = today ? todayTotal(profMe) : profMe.total;
     const el = $('prof-total');
-    el.style.color = today ? 'var(--green)' : 'var(--gold)';
     // Beim Umschalten nicht aufploppen: der Wert ist nicht gestiegen,
     // es steht nur ein anderer Zeitraum da.
     if (animate) bump('prof-total', total, `prof-total-${profScope}`);
@@ -1714,8 +1705,11 @@ if (!token || !playerId) {
       .filter((p) => todayTotal(p) > 0)
       .map((p) => ({ id: p.id, name: p.name, total: todayTotal(p), ts: p.lastDrinkTsToday }))
       .sort((a, b) => b.total - a.total || (a.ts ?? Infinity) - (b.ts ?? Infinity) || a.name.localeCompare(b.name, 'de'));
-    // All-Time: Reihenfolge kommt fertig sortiert vom Server (inkl. Tiebreak)
-    profLists.alltime = players.map((p) => ({ id: p.id, name: p.name, total: p.total }));
+    // All-Time: Reihenfolge kommt fertig sortiert vom Server (inkl. Tiebreak);
+    // Ausgeblendete fehlen wie in der TV-Rangliste (außer man ist es selbst)
+    profLists.alltime = players
+      .filter((p) => !p.hidden || p.id === playerId)
+      .map((p) => ({ id: p.id, name: p.name, total: p.total }));
 
     if (!profScopeManual) setProfScope(todayTotal(me) > 0 ? 'today' : 'alltime');
     else renderProfile(true);
@@ -1809,7 +1803,10 @@ if (!token || !playerId) {
         else statsTimer = setTimeout(loadStats, 800 + Math.random() * 1200);
       }
     },
-    onError: showError,
+    onError(message, { code } = {}) {
+      if (code === 'auth') signedOut();
+      else showError(message);
+    },
   });
 
   const send = (drink) => ws.send({ type: 'increment', token, playerId, drink, delta: 1 });

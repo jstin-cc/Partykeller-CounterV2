@@ -43,6 +43,10 @@ export function createLoginLimiter({ maxFails = 5, windowMs = 60_000, blockMs = 
   };
 }
 
+// Gemeinsames Limit für alle Passwort-/PIN-Prüfungen (REST-Logins, Backup-
+// Import und der Reset über den WebSocket): dieselbe IP ist dieselbe Person.
+export const loginLimiter = createLoginLimiter();
+
 // Zählt JEDEN Versuch pro Schlüssel (nicht nur Fehlversuche) und lässt in einem
 // gleitenden Fenster höchstens `max` zu. Für Aktionen, die auch bei Erfolg nicht
 // beliebig oft passieren sollen (z. B. neue Konten anlegen). In-Memory, ein Prozess.
