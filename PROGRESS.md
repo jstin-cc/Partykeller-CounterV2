@@ -7,6 +7,10 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16: **Inspiration Runde 4** (L30–L38, `docs/INSPIRATION-4.md`,
+Mockups in `docs/inspiration/l30-l38.html`) — Bierdeckel-Strichliste,
+Abend-Bon, Line-up des Abends, Geisterspur, Stempelkarte, Serie, Schwappen,
+Lichtstreifen, Pixel-Wechsel; noch nichts davon umgesetzt.
 Seit 2026-10-16 (D-105): **Rückblick blättert aus einem Guss** — gleiche
 Titelwörter („Dein") und die große Zahl gleiten von Seite zu Seite (die Zahl
 zählt um), übrige Wörter laufen durch eine Maske aus und ein, der Rest blendet
