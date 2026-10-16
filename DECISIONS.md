@@ -2414,6 +2414,11 @@ für alle Menüpunkte und ein paar Wege innerhalb der Seiten:
   Schließen zurück. „Ganze Rangliste ansehen": „Dein Platz" fliegt in die
   eigene markierte Zeile des Blatts, die erst danach mit kleinem Federn
   erscheint.
+- Nachtrag: Kachel und erste Story-Seite teilen den Titel gleich auf („Dein
+  Jahr" | „2026"). Die echten Titelteile der Story starten deckungsgleich auf
+  den Kachelteilen (Lage, Schriftgröße, Farbe) und gleiten an ihren Platz;
+  beim Schließen auf Seite 1 laufen sie zurück in die Kachel. Gemessen: im
+  Startbild pixelgleich mit der Kachel.
 
 **Begründung:** Wunsch des Nutzers nach mehr Übergängen wie beim
 Admin-Menü. Geprüft in der Demo-Instanz in Handybreite: Übergangsnamen auf

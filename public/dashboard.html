@@ -345,6 +345,10 @@ try {
   .review-card .eyebrow { color: var(--accent-ink); }
   .review-card-title { font-size: clamp(38px, 11vw, 56px); }
   .review-card-title .t-serif { -webkit-text-stroke: 0.022em currentColor; }
+  /* Titelteile als Blöcke: Kachel und erste Story-Seite haben dieselben
+     Teile („Dein Jahr" | „2026"), die beim Öffnen genau ineinander übergehen */
+  .review-card-title > span, .rv-title > span { display: inline-block; }
+  .rv-slide.is-in > .rv-morph { animation: none; }
 
   .review {
     position: fixed; inset: 0; z-index: 90; overflow: hidden;
@@ -799,7 +803,7 @@ try {
         <!-- Jahresrückblick (L23, D-095): Story-Seiten zum Durchtippen -->
         <button id="review-open" class="review-card" type="button" hidden data-notch="tabW:150;tabH:40;r:14;slant:20" data-reveal="up">
           <span class="eyebrow">Rückblick</span>
-          <span class="t-title review-card-title">Dein Jahr <span class="t-serif" id="review-year"></span></span>
+          <span class="t-title review-card-title"><span>Dein Jahr</span> <span class="t-serif" id="review-year"></span></span>
           <span class="notch-tag">Ansehen <span class="i-arrow"></span></span>
         </button>
 
@@ -1207,7 +1211,7 @@ if (!token || !playerId) {
     lines.forEach((line, i) => {
       if (i) t.append(document.createElement('br'));
       const m = /^\|(.*)\|$/.exec(line);
-      t.append(m ? el('span', 't-serif t-accent', m[1]) : line);
+      t.append(m ? el('span', 't-serif t-accent', m[1]) : el('span', '', line));
     });
     return t;
   };
@@ -1244,7 +1248,9 @@ if (!token || !playerId) {
       slides.push(sl);
     };
     const nights = `an ${r.nights} ${r.nights === 1 ? 'Abend' : 'Abenden'}`;
-    add(rvTitle('Dein', `|Jahr ${r.year}|`), bigNum(r.total), el('span', 'eyebrow', `Getränke ${nights}`));
+    // Gleiche Teile wie die Kachel („Dein Jahr" | „2026"): der Titel geht beim
+    // Öffnen Teil für Teil aus der Kachel hervor (D-103)
+    add(rvTitle('Dein Jahr', `|${r.year}|`), bigNum(r.total), el('span', 'eyebrow', `Getränke ${nights}`));
 
     const fav = Object.keys(r.drinks).sort((a, b) => r.drinks[b] - r.drinks[a])[0];
     const bar = el('div', 'dist-bar');
@@ -1352,10 +1358,13 @@ if (!token || !playerId) {
     if (rvIdx < rvSlides.length - 1) rvTimer = setTimeout(() => showSlide(rvIdx + 1), rvLeft);
     else $('review-segs').lastChild?.classList.replace('on', 'done');
   }
-  // Übergang (D-103): Die Story wächst aus der orangen Karte ins Vollbild
-  // (Ausschnitt und Farbe), der Kartentitel fliegt dabei an den Platz des
-  // Titels der ersten Seite. Beim Schließen schrumpft sie zurück in die Karte.
+  // Übergang (D-103): Die Story wächst aus der orangen Kachel ins Vollbild
+  // (Ausschnitt und Farbe). Die Titelteile der ersten Seite starten genau auf
+  // den Teilen des Kacheltitels (Lage, Größe, Farbe) und gleiten an ihren
+  // Platz; beim Schließen auf Seite 1 laufen sie zurück in die Kachel.
   const RV_EASE = 'cubic-bezier(0.65, 0.05, 0, 1)';
+  let rvAnims = [];   // eigene Animationen, damit Schließen/Öffnen sauber aufräumt
+  const rvAnim = (node, frames, opts) => { const a = node.animate(frames, opts); rvAnims.push(a); return a; };
   function reviewFrames() {
     const r = $('review-open').getBoundingClientRect();
     if (reducedMotion() || !r.width) return null;
@@ -1365,44 +1374,50 @@ if (!token || !playerId) {
       { clipPath: 'inset(0px 0px 0px 0px round 0px)', backgroundColor: cs.getPropertyValue('--bg').trim() },
     ];
   }
-  function flyReviewTitle() {
-    const from = document.querySelector('.review-card-title');
-    const to = rvSlides[0]?.querySelector('.rv-title');
-    if (!from || !to) return;
-    const a = from.getBoundingClientRect();
-    const b = to.getBoundingClientRect();
-    const fly = from.cloneNode(true);
-    const cs = getComputedStyle(from);
-    Object.assign(fly.style, {
-      position: 'fixed', left: `${a.left}px`, top: `${a.top}px`, width: `${a.width}px`, margin: '0',
-      zIndex: '91', pointerEvents: 'none', transformOrigin: '0 0', color: cs.color, fontSize: cs.fontSize,
+  // Teilpaare Kachel → Story mit dem Transform, der den Story-Teil exakt auf
+  // den Kachel-Teil legt (Ursprung oben links, Maßstab über die Schriftgröße)
+  function titlePairs() {
+    const from = [...document.querySelectorAll('.review-card-title > span')];
+    const to = [...(rvSlides[0]?.querySelectorAll('.rv-title > span') ?? [])];
+    if (from.length !== to.length || !from.length) return [];
+    return to.map((t, i) => {
+      const a = from[i].getBoundingClientRect();
+      const b = t.getBoundingClientRect();
+      const s = parseFloat(getComputedStyle(from[i]).fontSize) / parseFloat(getComputedStyle(t).fontSize);
+      return {
+        el: t,
+        at: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${s})`,
+        colorFrom: getComputedStyle(from[i]).color,
+        colorTo: getComputedStyle(t).color,
+      };
     });
-    fly.setAttribute('aria-hidden', 'true');
-    fly.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
-    document.body.append(fly);
-    const s = parseFloat(getComputedStyle(to).fontSize) / parseFloat(cs.fontSize);
-    const anim = fly.animate([
-      { transform: 'none', opacity: 1, color: cs.color },
-      { transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${s})`, opacity: 1, color: getComputedStyle(to).color, offset: 0.75 },
-      { transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${s})`, opacity: 0, color: getComputedStyle(to).color },
-    ], { duration: 900, easing: RV_EASE });
-    anim.finished.then(() => fly.remove(), () => fly.remove());
   }
   function openReview() {
     if (!review?.total) return;
+    rvAnims.forEach((a) => a.cancel());
+    rvAnims = [];
     rvSlides = reviewSlides(review);
     $('review-slides').replaceChildren(...rvSlides);
     $('review-kicker').textContent = `Rückblick · ${reviewName}`;
     const frames = reviewFrames();
+    const title = rvSlides[0].querySelector('.rv-title');
+    if (frames) title.classList.add('rv-morph');   // keine eigene Einblendung
     document.documentElement.style.overflow = 'hidden';
     enter($('review'));
     showSlide(0);
     if (!frames) return;
-    $('review').animate(frames, { duration: 750, easing: RV_EASE });
-    for (const c of $('review').children) {
-      if (!c.classList.contains('topo')) c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350, delay: 380, fill: 'backwards' });
+    rvAnim($('review'), frames, { duration: 750, easing: RV_EASE });
+    for (const p of titlePairs()) {
+      p.el.style.transformOrigin = '0 0';
+      rvAnim(p.el, [
+        { transform: p.at, color: p.colorFrom },
+        { transform: 'none', color: p.colorTo },
+      ], { duration: 750, easing: RV_EASE });
     }
-    flyReviewTitle();
+    // Alles andere kommt erst, wenn die Fläche fast steht
+    const rest = [$('review-segs'), document.querySelector('.review-top'), ...[...rvSlides[0].children].filter((c) => c !== title)];
+    for (const c of rest) rvAnim(c, [{ opacity: 0 }, { opacity: 1 }], { duration: 350, delay: 420, fill: 'backwards' });
+    setTimeout(() => title.classList.remove('rv-morph'), 800);
   }
   let reviewClosing = false;
   function closeReview() {
@@ -1411,14 +1426,25 @@ if (!token || !playerId) {
     const done = () => {
       reviewClosing = false;
       $('review').hidden = true;
-      $('review').getAnimations().forEach((a) => a.cancel());
+      rvAnims.forEach((a) => a.cancel());
+      rvAnims = [];
       document.documentElement.style.overflow = '';
     };
     const frames = reviewFrames();
     if (!frames) { done(); return; }
     reviewClosing = true;
-    for (const c of $('review').children) c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: 'forwards' });
-    $('review').animate([...frames].reverse(), { duration: 550, easing: RV_EASE, fill: 'forwards' })
+    // Auf Seite 1 läuft der Titel zurück in die Kachel, sonst blendet er aus
+    const pairs = rvIdx === 0 ? titlePairs() : [];
+    const keep = new Set(pairs.map((p) => p.el.parentElement));
+    const fade = [$('review-segs'), document.querySelector('.review-top'), ...[...rvSlides[rvIdx].children].filter((c) => !keep.has(c))];
+    for (const c of fade) rvAnim(c, [{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: 'forwards' });
+    for (const p of pairs) {
+      rvAnim(p.el, [
+        { transform: 'none', color: p.colorTo },
+        { transform: p.at, color: p.colorFrom },
+      ], { duration: 550, easing: RV_EASE, fill: 'forwards' });
+    }
+    rvAnim($('review'), [...frames].reverse(), { duration: 550, easing: RV_EASE, fill: 'forwards' })
       .finished.then(done, done);
   }
   $('review-open').addEventListener('click', openReview);
