@@ -2522,3 +2522,37 @@ Bewusst nicht im Profil und ohne die Serie (L35).
 im Rückblick belohnt die Karte das Dabeisein statt der Menge. Geprüft in der
 Demo-Instanz in Handybreite (Daten, Übergang von „Dein bester Abend“,
 keine Konsolenfehler).
+
+## D-109 (2026-10-16): Umzug vom alten Repo; Härtungen aus dem alten Repo nachgezogen
+
+**Entscheidung:** Die laufende Instanz im Partykeller (alter Stand aus
+`jstin-cc/Partykeller-Counter`) wird im selben Ordner auf dieses Repo
+umgestellt: `git remote set-url`, `git fetch`, `git reset --hard
+origin/main`, danach wie gewohnt `git pull`. Anleitung samt Sicherung und
+Rückweg im README („Umzug vom alten Partykeller-Counter“). Datenbank und
+`.env` bleiben liegen; das Schema ist in beiden Ständen gleich, eine
+Migration ist nicht nötig. Aus dem alten Repo, das sich nach der Abspaltung
+noch weiterentwickelt hat (dort D-080 bis D-085), fehlten hier noch:
+- `allowScripts` für better-sqlite3 in der `package.json` und der
+  README-Abschnitt zum Fehler „compiled against a different Node.js
+  version“ (Node 24 auf dem Partykeller-PC).
+- Kein Absturz durch eine kaputte WebSocket-Adresse (`new URL` im
+  `upgrade`-Handler abgefangen).
+- Broadcast um 06:00: Beim Wechsel des Party-Tags schickt der Server von
+  sich aus den neuen Stand, statt bis zum nächsten Getränk die Zahlen der
+  letzten Nacht zu zeigen.
+- Unerwartete REST-Fehler als knappes JSON statt Express-Fehlerseite mit
+  Stacktrace; `/api/login` prüft, dass `playerId` ein Text ist.
+Die übrigen Fixes von dort (Party-Tag bei Zeitumstellung, Lösch-Passwort
+mit Fehlversuch-Sperre, `Object.hasOwn`, Download-Freigabe nach 30 s,
+Emoji-Initialen) waren hier schon drin; die Design-Änderungen von dort sind
+durch die eigenen dieses Repos ersetzt.
+
+**Begründung:** Wunsch des Nutzers, die Instanz im Partykeller per Git auf
+das neue Programm zu heben und so aktuell zu halten; den Youngstars-Bereich
+braucht es nicht mehr. Geprüft mit einer Datenbank, die der alte Code
+angelegt hat (Konten mit und ohne PIN, ausgeblendetes Konto, vier Abende,
+Abend-Name, Fun-Fact, QR-Adresse): Der neue Server startet darauf, Zähler,
+Archiv, Abend-Namen, Login mit PIN, vom alten Code ausgestellte Tokens,
+Jahresrückblick und Admin-Login funktionieren; eine kaputte WS-Adresse
+lässt den Server weiterlaufen.

@@ -87,6 +87,35 @@ maschine die übliche Einstellung. In der **Eingabeaufforderung (cmd)** oder im
 **Git Bash** tritt das Problem gar nicht auf, dort läuft `npm.cmd` statt
 `npm.ps1`.
 
+### Fehler „was compiled against a different Node.js version“
+
+Nach einem Node-Update (z. B. von Node 22 auf 24) bricht `npm start` so ab:
+
+```
+Error: The module '...\better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 127. This version of Node.js requires
+NODE_MODULE_VERSION 137.
+```
+
+`better-sqlite3` enthält ein fertiges Binary, das genau zu einer
+Node-Version passt. Im `node_modules`-Ordner liegt noch das alte, und ein
+erneutes `npm install` tauscht es nicht aus, weil sich am Paket nichts
+geändert hat. Abhilfe — **die Daten in `data/` bleiben erhalten**:
+
+```powershell
+npm rebuild better-sqlite3
+npm start
+```
+
+Hilft das nicht, `node_modules` ganz löschen und neu installieren (siehe
+[Auf neue Version aktualisieren](#auf-neue-version-aktualisieren--neustart)).
+Für den Download des passenden Binarys braucht dieser eine Schritt
+Internet; danach läuft die App wieder offline.
+
+Die Freigabe für das Install-Skript von better-sqlite3 (ab npm 11.16 nötig)
+steht in der `package.json` (`allowScripts`).
+
 ## Auf neue Version aktualisieren / Neustart
 
 Laufenden Server im Terminal stoppen (**Strg + C**), dann ins Projektverzeichnis
@@ -122,10 +151,62 @@ nichts geändert, hilft `git reset --hard origin/main` — das lässt `data/` un
 Beschwert sich PowerShell hier über `npm`, siehe
 [Windows: `npm` wird von PowerShell blockiert](#windows-npm-wird-von-powershell-blockiert).
 
-> **Update auf D-080 (nur noch Partykeller):** `YOUNGSTARS_ADMIN_PASSWORD` und
-> `YOUNGSTARS_DB_PATH` in der `.env` werden nicht mehr gebraucht und können
-> raus. `data/youngstars.db` bleibt unangetastet liegen, wird aber nicht mehr
-> gelesen.
+## Umzug vom alten Partykeller-Counter
+
+Wer noch die alte Version aus
+[jstin-cc/Partykeller-Counter](https://github.com/jstin-cc/Partykeller-Counter)
+betreibt, stellt denselben Ordner auf dieses Repo um. Datenbank, `.env`,
+Pfade und Autostart bleiben, wie sie sind; das Datenbankformat ist gleich,
+alle Konten, Getränke, Abende, Abend-Namen und Fun-Facts sind danach da.
+Mit demselben `TOKEN_SECRET` bleiben auch die Handys angemeldet.
+
+Vorher im Admin **⬇ Backup herunterladen** und die Datei auf einen
+USB-Stick legen. Dann den Server stoppen (**Strg + C**).
+
+**Windows (PowerShell):**
+
+```powershell
+cd <dein-Projektordner>
+Copy-Item -Recurse data ..\partykeller-sicherung-v1
+Copy-Item .env ..\partykeller-sicherung-v1\.env
+git remote set-url origin https://github.com/jstin-cc/Partykeller-CounterV2.git
+git fetch origin
+git checkout main
+git reset --hard origin/main
+Remove-Item -Recurse -Force node_modules
+npm install
+npm start
+```
+
+**macOS/Linux (bash):**
+
+```bash
+cd <dein-Projektordner>
+cp -r data ../partykeller-sicherung-v1
+cp .env ../partykeller-sicherung-v1/.env
+git remote set-url origin https://github.com/jstin-cc/Partykeller-CounterV2.git
+git fetch origin
+git checkout main
+git reset --hard origin/main
+rm -rf node_modules
+npm install
+npm start
+```
+
+Für diesen einen Wechsel `git reset --hard` statt `git pull`: Das neue Repo
+hat eine eigene Git-Geschichte, `git pull` bricht mit „refusing to merge
+unrelated histories“ ab. `data/` und `.env` sind gitignored und bleiben
+unangetastet. Ab dann reicht für jedes Update wieder `git pull` wie unter
+[Auf neue Version aktualisieren](#auf-neue-version-aktualisieren--neustart).
+
+In der `.env` können `YOUNGSTARS_ADMIN_PASSWORD` und `YOUNGSTARS_DB_PATH`
+raus; `data/youngstars.db` wird nicht mehr gelesen und kann gelöscht werden.
+Alte `/youngstars/…`-Links und -QR-Codes leiten in den Partykeller.
+
+**Zurück zur alten Version**, falls etwas schiefgeht: Server stoppen,
+`data` und `.env` aus `..\partykeller-sicherung-v1` zurückkopieren, dann
+`git remote set-url origin https://github.com/jstin-cc/Partykeller-Counter.git`,
+`git fetch origin`, `git reset --hard origin/main`, `npm install`, `npm start`.
 
 ## Screens
 
