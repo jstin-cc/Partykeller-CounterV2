@@ -405,6 +405,10 @@ try {
   .mv.is-down::before { transform: rotate(180deg); }
   .mv:empty { display: none; }
   @keyframes tv-mv-in { from { opacity: 0; transform: translateY(8px); } }
+  /* Geisterspur beim Überholen (L33): Umriss-Kopien von Name und Gesamtzahl */
+  .row-ghost { border-top-color: transparent; pointer-events: none; }
+  .row-ghost > :not(.col-name):not(.col-total), .row-ghost .mv, .row-ghost .best { visibility: hidden; }
+  .row-ghost .nm, .row-ghost .col-total > span { color: transparent; background: none; -webkit-text-stroke: 1.5px var(--accent); }
   /* Bestwert (grün) und Hausrekord (lila) wie die Sektorfarben der F1 */
   .best {
     flex: none; padding: 6px 9px 5px; border-radius: 6px;
@@ -979,12 +983,36 @@ function updateRowsInPlace(list) {
   }
 }
 
+// Geisterspur beim Überholen (L33): Wer nach oben rückt, zieht vier
+// Umriss-Kopien von Name und Gesamtzahl hinter sich her, die verzögert
+// folgen und am Ziel verblassen. Die Überholten dimmen währenddessen ab.
+const SWAP_MS = 900;
+const GHOSTS = [0.7, 0.45, 0.25, 0.12];
+function ghostTrail(row, delta, layer, opacity) {
+  GHOSTS.forEach((o, k) => {
+    const g = row.cloneNode(true);
+    g.className = 'row row-ghost';
+    g.removeAttribute('data-id');
+    g.querySelectorAll('.pk-pop').forEach((e) => e.classList.remove('pk-pop'));
+    g.setAttribute('aria-hidden', 'true');
+    g.style.cssText = `position:absolute;left:0;right:0;top:${row.offsetTop}px;height:${ROW_H}px`;
+    layer.insertBefore(g, layer.firstChild);
+    g.animate([
+      { transform: `translateY(${delta}px)`, opacity: o * opacity, easing: 'cubic-bezier(0.65, 0.05, 0, 1)' },
+      { transform: 'none', opacity: o * opacity, offset: SWAP_MS / (SWAP_MS + 300) },
+      { transform: 'none', opacity: 0 },
+    ], { duration: SWAP_MS + 300, delay: (k + 1) * 70, fill: 'backwards' })
+      .finished.then(() => g.remove(), () => g.remove());
+  });
+}
+
 // Reihenfolge/Menge geändert: neu aufbauen. Bei Umsortierung gleiten die Zeilen
 // per FLIP von ihrer alten an die neue Position.
 function rebuildRest(animate) {
   const viewport = $('rest');
   const oldTop = {};
-  if (track) for (const r of track.children) oldTop[r.dataset.id] = r.getBoundingClientRect().top;
+  const oldIdx = {};
+  if (track) [...track.children].forEach((r, i) => { oldTop[r.dataset.id] = r.getBoundingClientRect().top; oldIdx[r.dataset.id] = i; });
 
   stopScroll();
   viewport.textContent = '';
@@ -1006,6 +1034,13 @@ function rebuildRest(animate) {
   syncScroll();
 
   if (animate && !modeSwitching) {
+    // Überholt hat, wer an einer Zeile vorbeigezogen ist, die vorher über ihm
+    // stand — nicht, wer nur aufrückt, weil jemand aufs Podest wechselt
+    const newIdx = {};
+    [...track.children].forEach((r, i) => { newIdx[r.dataset.id] = i; });
+    const both = Object.keys(newIdx).filter((id) => id in oldIdx);
+    const passed = (id) => both.some((x) => oldIdx[x] < oldIdx[id] && newIdx[x] > newIdx[id]);
+    const overtaken = (id) => both.some((x) => oldIdx[x] > oldIdx[id] && newIdx[x] < newIdx[id]);
     [...track.children].forEach((r, i) => {
       const id = r.dataset.id;
       const newTop = r.getBoundingClientRect().top;
@@ -1015,9 +1050,15 @@ function rebuildRest(animate) {
         if (delta) {
           r.style.transform = `translateY(${delta}px)`;
           requestAnimationFrame(() => {
-            r.style.transition = 'transform 0.6s var(--ease-out)';
+            r.style.transition = `transform ${SWAP_MS}ms var(--ease)`;
             r.style.transform = 'translateY(0)';
           });
+          // Nach Reihenfolge, nicht nach Pixeln: läuft die Rotation, ist die
+          // alte Liste verschoben und jede Zeile gleitet ein Stück
+          if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            if (passed(id)) ghostTrail(r, delta, viewport, rowOpacity(i));
+            else if (overtaken(id)) r.animate([{ opacity: rowOpacity(i) }, { opacity: rowOpacity(i) * 0.25, offset: 0.35 }, { opacity: rowOpacity(i) }], { duration: SWAP_MS });
+          }
         }
       } else {
         r.style.opacity = '0';               // neue Zeile: sanft einblenden
