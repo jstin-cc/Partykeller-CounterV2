@@ -7,6 +7,12 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16 (D-109): **Umzug vom alten Repo** — README erklärt, wie die
+Instanz im Partykeller per `git remote set-url` + `git reset --hard` auf
+dieses Repo wechselt (Daten und `.env` bleiben, gleiches Schema, mit einer
+vom alten Code angelegten DB geprüft). Aus dem alten Repo nachgezogen:
+`allowScripts` für better-sqlite3, Hilfe bei Node-Wechsel, kein Absturz
+durch kaputte WS-Adresse, Broadcast um 06:00, REST-Fehler als JSON.
 Seit 2026-10-16 (D-108): **Stempelkarte im Rückblick** (L34) — neue Seite
 „Deine Abende“ mit jedem Party-Abend des Jahres als Stempel (gewonnen =
 gefüllt, verpasst = gestrichelt); Server liefert `stamps` im Review.

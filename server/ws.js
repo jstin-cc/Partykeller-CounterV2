@@ -3,7 +3,7 @@ import { config } from './config.js';
 import { verifyToken, tokenArea, hashPin, checkPassword } from './auth.js';
 import { loginLimiter } from './ratelimit.js';
 import { validName, validPin, validFactTitle, validFactText, validNightName, normalizeJoinUrl } from './validate.js';
-import { validDayString } from './db.js';
+import { validDayString, partyDayStartMs } from './db.js';
 
 // Nachrichten-Contract siehe PLAN.md §5; Server validiert alles.
 // Ein Handler-Satz pro Bereich (D-019): db und Increment-Buckets hängen am
@@ -322,6 +322,21 @@ export function setupWs(server, areas) {
 
     armFactTimer();
 
+    // Tageswechsel: Um 06:00 beginnt ein neuer Party-Tag, und alle Heute-Werte
+    // springen auf 0. Ohne eigenen Broadcast sähen TV und Handys das erst beim
+    // nächsten Getränk.
+    let dayTimer = null;
+    function armDayTimer() {
+      clearTimeout(dayTimer);
+      // 06:00 des Folgetags per Datum, nicht +24 h (Zeitumstellung)
+      const next = new Date(partyDayStartMs());
+      next.setDate(next.getDate() + 1);
+      // eine Sekunde Luft, damit der Stand sicher schon zum neuen Tag gehört
+      dayTimer = setTimeout(() => { area.broadcast(); armDayTimer(); }, next.getTime() - Date.now() + 1000);
+      dayTimer.unref?.();
+    }
+    armDayTimer();
+
     area.broadcastDemo = (demo) => {
       const msg = JSON.stringify({ type: 'demo', ...demo });
       for (const client of wss.clients) {
@@ -411,7 +426,15 @@ export function setupWs(server, areas) {
   }
 
   server.on('upgrade', (req, socket, head) => {
-    const { pathname } = new URL(req.url, 'http://localhost');
+    // Kaputte Adresse (z. B. „GET http://[") wirft in new URL und riss sonst
+    // den ganzen Server mit
+    let pathname;
+    try {
+      ({ pathname } = new URL(req.url, 'http://localhost'));
+    } catch {
+      socket.destroy();
+      return;
+    }
     const area =
       areas.find((a) => pathname === `${a.base}/ws`) ??
       (pathname === '/ws' ? areas[0] : null);   // Alt-Pfad => Partykeller
