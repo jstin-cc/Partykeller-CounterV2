@@ -7,6 +7,8 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16: Im Dashboard-Menü steht unter „Mehr" auch „Admin" (zwischen
+Abend-Archiv und Abmelden, mit Übergang in den Admin-Titel).
 Seit 2026-10-16 (D-099): **Effekt-Demo** im Admin (Reiter TV) — Plakat,
 Meilenstein, Konfetti, Fledermaus, Bläschen, Feuerwerk, Schnee,
 Silvester-Countdown und Saison-Deko auf Knopfdruck auf allen Fernsehern.
