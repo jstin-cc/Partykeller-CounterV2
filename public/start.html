@@ -83,14 +83,22 @@ try {
   .tile {
     --notch-fill: var(--surface);
     --notch-tag-ink: var(--ink);
-    flex: 1 1 0; min-height: 250px; min-width: 0;
+    /* Handy: so hoch wie der Inhalt (nie gestaucht, sonst liefe die
+       Live-Zeile in die Kerbe); Desktop: gleich breit nebeneinander */
+    flex: 1 0 auto; min-height: 250px; min-width: 0;
     display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
     padding: 20px 20px 54px;
     color: var(--ink); text-decoration: none; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: flex-grow 0.85s var(--ease), opacity 0.5s var(--ease);
   }
-  @media (min-width: 960px) { .tile { padding: 28px 30px 64px; } }
+  @media (min-width: 960px) { .tile { flex: 1 1 0; padding: 28px 30px 64px; } }
+  /* Nach dem Einblenden übernehmen die eigenen Übergänge (die Regel für
+     [data-reveal] wiegt sonst schwerer, Größenwechsel sprängen dann) */
+  .js-motion .split > .tile.is-settled {
+    transition: flex-grow 0.85s var(--ease), opacity 0.45s var(--ease), transform 0.6s var(--ease);
+    transition-delay: 0s;
+  }
   a.tile:hover { color: var(--ink); }
   .tile .topo { transition: background-color 0.6s var(--ease); }
   .tile-head { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 26px; }
@@ -116,10 +124,13 @@ try {
     .tile:hover .wm-top { color: var(--accent-text); transform: translateX(0.12em); }
     .tile:hover .wm-bottom { transform: translateX(-0.04em); }
   }
-  /* Gewählt: die Karte füllt die Bühne, die andere klappt weg */
-  .split.is-chosen .tile:not(.is-chosen) { flex-grow: 0.0001; opacity: 0; min-height: 0; padding: 0; overflow: hidden; white-space: nowrap; }
-  @media (max-width: 959px) { .split.is-chosen .tile:not(.is-chosen) { height: 0; } }
-  .split.is-chosen .tile.is-chosen { flex-grow: 1; }
+  /* Gewählt: die andere Karte tritt weg (auf dem Handy ohne Layoutsprung:
+     sie blendet nur aus und sinkt), am Rechner füllt die gewählte die Bühne */
+  .split.is-chosen .tile:not(.is-chosen) { opacity: 0; transform: translateY(24px); pointer-events: none; }
+  @media (min-width: 960px) {
+    .split.is-chosen .tile:not(.is-chosen) { flex-grow: 0.0001; transform: none; overflow: hidden; white-space: nowrap; }
+    .split.is-chosen .tile.is-chosen { flex-grow: 1; }
+  }
   .split.is-chosen .tile.is-chosen .topo { background: color-mix(in srgb, var(--accent) 34%, var(--topo-line)); }
   .pick.is-leaving :is(.pick-title, .pick-top, .pick-foot) {
     opacity: 0; transform: translateY(-14px);
@@ -228,7 +239,9 @@ for (const t of tiles) {
     t.classList.add('is-chosen');
     page.classList.add('is-leaving');
     drawScribble(t.querySelector('.scribble--underline'), { restart: true });
-    setTimeout(() => go(t.href), 620);
+    // weiter, wenn die Bewegung im Wesentlichen steht (Rechner: Karte wächst,
+    // Handy: die andere blendet nur aus)
+    setTimeout(() => go(t.href), matchMedia('(min-width: 960px)').matches ? 760 : 480);
   });
 }
 // Zurück aus dem bfcache: Auswahl wieder zeigen
@@ -273,6 +286,11 @@ setInterval(refresh, 20_000);
 document.addEventListener('visibilitychange', refresh);
 
 initLando();
+
+// Eigene Übergänge erst nach dem Einblenden (siehe .is-settled)
+const settle = () => tiles.forEach((t) => t.classList.add('is-settled'));
+if (reducedMotion() || document.documentElement.dataset.morph) settle();
+else Promise.resolve(document.documentElement.pkBootDone).then(() => setTimeout(settle, 1400));
 </script>
 </body>
 </html>
