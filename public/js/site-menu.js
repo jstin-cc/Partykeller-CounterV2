@@ -7,6 +7,11 @@ import { go } from './lando.js';
 // Ohne Anmeldung steht statt Zählen/Profil die Anmeldung da. Der Eintrag der
 // aktuellen Seite ist durchgestrichen und schließt nur das Menü.
 // Muss vor initLando() laufen (initMenu hängt sich an #site-menu).
+// Übergänge (D-103): jeder Menüpunkt gleitet auf der Zielseite in sein
+// Gegenstück — „Zählen"/„Profil" in die Tab-Knöpfe, „Abend-Archiv" in die
+// Zeile über der Archiv-Headline, „Anmeldung" in die Zeile über „Wer bist
+// du?", „Admin" in den Admin-Titel; beim Abmelden gleitet der Name unten im
+// Menü in die eigene Zeile der Anmeldeliste.
 //
 // current: 'login' | 'dashboard' | 'archive' | 'admin'. Im Dashboard sind
 // Zählen und Profil Knöpfe mit data-go-tab, die Seite schaltet damit ihre
@@ -30,19 +35,19 @@ export function renderSiteMenu(current) {
   const items = signedIn
     ? [
       { group: 'Dein Abend' },
-      { key: 'count', label: 'Zählen', href: 'dashboard', tab: 'count' },
-      { key: 'profile', label: 'Profil', href: 'dashboard#profil', tab: 'profile' },
+      { key: 'count', label: 'Zählen', href: 'dashboard', tab: 'count', morph: 'tab-count' },
+      { key: 'profile', label: 'Profil', href: 'dashboard#profil', tab: 'profile', morph: 'tab-profile' },
       { group: 'Mehr' },
-      { key: 'archive', label: 'Abend-Archiv', href: 'abende', sm: true },
+      { key: 'archive', label: 'Abend-Archiv', href: 'abende', sm: true, morph: 'archive' },
       { key: 'tv', label: 'TV', href: 'tv', sm: true, newTab: true },
       { key: 'admin', label: 'Admin', href: 'admin', sm: true, morph: 'admin' },
       { key: 'logout', label: 'Abmelden', sm: true, logout: true },
     ]
     : [
       { group: 'Dein Abend' },
-      { key: 'login', label: 'Anmeldung', href: './' },
+      { key: 'login', label: 'Anmeldung', href: './', morph: 'login' },
       { group: 'Mehr' },
-      { key: 'archive', label: 'Abend-Archiv', href: 'abende', sm: true },
+      { key: 'archive', label: 'Abend-Archiv', href: 'abende', sm: true, morph: 'archive' },
       { key: 'tv', label: 'TV', href: 'tv', sm: true, newTab: true },
       { key: 'admin', label: 'Admin', href: 'admin', sm: true, morph: 'admin' },
     ];
@@ -69,7 +74,9 @@ export function renderSiteMenu(current) {
     if (onDash && it.tab) {
       node = el('button', { class: cls, type: 'button', 'data-menu-close': true, 'data-go-tab': it.tab });
     } else if (it.logout) {
-      node = el('button', { class: cls, type: 'button', 'data-menu-close': true, 'data-logout': true });
+      // Außerhalb des Dashboards bleibt das Menü beim Abmelden stehen: aus
+      // ihm gleitet der Name in die Anmeldeliste
+      node = el('button', { class: cls, type: 'button', 'data-menu-close': onDash, 'data-logout': true });
     } else if (isCurrent) {
       node = el('button', { class: cls, type: 'button', 'data-menu-close': true, 'aria-current': 'page' });
     } else {
@@ -104,7 +111,9 @@ export function renderSiteMenu(current) {
 
   nav.querySelector('[data-logout]')?.addEventListener('click', () => {
     clearSession();
-    // Aus dem Dashboard gleitet der Kopf zurück in die eigene Zeile (D-085)
-    go('./', { morph: onDash ? 'me' : '' });
+    // Aus dem Dashboard gleitet der Kopf zurück in die eigene Zeile (D-085),
+    // von den anderen Seiten der Name aus „Angemeldet als …" (D-103)
+    if (!onDash) nav.querySelector('[data-me-name]')?.style.setProperty('view-transition-name', 'me-name');
+    go('./', { morph: 'me' });
   });
 }

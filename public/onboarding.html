@@ -557,9 +557,17 @@ $('skip').addEventListener('click', toDashboard);
 
 // Ins Dashboard (D-085): Von Schritt 1 aus gleiten die Probier-Karten an den
 // Platz der echten Getränkekarten und der Name aus der Begrüßung in den
-// Dashboard-Kopf; das Logo gleitet immer mit.
+// Dashboard-Kopf; von Schritt 3 aus öffnet das Dashboard im Profil und die
+// Ranglisten-Karte gleitet an ihren Platz dort (D-103). Das Logo gleitet
+// immer mit.
 function toDashboard() {
   let morph = '';
+  let url = 'dashboard';
+  if (step === STEPS) {
+    document.querySelector('#step-3 .rank-card').style.viewTransitionName = 'morph-rank-card';
+    morph = 'rank';
+    url = 'dashboard#profil';
+  }
   if (step === 1) {
     const kinds = ['beer', 'shot', 'mix'];
     document.querySelectorAll('#drink-demos > .drink-demo').forEach((c, i) => { c.style.viewTransitionName = `morph-drink-${kinds[i]}`; });
@@ -567,7 +575,7 @@ function toDashboard() {
     if (nm) nm.style.viewTransitionName = 'me-name';
     morph = 'drinks';
   }
-  go('dashboard', { replace: true, morph });
+  go(url, { replace: true, morph });
 }
 
 // Schaubild zum Ausprobieren: Ein Tipp zählt nur hier auf der Seite hoch —

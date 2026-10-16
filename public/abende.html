@@ -91,6 +91,11 @@ try {
   .hero-emblem { flex-direction: row; gap: 10px; align-self: flex-start; text-align: left; }
   .hero-emblem .laurel { width: 34px; height: 34px; }
   .hero-emblem .eyebrow { font-size: 10px; }
+  /* „Abend-Archiv" aus dem Menü gleitet in diese Zeile (D-103); sie steht
+     dafür sofort da, statt einzublenden */
+  .morph-archive { display: inline-block; }
+  html[data-morph="archive"] .morph-archive { view-transition-name: morph-archive; }
+  html[data-morph="archive"] .hero-emblem[data-reveal] { opacity: 1; transform: none; transition: none; }
 
   /* Höhe mitdenken: auf flachen Desktop-Fenstern soll das Laufband noch
      im ersten Bild stehen */
@@ -712,7 +717,7 @@ try {
       <div class="hero-body">
         <div class="emblem hero-emblem" data-reveal="fade">
           <span class="laurel"></span>
-          <span class="eyebrow">Abend-Archiv · seit <span id="hero-since" class="num">–</span></span>
+          <span class="eyebrow"><span class="morph-archive">Abend-Archiv</span> · seit <span id="hero-since" class="num">–</span></span>
         </div>
         <h1 class="t-impact hero-title" id="hero-title" aria-live="off">
           <span class="ln"><span class="ln-i" style="--i:0"><span class="num" id="stat-nights">0</span> <span class="t-serif t-accent" id="stat-nights-word">Abende</span>,</span></span>
@@ -808,7 +813,7 @@ try {
           <ul class="foot-links">
             <li><a href="./" data-home><span data-home-label>Anmeldung</span><span class="i-arrow"></span></a></li>
             <li><a href="tv">TV-Ansicht <span class="i-arrow"></span></a></li>
-            <li><a href="admin">Admin <span class="i-arrow"></span></a></li>
+            <li><a href="admin" data-morph="admin" data-morph-self>Admin <span class="i-arrow"></span></a></li>
             <li><button type="button" id="to-top">Nach oben <span class="i-arrow i-arrow--up"></span></button></li>
           </ul>
         </div>
@@ -1124,6 +1129,9 @@ function buildCard(night) {
     // Getränke dieses Abends einzeln korrigieren: im Getränke-Protokoll (D-076)
     const log = h('a', 'btn btn--sm btn--ghost night-btn', 'Protokoll ');
     log.href = `admin?protokoll=${night.day}`;
+    // Das Wort gleitet in „Getränke-Protokoll" im Admin (D-103)
+    log.dataset.morph = 'proto';
+    log.setAttribute('data-morph-self', '');
     log.title = 'Getränke dieses Abends einzeln ansehen und korrigieren';
     log.append(h('span', 'i-arrow'));
     const tv = h('button', 'btn btn--sm btn--dark night-btn');

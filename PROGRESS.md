@@ -7,6 +7,12 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16 (D-103): **Mehr Übergänge** — jeder Menüpunkt gleitet auf der
+Zielseite in sein Gegenstück (Archiv-Zeile, Tab-Knöpfe, „Anmeldung",
+Abmelden-Name in die Anmeldeliste), „Protokoll" im Archiv → Admin-Titel,
+Onboarding Schritt 3 → Profil; Rückblick wächst aus seiner Karte, „Dein
+Platz" fliegt in die eigene Zeile der ganzen Rangliste. In der Demo-Instanz
+in Handybreite geprüft.
 Seit 2026-10-16 (D-101/D-102): **Code-Check umgesetzt** — ein gemeinsames
 Menü auf Anmeldung, Dashboard, Archiv und Admin (`js/site-menu.js`);
 Zeitumstellung im Party-Tag korrigiert; ungültiges Token meldet ab (statt
