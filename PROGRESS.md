@@ -7,6 +7,10 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16: **Entwurf Auswahlseite** für die Rückkehr des
+Youngstars-Bereichs im gleichen Design (`docs/INSPIRATION-AUSWAHL.md`,
+Mockup `docs/inspiration/start-auswahl.html`, drei Varianten); Wahl und
+Rückfragen (Daten, Startverhalten, Admin, Logo, TV) beim Nutzer offen.
 Seit 2026-10-16 (D-109): **Umzug vom alten Repo** — README erklärt, wie die
 Instanz im Partykeller per `git remote set-url` + `git reset --hard` auf
 dieses Repo wechselt (Daten und `.env` bleiben, gleiches Schema, mit einer

@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Entwurf Auswahlseite</title>
+<script>document.documentElement.classList.add('js-motion');
+// Entwurf: Variante über ?v=1|2|3 (Standard 1)
+document.documentElement.dataset.v = (new URLSearchParams(location.search).get('v') || '1');</script>
+<link rel="stylesheet" href="../../public/css/theme.css">
+<style>
+  /* Entwurf Auswahlseite (Partykeller / Youngstars). Beide Bereiche sehen
+     gleich aus, sie unterscheiden sich nur über die Wortmarke. Nur Tokens und
+     Bausteine aus theme.css / lando.js, keine eigenen Farben. */
+  .v { display: none; }
+  html[data-v="1"] .v1, html[data-v="2"] .v2, html[data-v="3"] .v3 { display: flex; }
+
+  .page {
+    position: relative; z-index: 1;
+    min-height: 100vh; min-height: 100dvh;
+    max-width: 1440px; margin: 0 auto;
+    padding: max(14px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+    flex-direction: column; gap: 22px;
+  }
+  @media (min-width: 960px) { .page { padding: 22px 40px 28px; gap: 28px; } }
+  .page-top .eyebrow b { color: var(--ink); font-weight: 700; }
+  .live { display: inline-flex; align-items: center; gap: 7px; }
+  .live::before {
+    content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+    animation: live-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes live-pulse { 50% { opacity: 0.25; } }
+
+  .pick-title { font-size: clamp(42px, 11.5vw, 112px); }
+  .pick-title .scribbled { margin-left: 0.12em; }
+  .pick-title .scribble--circle { left: -8%; width: 116%; }
+  /* Kringel mit mehreren Teilstrichen erst zeigen, wenn sie gezeichnet werden */
+  :is(.tile, .row) .scribble:not(.is-drawn) { visibility: hidden; }
+  @media (max-width: 599px) { .foot-hint { display: none; } }
+  .page-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .page-foot .emblem { flex-direction: row; gap: 10px; }
+  .page-foot .emblem .laurel { width: 30px; height: 30px; }
+  .foot-hint { text-align: right; }
+
+  /* ------------------------------------------------------------------
+     Variante 1: „On Track / Off Track" — zwei gleich große Kerbenkarten
+     nebeneinander (Handy: untereinander), riesige Wortmarke, Live-Zeile.
+     Mit Maus wächst die Karte unter dem Zeiger, die andere tritt zurück.
+     ------------------------------------------------------------------ */
+  .split { flex: 1; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  @media (min-width: 960px) { .split { flex-direction: row; gap: 18px; min-height: 460px; } }
+  .tile {
+    --notch-fill: var(--surface);
+    --notch-tag-ink: var(--ink);
+    flex: 1 1 0; min-height: 250px; min-width: 0;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
+    padding: 20px 20px 54px;
+    color: var(--ink); text-decoration: none; cursor: pointer;
+    transition: flex-grow 0.85s var(--ease), opacity 0.5s var(--ease), filter 0.5s var(--ease);
+  }
+  @media (min-width: 960px) { .tile { padding: 28px 30px 64px; } }
+  .tile .topo { opacity: 0.9; transition: background-color 0.6s var(--ease); }
+  .tile-head { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .tile-no { color: var(--accent-text); }
+  .tile-mark { position: relative; font-size: clamp(64px, 19vw, 150px); align-self: flex-start; }
+  @media (min-width: 960px) { .tile-mark { font-size: clamp(88px, 9.6vw, 168px); } }
+  .tile-mark .wm-bottom { display: block; transition: transform 0.85s var(--ease); }
+  .tile-mark .wm-top { display: block; transition: transform 0.85s var(--ease), color 0.4s var(--ease); }
+  .tile-mark .scribble--underline { position: absolute; left: -2%; width: 104%; bottom: -0.16em; height: 0.2em; }
+  .tile-stats { position: relative; display: flex; gap: 22px; flex-wrap: wrap; }
+  .tile-stat { display: flex; flex-direction: column; gap: 4px; }
+  .tile-stat .num { font-size: 30px; line-height: 0.9; }
+  .tile-stat .t-serif { font-size: 30px; line-height: 0.9; color: var(--accent-text); }
+  .tile .notch-tag { font-size: 12px; }
+  .tile .chip { position: relative; }
+  @media (hover: hover) and (pointer: fine) {
+    .split:has(.tile:hover) .tile:not(:hover) { flex-grow: 0.72; opacity: 0.5; }
+    .tile:hover { flex-grow: 1.28; }
+    .tile:hover .topo { background: color-mix(in srgb, var(--accent) 34%, var(--topo-line)); }
+    .tile:hover .wm-top { color: var(--accent-text); transform: translateX(0.12em); }
+    .tile:hover .wm-bottom { transform: translateX(-0.04em); }
+  }
+  /* Gewählt: die Karte füllt die Bühne, die andere klappt weg, dann
+     morpht die Wortmarke in die Kopfleiste der Anmeldung (site-wordmark) */
+  .split.is-chosen .tile:not(.is-chosen) { flex-grow: 0.0001; opacity: 0; min-height: 0; padding: 0; overflow: hidden; white-space: nowrap; }
+  @media (max-width: 959px) { .split.is-chosen .tile:not(.is-chosen) { height: 0; } }
+  .split.is-chosen .tile.is-chosen { flex-grow: 1; }
+  .v1.is-leaving .pick-title, .v1.is-leaving .page-top, .v1.is-leaving .page-foot { opacity: 0; transform: translateY(-14px); transition: opacity 0.4s var(--ease), transform 0.6s var(--ease); }
+
+  /* ------------------------------------------------------------------
+     Variante 2: Vollbild-Menü-Stil — Bereiche als riesige Versal-Zeilen
+     mit Haarlinien, Nummer und Live-Zahl; Hover streicht durch wie der
+     aktive Menüpunkt, Rest dimmt.
+     ------------------------------------------------------------------ */
+  /* Handy: Zeilen unten in der Daumenzone, Desktop mittig */
+  .rows { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 8px; }
+  @media (min-width: 960px) { .rows { justify-content: center; padding-bottom: 0; } }
+  .v2 .pick-title { font-size: clamp(34px, 8.6vw, 72px); }
+  .row {
+    position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 18px;
+    padding: 22px 0; border-top: 1px solid var(--line); color: var(--ink); text-decoration: none;
+    transition: opacity 0.4s var(--ease);
+  }
+  .row:last-child { border-bottom: 1px solid var(--line); }
+  .row-no { align-self: start; padding-top: 0.6em; color: var(--accent-text); }
+  .row-name {
+    position: relative; isolation: isolate; justify-self: start;
+    font-weight: 800; text-transform: uppercase; letter-spacing: -0.035em; line-height: 0.9;
+    font-size: clamp(44px, 12.4vw, 168px);
+    transition: color 0.3s ease, transform 0.8s var(--ease);
+  }
+  .row-name .t-serif { -webkit-text-stroke: 0.022em currentColor; paint-order: stroke fill; letter-spacing: -0.01em; }
+  .row-name .scribble { position: absolute; z-index: -1; left: -3%; top: 40%; width: 106%; height: 0.34em; }
+  .row-meta { grid-column: 2 / 4; display: flex; gap: 16px; align-items: center; justify-content: space-between; }
+  @media (min-width: 960px) { .row-meta { grid-column: 3; flex-direction: column; align-items: flex-end; gap: 10px; } }
+  .row-count { display: inline-flex; align-items: baseline; gap: 8px; }
+  .row-count .num { font-size: 34px; line-height: 0.9; }
+  @media (hover: hover) and (pointer: fine) {
+    .rows:has(.row:hover) .row:not(:hover) { opacity: 0.35; }
+    .row:hover .row-name { color: var(--accent-text); transform: translateX(14px); }
+    .row:hover .btn { --btn-bg: var(--accent); --btn-ink: var(--accent-ink); --btn-line: var(--accent); }
+  }
+
+  /* ------------------------------------------------------------------
+     Variante 3: „Hall of Fame"-Karten — kompakter Kopf, zwei Kerbenkarten
+     mit dem heutigen Stand (Spitzenreiter, Podest), Etikett zum Einstieg.
+     ------------------------------------------------------------------ */
+  .cards { flex: 1; display: grid; gap: 16px; align-content: center; }
+  @media (min-width: 960px) { .cards { grid-template-columns: 1fr 1fr; gap: 22px; } }
+  .hof {
+    --notch-fill: var(--surface);
+    --notch-tag-ink: var(--ink);
+    display: flex; flex-direction: column; gap: 18px; padding: 22px 22px 60px;
+    color: var(--ink); text-decoration: none;
+    transition: transform 0.6s var(--ease);
+  }
+  .hof-head { position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
+  .hof-head .wordmark { font-size: 34px; }
+  .hof-lead { position: relative; display: flex; align-items: baseline; gap: 14px; }
+  .hof-lead .t-serif { font-size: 64px; line-height: 0.8; color: var(--accent-text); }
+  .hof-lead .t-title { font-size: clamp(36px, 9vw, 60px); }
+  .podium { position: relative; display: grid; gap: 0; }
+  .podium li { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--line); }
+  .podium .rk { color: var(--ink-faint); }
+  .podium .nm { font-weight: 700; text-transform: uppercase; letter-spacing: -0.01em; }
+  .podium .num { font-size: 18px; }
+  @media (hover: hover) and (pointer: fine) { .hof:hover { transform: translateY(-6px); } }
+
+  /* Umschalter nur im Entwurf */
+  .draft-switch {
+    position: fixed; z-index: 50; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+    display: flex; gap: 4px; padding: 4px; border-radius: var(--radius);
+    background: var(--bg-deep); border: 1px solid var(--line-strong);
+  }
+  .draft-switch a {
+    min-height: 36px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: var(--radius-sm);
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; text-decoration: none; color: var(--ink-muted);
+  }
+  .draft-switch a.is-on { background: var(--accent); color: var(--accent-ink); }
+  html.shot .draft-switch { display: none; }
+</style>
+</head>
+<body>
+<div class="topo" aria-hidden="true"></div>
+<div class="topo-spot" aria-hidden="true"></div>
+
+<!-- ===================== Variante 1 ===================== -->
+<main class="page v v1">
+  <header class="topbar page-top">
+    <span class="eyebrow">SV Partykeller · <b>Bereich wählen</b></span>
+    <span class="eyebrow live" data-clock>Fr 16.10. · 22:41</span>
+  </header>
+
+  <h1 class="t-impact pick-title" data-reveal="words">Wo wird <span class="scribbled"><span class="t-serif t-accent">heute</span><svg class="scribble scribble--circle" data-draw="700" viewBox="0 0 260 130" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M176 14C128 1 58 6 24 34-4 58 12 104 88 118c64 12 150 0 164-40 11-32-26-64-92-72-40-5-80 1-104 12" pathLength="1"/></svg></span> gezählt?</h1>
+
+  <div class="split">
+    <a class="tile" href="#partykeller" data-notch="tabW:200;tabH:40;r:14;slant:22" data-reveal="up" data-delay="250">
+      <span class="topo topo--abs notch-clip" aria-hidden="true"></span>
+      <span class="tile-head"><span class="eyebrow tile-no">01</span><span class="chip chip--accent">Zuletzt hier</span></span>
+      <span class="wordmark tile-mark"><span class="wm-top">Party</span><span class="wm-bottom">Keller</span></span>
+      <span class="tile-stats">
+        <span class="tile-stat"><span class="num">142</span><span class="eyebrow">Getränke heute</span></span>
+        <span class="tile-stat"><span class="num">11</span><span class="eyebrow">Dabei</span></span>
+        <span class="tile-stat"><span class="t-serif">Jonas</span><span class="eyebrow">Vorne</span></span>
+      </span>
+      <span class="notch-tag">Zur Anmeldung <span class="i-arrow"></span></span>
+    </a>
+    <a class="tile" href="#youngstars" data-notch="tabW:200;tabH:40;r:14;slant:22" data-reveal="up" data-delay="340">
+      <span class="topo topo--abs notch-clip" aria-hidden="true"></span>
+      <span class="tile-head"><span class="eyebrow tile-no">02</span></span>
+      <span class="wordmark tile-mark"><span class="wm-top">Young</span><span class="wm-bottom">Stars</span></span>
+      <span class="tile-stats">
+        <span class="tile-stat"><span class="num">87</span><span class="eyebrow">Getränke heute</span></span>
+        <span class="tile-stat"><span class="num">8</span><span class="eyebrow">Dabei</span></span>
+        <span class="tile-stat"><span class="t-serif">Lea</span><span class="eyebrow">Vorne</span></span>
+      </span>
+      <span class="notch-tag">Zur Anmeldung <span class="i-arrow"></span></span>
+    </a>
+  </div>
+
+  <footer class="page-foot">
+    <div class="emblem"><span class="laurel" aria-hidden="true"></span><span class="eyebrow">SV Partykeller</span></div>
+    <span class="eyebrow foot-hint">Zwei Bereiche · eigene Listen und Logins</span>
+  </footer>
+</main>
+
+<!-- ===================== Variante 2 ===================== -->
+<main class="page v v2">
+  <header class="topbar page-top">
+    <span class="eyebrow">SV Partykeller · <b>Bereich wählen</b></span>
+    <span class="eyebrow live">Fr 16.10. · 22:41</span>
+  </header>
+
+  <h1 class="t-title pick-title" data-reveal="words">Wo wird <span class="t-serif t-accent">heute</span> gezählt?</h1>
+
+  <nav class="rows" aria-label="Bereiche">
+    <a class="row" href="#partykeller" data-reveal="up" data-delay="120">
+      <span class="eyebrow row-no">01</span>
+      <span class="row-name"><span class="t-serif">Party</span>keller<svg class="scribble scribble--strike" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 18c26-8 44 6 70-2s46-9 74-2 52 5 88-6" pathLength="1"/></svg></span>
+      <span class="row-meta">
+        <span class="row-count"><span class="num">142</span><span class="eyebrow">heute · 11 dabei</span></span>
+        <span class="btn btn--sm btn--ghost">Rein <span class="i-arrow"></span></span>
+      </span>
+    </a>
+    <a class="row" href="#youngstars" data-reveal="up" data-delay="220">
+      <span class="eyebrow row-no">02</span>
+      <span class="row-name"><span class="t-serif">Young</span>stars<svg class="scribble scribble--strike" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 18c26-8 44 6 70-2s46-9 74-2 52 5 88-6" pathLength="1"/></svg></span>
+      <span class="row-meta">
+        <span class="row-count"><span class="num">87</span><span class="eyebrow">heute · 8 dabei</span></span>
+        <span class="btn btn--sm btn--ghost">Rein <span class="i-arrow"></span></span>
+      </span>
+    </a>
+  </nav>
+
+  <footer class="page-foot">
+    <div class="emblem"><span class="laurel" aria-hidden="true"></span><span class="eyebrow">SV Partykeller</span></div>
+    <span class="eyebrow foot-hint">Zwei Bereiche · eigene Listen und Logins</span>
+  </footer>
+</main>
+
+<!-- ===================== Variante 3 ===================== -->
+<main class="page v v3">
+  <header class="topbar page-top">
+    <span class="eyebrow">SV Partykeller · <b>Bereich wählen</b></span>
+    <span class="eyebrow live">Fr 16.10. · 22:41</span>
+  </header>
+
+  <h1 class="t-title" data-reveal="words">Heute im <span class="t-serif t-accent">Keller</span></h1>
+
+  <div class="cards">
+    <a class="hof" href="#partykeller" data-notch="tabW:190;tabH:40;r:14;slant:22" data-reveal="up" data-delay="200">
+      <span class="topo topo--abs notch-clip" aria-hidden="true"></span>
+      <span class="hof-head"><span class="wordmark"><span class="wm-top">Party</span><span class="wm-bottom">Keller</span></span><span class="eyebrow live">142 Getränke</span></span>
+      <span class="hof-lead"><span class="t-serif">1</span><span class="t-title">Jonas</span></span>
+      <ol class="podium" style="list-style:none;margin:0;padding:0">
+        <li><span class="eyebrow rk">2</span><span class="nm">Marie</span><span class="num">14</span></li>
+        <li><span class="eyebrow rk">3</span><span class="nm">Felix</span><span class="num">12</span></li>
+      </ol>
+      <span class="notch-tag">Zur Anmeldung <span class="i-arrow"></span></span>
+    </a>
+    <a class="hof" href="#youngstars" data-notch="tabW:190;tabH:40;r:14;slant:22" data-reveal="up" data-delay="300">
+      <span class="topo topo--abs notch-clip" aria-hidden="true"></span>
+      <span class="hof-head"><span class="wordmark"><span class="wm-top">Young</span><span class="wm-bottom">Stars</span></span><span class="eyebrow live">87 Getränke</span></span>
+      <span class="hof-lead"><span class="t-serif">1</span><span class="t-title">Lea</span></span>
+      <ol class="podium" style="list-style:none;margin:0;padding:0">
+        <li><span class="eyebrow rk">2</span><span class="nm">Tim</span><span class="num">11</span></li>
+        <li><span class="eyebrow rk">3</span><span class="nm">Sophie</span><span class="num">9</span></li>
+      </ol>
+      <span class="notch-tag">Zur Anmeldung <span class="i-arrow"></span></span>
+    </a>
+  </div>
+
+  <footer class="page-foot">
+    <div class="emblem"><span class="laurel" aria-hidden="true"></span><span class="eyebrow">SV Partykeller</span></div>
+    <span class="eyebrow foot-hint">Zwei Bereiche · eigene Listen und Logins</span>
+  </footer>
+</main>
+
+<nav class="draft-switch" aria-label="Variante">
+  <a href="?v=1">1 · Split</a><a href="?v=2">2 · Liste</a><a href="?v=3">3 · Karten</a>
+</nav>
+
+<script type="module">
+  import { initLando, drawScribble, scribble } from '../../public/js/lando.js';
+  const v = document.documentElement.dataset.v;
+  document.querySelectorAll('.draft-switch a').forEach((a) => a.classList.toggle('is-on', a.getAttribute('href') === `?v=${v}`));
+  if (new URLSearchParams(location.search).has('shot')) document.documentElement.classList.add('shot');
+
+  // Unterstrich unter dem unteren Wortmarken-Teil (V1), zeichnet sich beim Hover
+  document.querySelectorAll('.tile .wm-bottom').forEach((el) => {
+    el.style.position = 'relative';
+    el.insertAdjacentHTML('beforeend', scribble('underline'));
+  });
+  document.querySelectorAll('.tile').forEach((t) => {
+    t.addEventListener('pointerenter', () => drawScribble(t.querySelector('.scribble--underline'), { restart: true }));
+    t.addEventListener('pointerleave', () => t.querySelector('.scribble--underline').classList.remove('is-drawn'));
+  });
+  // V2: Durchstreichen beim Hover wie der aktive Menüpunkt
+  document.querySelectorAll('.row').forEach((r) => {
+    const s = r.querySelector('.scribble');
+    r.addEventListener('pointerenter', () => drawScribble(s, { restart: true }));
+    r.addEventListener('pointerleave', () => s.classList.remove('is-drawn'));
+  });
+
+  // V1: Tipp auf eine Karte — sie füllt die Bühne, dann ginge es zur
+  // Anmeldung (dort morpht die Wortmarke in die Kopfleiste). Im Entwurf
+  // springt der Zustand danach zurück.
+  document.querySelectorAll('.tile').forEach((t) => t.addEventListener('click', (e) => {
+    e.preventDefault();
+    const split = t.parentElement, page = split.closest('.page');
+    split.classList.add('is-chosen'); t.classList.add('is-chosen'); page.classList.add('is-leaving');
+    setTimeout(() => { split.classList.remove('is-chosen'); t.classList.remove('is-chosen'); page.classList.remove('is-leaving'); }, 2200);
+  }));
+
+  // Uhrzeit wie auf dem TV
+  const clock = () => {
+    const d = new Date();
+    const txt = d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace(',', '') + ' · ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    document.querySelectorAll('.live:not(.eyebrow.live[class*="hof"])').forEach((el) => { if (el.closest('.page-top')) el.textContent = txt; });
+  };
+  if (!new URLSearchParams(location.search).has('shot')) clock();
+
+  initLando();
+</script>
+</body>
+</html>
