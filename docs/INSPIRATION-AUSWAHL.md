@@ -1,6 +1,7 @@
 # Entwurf: Auswahlseite Partykeller / Youngstars (Stand 2026-10-16)
 
-**Status:** Entwurf, noch nicht umgesetzt. Wunsch des Nutzers: den
+**Status:** Variante 1 umgesetzt (D-110, `public/start.html`), der Rest
+bleibt Entwurf. Wunsch des Nutzers: den
 Youngstars-Bereich wieder hinzufügen, im genau gleichen Design wie der
 Partykeller. Mockup im echten Theme (mit Animationen, Umschalter `?v=1|2|3`):
 [inspiration/start-auswahl.html](inspiration/start-auswahl.html).

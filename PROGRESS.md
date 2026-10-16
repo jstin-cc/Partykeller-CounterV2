@@ -7,10 +7,18 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16 (D-110): **Youngstars wieder da**, im gleichen Design wie
+der Partykeller (nur Wortmarke „Young / Stars“, kein SV-Logo), mit der alten
+`data/youngstars.db` und eigenem Admin-Passwort. `/` ist die neue
+Auswahlseite (Variante 1): Live-Zeile je Bereich, Karte füllt beim Tipp die
+Seite und ihre Wortmarke gleitet in die Kopfleiste; Angemeldete springen
+direkt ins Dashboard, im Menü „Bereich wechseln“. In der Demo-Instanz
+geprüft (Handy und Desktop, Übergang Bild für Bild, Zählen per WebSocket,
+Tokens und Admin-Passwörter je Bereich getrennt).
 Seit 2026-10-16: **Entwurf Auswahlseite** für die Rückkehr des
 Youngstars-Bereichs im gleichen Design (`docs/INSPIRATION-AUSWAHL.md`,
-Mockup `docs/inspiration/start-auswahl.html`, drei Varianten); Wahl und
-Rückfragen (Daten, Startverhalten, Admin, Logo, TV) beim Nutzer offen.
+Mockup `docs/inspiration/start-auswahl.html`, drei Varianten); gewählt
+und umgesetzt wurde Variante 1 (D-110).
 Seit 2026-10-16 (D-109): **Umzug vom alten Repo** — README erklärt, wie die
 Instanz im Partykeller per `git remote set-url` + `git reset --hard` auf
 dieses Repo wechselt (Daten und `.env` bleiben, gleiches Schema, mit einer

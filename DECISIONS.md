@@ -2556,3 +2556,45 @@ Abend-Name, Fun-Fact, QR-Adresse): Der neue Server startet darauf, Zähler,
 Archiv, Abend-Namen, Login mit PIN, vom alten Code ausgestellte Tokens,
 Jahresrückblick und Admin-Login funktionieren; eine kaputte WS-Adresse
 lässt den Server weiterlaufen.
+
+## D-110 (2026-10-16): Youngstars wieder da, im gleichen Design; Auswahlseite
+
+**Entscheidung:** Der Youngstars-Bereich kommt zurück, diesmal im genau
+gleichen Design wie der Partykeller (D-080). Die Bereichs-Struktur aus D-019
+(Router, WebSocket, bereichsgestempelte Tokens) war geblieben und trägt
+wieder zwei Einträge in `server/areas.js`.
+
+- **Daten:** die alte `data/youngstars.db` wird wieder gelesen
+  (`YOUNGSTARS_DB_PATH`), Konten und Abende sind sofort zurück. Vom alten
+  Code ausgestellte Youngstars-Tokens gelten wieder (gleiches
+  `TOKEN_SECRET`), Handys mit `ys_*`-Login bleiben angemeldet.
+- **Admin:** eigenes Passwort `YOUNGSTARS_ADMIN_PASSWORD`; nicht gesetzt =>
+  es gilt `ADMIN_PASSWORD`, damit bestehende Setups ohne neue Pflichtangabe
+  starten. Das Lösch-Passwort bleibt gemeinsam.
+- **Design:** dieselben Seiten, Farben, Getränke-Reihenfolge. Unterschied
+  nur die Wortmarke („Young / Stars“) und das SV-Logo, das nur der
+  Partykeller zeigt (Youngstars: nur Wortmarke, `html[data-area]` blendet
+  `.pk-logo`/`.tv-emblem` aus). Wortmarke, Titel und `data-area` setzt der
+  Server beim Ausliefern (`renderPage`), damit schon das erste Bild stimmt
+  und Kaltstart-Bild und Morphs greifen; Skripte nehmen sie aus
+  `js/area.js` (Bereich am Pfad, Storage-Prefix `pk`/`ys`). Eigenes Manifest
+  je Bereich (`/<bereich>/manifest.webmanifest`).
+- **Auswahlseite** `/` (`public/start.html`, Variante 1 aus
+  `docs/INSPIRATION-AUSWAHL.md`, nach „On Track / Off Track“ auf
+  landonorris.com): zwei Kerbenkarten mit riesiger Wortmarke und Live-Zeile
+  aus dem neuen öffentlichen `GET /<bereich>/api/summary` (Getränke heute,
+  dabei, vorne; ohne Ausgeblendete). Ein Tipp lässt die Karte die Seite
+  füllen, dann gleitet ihre Wortmarke als `site-wordmark` in die Kopfleiste
+  der Anmeldung (bzw. des Dashboards). Angemeldete Handys springen direkt
+  in ihr Dashboard (bei beiden in den zuletzt genutzten Bereich,
+  `localStorage.last_area`); `/?wahl` zeigt die Auswahl trotzdem.
+- **Menü:** neuer Punkt „Bereich wechseln“ unter „Mehr“; er gleitet in
+  „Bereich wählen“, die Kopfleisten-Wortmarke in die Karte des Bereichs.
+- Alt-Pfade ohne Präfix (`/tv`, `/api`, `/ws`, …) bleiben beim Partykeller;
+  `/youngstars/…` leitet nicht mehr um.
+
+**Begründung:** Wunsch des Nutzers: Youngstars wieder als eigener Bereich,
+aber mit dem genau gleichen Design; Auswahlseite nach Recherche
+(Awwwards, Dribbble, landonorris.com) als Variante 1 gewählt, mit schönem
+Übergang ins nächste Fenster. Daten, Startverhalten, Admin-Passwort und
+Logo nach Rückfrage beim Nutzer.
