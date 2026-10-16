@@ -2324,3 +2324,70 @@ WS-Testskript.
 **Begründung:** Rückmeldungen des Nutzers (Screenshots). In der Demo-Instanz
 geprüft: Feuerwerk zeichnet und hinterlässt danach keinen Pixel, „Beenden"
 räumt Meilenstein, Konfetti, Countdown und Winter-Vorschau sofort ab.
+
+## D-101 (2026-10-16): Code-Check — Quittungen, Abmelden bei ungültigem Token, Zeitumstellung
+
+**Entscheidung:**
+- **Quittungen über den WebSocket:** Eine Nachricht darf ein `ref` (frei
+  gewählte Kennung, max. 40 Zeichen) mitschicken. Der Server antwortet dem
+  Absender dann mit genau einer Nachricht: `{ type: 'ack', ref }` bei Erfolg
+  oder `{ type: 'error', message, ref }`. Der Admin nutzt das für Reset, Neues
+  Konto, PIN und Konto löschen (Dialog schließt erst bei Erfolg, Fehler stehen
+  im Dialog), das Archiv fürs Benennen eines Abends. Vorher galt beim Reset
+  *irgendein* State-Broadcast als Erfolg — trank währenddessen jemand, stand
+  „Zurückgesetzt!" da, obwohl das Passwort falsch war.
+- **`code: 'auth'`** in Fehlern heißt: Token taugt nicht (ungültig, anderer
+  Bereich, Konto gelöscht). Dashboard, Archiv und Admin melden sich dann ab.
+  Neu `GET /api/session` (Bearer-Token) — das Dashboard prüft damit beim
+  Öffnen, ob das Token noch gilt. Vorher verwarf der Server nach einem neuen
+  `TOKEN_SECRET` jeden Tipp still, das Handy blieb scheinbar angemeldet.
+- Die **Anmeldeseite leitet angemeldete Handys direkt ins Dashboard** (QR-Code
+  am TV gescannt → Zähler statt Namensliste und PIN).
+- **Zeitumstellung:** Das Ende eines Party-Tags ist 06:00 des Folgetags als
+  Uhrzeit, nicht Start + 24 h; in SQL wird erst in Ortszeit umgerechnet, dann
+  6 h abgezogen (`date(ts/1000, 'unixepoch', 'localtime', '-6 hours')`). Sonst
+  fehlten in der Nacht der Umstellung auf Winterzeit die Getränke zwischen
+  05:00 und 06:00 in Archiv-Detail, TV-Archiv und Protokoll, und im März
+  rutschte 06:00–07:00 in den Vortag.
+- Reset-Passwort zeitkonstant vergleichen und mit demselben Fehlversuch-Limit
+  wie Logins und Backup-Import (`loginLimiter` ist jetzt ein gemeinsames
+  Modul-Objekt in `ratelimit.js`). WS-Handler nur über `Object.hasOwn` (keine
+  geerbten Methoden wie `toString`).
+- Kleinkram: Download-Links (CSV, Backup, Story) erst nach 30 s freigeben
+  (Safari brach sonst ab); Anmelden/Anlegen gegen Doppeltipp gesperrt, falsche
+  PIN leert das Feld; Admin-Archiv lädt nach neuen Getränken höchstens alle
+  2 s nach, zeichnet nur bei echter Änderung und nicht mitten im Wischen neu;
+  Wind-up der Wortmarke im Kaltstart-Bild (Regex ohne Backslashes) repariert;
+  „1 Getränk Rückstand"/„Gleichstand" im Jahresrückblick.
+
+**Begründung:** Ausführlicher Code-Check auf Wunsch des Nutzers, mit Fokus auf
+Handy-Nutzung. In der Demo-Instanz in Handybreite geprüft (Anmeldung,
+Dashboard, Archiv, Admin), Server per WS-Testskript (Reset falsch + parallel
+ein Getränk, Sperre nach Fehlversuchen, `toString`, ungültiges Token, `ref`),
+Zeitumstellung mit `TZ=Europe/Berlin`.
+
+## D-102 (2026-10-16): Ein Menü für alle Seiten
+
+**Entscheidung:** Das Vollbild-Menü baut `public/js/site-menu.js` auf jeder
+Seite gleich (Anmeldung, Dashboard, Abend-Archiv, Admin): angemeldet
+„Dein Abend: Zählen, Profil — Mehr: Abend-Archiv, TV, Admin, Abmelden",
+abgemeldet „Anmeldung — Mehr: Abend-Archiv, TV, Admin". Der Eintrag der
+aktuellen Seite ist durchgestrichen und schließt nur das Menü; „Profil" von
+einer anderen Seite öffnet `dashboard#profil`; „TV" öffnet einen neuen Tab;
+unten steht „Angemeldet als …". Der Admin hat dafür einen Menüknopf im Kopf;
+die eigenen Archiv-/TV-Knöpfe dort entfallen, sein Abmelden heißt „Admin
+abmelden" (zur Unterscheidung vom Abmelden des Gastes). Onboarding und TV
+bleiben ohne Menü (geführter Ablauf bzw. Kiosk).
+
+Dazu Design-Angleichungen: Hover-Zustände nur noch mit Maus (`hover: hover`),
+auf dem Handy blieben sie nach dem Tippen stehen; Onboarding-Schritt 3 zeigt
+die Bausteine des echten Profils (Platzkarte mit Nachbar, Statistik-Raster);
+„Ausblenden" im Admin heißt nur noch so (es betrifft All-Time-Rangliste und
+Anmeldeliste, nicht „Heute", D-013) und die All-Time-Liste im Dashboard
+lässt Ausgeblendete weg wie der TV (außer man ist es selbst), damit „Dein
+Platz" zum Fernseher passt; Konto löschen über einen eigenen Dialog statt
+`confirm()`; ohne Anmeldung kein „Abmelden" im Dashboard-Fuß.
+
+**Begründung:** Wunsch des Nutzers („überall das gleiche Menü"). Vorher hatte
+jede Seite eigene Einträge („Archiv" vs. „Abend-Archiv", TV nur im Archiv,
+Admin ganz ohne Menü). In Handybreite auf allen vier Seiten geprüft.
