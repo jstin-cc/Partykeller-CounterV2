@@ -7,7 +7,7 @@
 // Meldungen. „Heute" = Party-Tag 06:00–05:59 (kommt schon aggregiert vom
 // Server). `kind` ist nur für die Admin-Übersicht da; das Band zeigt es nicht.
 
-export const FUNFACT_FALLBACK = { kind: 'leer', title: 'Fun Fact', text: 'Heute noch nichts getrunken – auf geht’s!' };
+const FUNFACT_FALLBACK = { kind: 'leer', title: 'Fun Fact', text: 'Heute noch nichts getrunken – auf geht’s!' };
 
 // Beschriftung der Herkunft in der Admin-Übersicht
 export const FACT_KIND_LABEL = {
@@ -54,7 +54,7 @@ export function fmtDay(iso) {
   return `${d}.${m}.${y}`;
 }
 
-export function computeFacts(players, records, customFacts, funStats) {
+function computeFacts(players, records, customFacts, funStats) {
   const out = [];
   // kind = Herkunft der Meldung; das TV-Band zeigt sie nicht, die
   // Admin-Übersicht gruppiert danach (D-043).

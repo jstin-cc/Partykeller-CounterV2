@@ -16,7 +16,7 @@ function escapeCell(value) {
   return s;
 }
 
-export function buildCsv(header, rows) {
+function buildCsv(header, rows) {
   const lines = [header, ...rows].map((cells) => cells.map(escapeCell).join(SEP));
   return `﻿${lines.join('\r\n')}\r\n`;
 }
@@ -24,13 +24,13 @@ export function buildCsv(header, rows) {
 const WEEKDAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 
 // '2026-09-25' -> { date: '25.09.2026', weekday: 'Freitag' }
-export function formatDay(iso) {
+function formatDay(iso) {
   const [y, m, d] = iso.split('-').map(Number);
   const p = (n) => String(n).padStart(2, '0');
   return { date: `${p(d)}.${p(m)}.${y}`, weekday: WEEKDAYS[new Date(y, m - 1, d).getDay()] };
 }
 
-export const ARCHIVE_HEADER = [
+const ARCHIVE_HEADER = [
   'Tag', 'Datum', 'Wochentag', 'Name', 'Bier', 'Shots', 'Mischen', 'Gesamt',
 ];
 

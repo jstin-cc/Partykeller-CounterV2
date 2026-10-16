@@ -66,7 +66,7 @@ CREATE TABLE facts (                       -- eigene Fun-Facts/Meldungen (D-015)
 );
 ```
 
-- `beers`/`shots`/`mixes` bleiben die schnelle All-Time-Wahrheit (wie in Prompt.md).
+- `beers`/`shots`/`mixes` bleiben die schnelle All-Time-Wahrheit (wie in der ursprünglichen Aufgabenstellung).
 - `drink_log` ergänzt das Prompt-Modell: das v3-Design zeigt zusätzlich
   **„Getränke heute"**. „Heute" = Party-Tag von **06:00 bis 05:59** des
   Folgetags (aus dem Design-Prototyp übernommen).
@@ -143,7 +143,7 @@ Spieler gedrosselt (Token-Bucket ~1/s, Burst 5), Admins ungedrosselt.
 // { "type": "demo", "effect": "season", "season": "winter" }
 ```
 
-**Client → Server** (Nachrichtennamen aus Prompt.md, `token` in jeder Nachricht):
+**Client → Server** (Nachrichtennamen aus der ursprünglichen Aufgabenstellung, `token` in jeder Nachricht):
 
 | Nachricht | Wer | Regel |
 |---|---|---|
@@ -194,7 +194,7 @@ QR-Code auf dem Scoreboard zeigt auf `http://partykeller.local:<PORT>/<bereich>/
 
 ```
 Partykeller-Counter/
-├── CLAUDE.md / PLAN.md / PROGRESS.md / DECISIONS.md / README.md / Prompt.md
+├── CLAUDE.md / PLAN.md / PROGRESS.md / DECISIONS.md / README.md
 ├── package.json          # express, ws, better-sqlite3, dotenv
 ├── .env.example          # PORT, ADMIN_PASSWORD, TOKEN_SECRET, DB_PATH
 ├── .gitignore            # node_modules, .env, data/
