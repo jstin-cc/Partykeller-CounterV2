@@ -471,8 +471,6 @@ try {
   .demo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .demo-grid > .btn:last-child:nth-child(odd) { grid-column: 1 / -1; }
   .btn[data-demo].is-sent { --btn-bg: var(--accent); --btn-ink: var(--accent-ink); --btn-line: var(--accent); }
-  .quick-links { display: flex; flex-direction: row; gap: 8px; }
-  .quick-links .btn { flex: 1; }
 
   /* Danger Zone: Kerben-Karte mit roter Kontur und feiner Schraffur */
   .danger-title { color: var(--danger); }
@@ -680,7 +678,10 @@ try {
       <a class="wordmark" href="./" aria-label="Zur Anmeldung">
         <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
       </a>
-      <span class="chip chip--line adm-chip">Admin</span>
+      <div class="topbar-actions">
+        <span class="chip chip--line adm-chip">Admin</span>
+        <button class="btn btn--ghost btn--icon btn--sm" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="Menü"><span class="i-menu"></span></button>
+      </div>
     </header>
 
     <div class="login-main">
@@ -716,9 +717,8 @@ try {
         <span class="chip chip--accent adm-chip">Admin</span>
       </div>
       <div class="topbar-actions">
-        <a class="btn btn--ghost btn--sm hide-sm" href="abende">Archiv <span class="i-arrow"></span></a>
-        <a class="btn btn--ghost btn--sm hide-sm" href="tv" target="_blank" rel="noopener">TV <span class="i-arrow"></span></a>
-        <button id="logout" type="button" class="btn btn--ghost btn--sm">Abmelden</button>
+        <button id="logout" type="button" class="btn btn--ghost btn--sm">Admin abmelden</button>
+        <button class="btn btn--ghost btn--icon btn--sm" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="Menü"><span class="i-menu"></span></button>
       </div>
     </header>
 
@@ -905,10 +905,6 @@ try {
         </div>
 
         <div class="grp grp-more">
-          <section class="side-block quick-links only-sm">
-            <a class="btn btn--ghost" href="abende">Archiv <span class="i-arrow"></span></a>
-            <a class="btn btn--ghost" href="tv" target="_blank" rel="noopener">TV <span class="i-arrow"></span></a>
-          </section>
           <section class="side-block">
             <h3 class="t-h3 side-title" data-reveal="up">Technik &amp; <span class="t-serif t-accent">Einrichtung</span></h3>
             <div class="card side" data-reveal="up" data-delay="80">
@@ -965,6 +961,9 @@ try {
   }
 </script>
 
+<!-- Vollbild-Menü: gleich auf allen Seiten (js/site-menu.js, D-102) -->
+<nav id="site-menu" class="site-menu" aria-hidden="true" aria-label="Menü"></nav>
+
 <!-- Meldungen (Fehler, Erfolg) als Toasts -->
 <div class="toasts" aria-live="polite">
   <div id="reset-done" class="toast toast--ok" hidden>Zurückgesetzt!</div>
@@ -978,6 +977,7 @@ try {
     <h2 class="t-h3 dialog-title">Neues <span class="t-serif t-accent">Konto</span></h2>
     <label class="fld"><span class="lbl">Name</span><input id="add-name" class="field" type="text" maxlength="24" placeholder="Name" autocomplete="off" required></label>
     <label class="fld"><span class="lbl">PIN (optional)</span><input id="add-pin" class="field" type="password" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="4 Ziffern" autocomplete="off"></label>
+    <div id="add-error" class="error-banner" hidden></div>
     <div class="dialog-btns">
       <button type="button" id="close-add" class="btn btn--ghost">Abbrechen</button>
       <button class="btn">Anlegen <span class="i-arrow"></span></button>
@@ -1009,9 +1009,24 @@ try {
     <p class="eyebrow">PIN setzen</p>
     <h2 class="t-h3 dialog-title"><span id="pin-name" class="t-serif t-accent"></span></h2>
     <input id="pin-value" class="field" type="password" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="Neue PIN (leer = keine PIN)" autocomplete="off">
+    <div id="pin-error" class="error-banner" hidden></div>
     <div class="dialog-btns">
       <button type="button" id="close-pin" class="btn btn--ghost">Abbrechen</button>
       <button class="btn">Speichern <span class="i-arrow"></span></button>
+    </div>
+  </form>
+</div>
+
+<!-- Dialog: Konto löschen (statt des Browser-confirm, D-102) -->
+<div id="del-modal" class="modal-backdrop" hidden>
+  <form id="del-form" class="dialog">
+    <p class="eyebrow danger-title">Konto löschen</p>
+    <h2 class="t-h3 dialog-title"><span id="del-name" class="t-serif t-accent"></span></h2>
+    <p class="t-small">Alle Zählstände und Getränke dieses Kontos gehen verloren.</p>
+    <div id="del-error" class="error-banner" hidden></div>
+    <div class="dialog-btns">
+      <button type="button" id="close-del" class="btn btn--ghost">Abbrechen</button>
+      <button class="btn btn--danger-fill">Löschen</button>
     </div>
   </form>
 </div>
@@ -1080,6 +1095,7 @@ import { connectState } from './js/ws-client.js';
 import { factList, FACT_KIND_LABEL } from './js/facts.js';
 import { seasonAt } from './js/season.js';
 import { initLando, countUp, leave, enter, swapView, go } from './js/lando.js';
+import { renderSiteMenu } from './js/site-menu.js';
 
 const $ = (id) => document.getElementById(id);
 // Getrennte Admin-Sessions pro Bereich (pk_/ys_-Präfix, D-019)
@@ -1125,16 +1141,7 @@ if (getSession().token) {
 
 // --- Dashboard ---
 let errTimer;
-let pendingReset = false;
 function showError(message) {
-  // Fehler beim Zurücksetzen (z. B. falsches Passwort) im Reset-Modal zeigen
-  if (pendingReset) {
-    pendingReset = false;
-    const el = $('reset-error');
-    el.textContent = message;
-    el.hidden = false;
-    return;
-  }
   $('dash-error').textContent = message;
   enter($('dash-error'));
   clearTimeout(errTimer);
@@ -1143,6 +1150,50 @@ function showError(message) {
 
 function send(msg) {
   ws.send({ ...msg, token });
+}
+
+// Aktionen aus Dialogen tragen ein `ref`; der Server antwortet darauf mit
+// genau einer Quittung oder einem Fehler (D-101). Erst dann schließt der
+// Dialog — vorher hielt beim Reset jeder State-Broadcast (irgendwer trinkt)
+// als Erfolg her, und bei Fehlern war die Eingabe weg.
+const DIALOGS = {
+  reset: { modal: 'reset-modal', error: 'reset-error', done: () => {
+    enter($('reset-done'));
+    setTimeout(() => leave($('reset-done')), 2000);
+  } },
+  add: { modal: 'add-modal', error: 'add-error' },
+  pin: { modal: 'pin-modal', error: 'pin-error' },
+  del: { modal: 'del-modal', error: 'del-error' },
+};
+function sendFromDialog(ref, msg) {
+  $(DIALOGS[ref].error).hidden = true;
+  $(DIALOGS[ref].modal).querySelectorAll('button:not([type="button"])').forEach((b) => { b.disabled = true; });
+  send({ ...msg, ref });
+}
+function dialogAnswer(ref, error) {
+  const d = DIALOGS[ref];
+  if (!d) return false;
+  $(d.modal).querySelectorAll('button').forEach((b) => { b.disabled = false; });
+  if (error) {
+    $(d.error).textContent = error;
+    $(d.error).hidden = false;
+  } else {
+    leave($(d.modal));
+    d.done?.();
+  }
+  return true;
+}
+
+// Admin-Token taugt nicht mehr (z. B. neues TOKEN_SECRET): zurück zum Login
+function adminSignedOut() {
+  sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  token = null;
+  ws?.close();
+  ws = null;
+  $('dash-view').hidden = true;
+  $('login-view').hidden = false;
+  $('login-error').textContent = 'Bitte neu anmelden.';
+  $('login-error').hidden = false;
 }
 
 function enterDashboard() {
@@ -1173,20 +1224,17 @@ function enterDashboard() {
       updateSpeed(state.scrollSeconds ?? 3.2);
       updateFunfact(state.funfactSeconds ?? 30);
       renderFacts(state.customFacts ?? []);
-      // Ein State-Broadcast nach dem Reset = Erfolg (Passwort war korrekt)
-      if (pendingReset) {
-        pendingReset = false;
-        leave($('reset-modal'));
-        enter($('reset-done'));
-        setTimeout(() => leave($('reset-done')), 2000);
-      }
     },
+    onAck(ref) { dialogAnswer(ref); },
     onFact(msg) {
       factPos = msg;
       renderFactSheet();
       renderNow();
     },
-    onError: showError,
+    onError(message, { code, ref } = {}) {
+      if (code === 'auth') { adminSignedOut(); return; }
+      if (!dialogAnswer(ref, message)) showError(message);
+    },
   });
 }
 
@@ -1394,7 +1442,8 @@ $('archive-day').addEventListener('change', () => {
   send({ type: 'setBoardMode', mode: 'archive', day: $('archive-day').value });
   $('archive-day').blur();
 });
-$('archive-day').addEventListener('mousedown', loadArchiveDays);
+// Liste beim Antippen auffrischen (Maus und Touch)
+$('archive-day').addEventListener('pointerdown', loadArchiveDays);
 
 // --- Rotationsgeschwindigkeit der TV-Rangliste ---
 const fmtSpeed = (s) => `${Number(s).toLocaleString('de-DE', { minimumFractionDigits: 1 })} s`;
@@ -1827,7 +1876,7 @@ async function loadProto() {
   try {
     const res = await fetch(`${AREA.base}/api/log/${day}`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) {
-      if (res.status === 403) showError('Admin-Anmeldung abgelaufen – bitte neu anmelden.');
+      if (res.status === 403) adminSignedOut();
       return;
     }
     const data = await res.json();
@@ -2381,7 +2430,7 @@ function renderRows() {
         const chip = document.createElement('span');
         chip.className = 'chip chip-muted';
         chip.textContent = 'ausgeblendet';
-        chip.title = 'Nicht auf dem TV und nicht in der Anmeldeliste';
+        chip.title = 'Nicht in der All-Time-Rangliste und nicht in der Anmeldeliste';
         meta.appendChild(chip);
       }
       // Hinweis, wenn dieses Konto keine PIN hat (D-018)
@@ -2440,16 +2489,13 @@ function renderRows() {
       { label: 'Umbenennen', icon: 'pen', run: () => { editingId = p.id; renderRows(); } },
       { label: 'PIN ändern', icon: 'key', run: () => openPinModal(p) },
       { label: 'Im Protokoll ansehen', icon: 'list', run: () => showInProtocol(p) },
-      // Sichtbarkeit im TV-Scoreboard und in der Anmeldeliste
+      // Sichtbarkeit in der All-Time-Rangliste und der Anmeldeliste (in
+      // „Heute" und im Archiv bleibt man drin, D-013)
       p.hidden
-        ? { label: 'Auf dem TV einblenden', icon: 'eye', run: () => send({ type: 'setHidden', id: p.id, hidden: false }) }
-        : { label: 'Auf dem TV ausblenden', icon: 'eye-off', run: () => send({ type: 'setHidden', id: p.id, hidden: true }) },
+        ? { label: 'Einblenden', icon: 'eye', run: () => send({ type: 'setHidden', id: p.id, hidden: false }) }
+        : { label: 'Ausblenden', icon: 'eye-off', run: () => send({ type: 'setHidden', id: p.id, hidden: true }) },
       { sep: true },
-      { label: 'Konto löschen', icon: 'trash', danger: true, run: () => {
-        if (confirm(`${p.name} wirklich löschen? Alle Zählstände gehen verloren.`)) {
-          send({ type: 'deletePlayer', id: p.id });
-        }
-      } },
+      { label: 'Konto löschen', icon: 'trash', danger: true, run: () => openDelModal(p) },
     ]);
 
     row.append(avatar, nameCell, steppers, total, menu);
@@ -2461,6 +2507,7 @@ function renderRows() {
 // --- Neues Konto ---
 function openAddModal() {
   $('add-form').reset();
+  $('add-error').hidden = true;
   enter($('add-modal'));
   $('add-name').focus();
 }
@@ -2469,8 +2516,7 @@ $('open-add-round').addEventListener('click', openAddModal);
 $('close-add').addEventListener('click', () => { leave($('add-modal')); });
 $('add-form').addEventListener('submit', (e) => {
   e.preventDefault();
-  send({ type: 'addPlayer', name: $('add-name').value, pin: $('add-pin').value });
-  leave($('add-modal'));
+  sendFromDialog('add', { type: 'addPlayer', name: $('add-name').value, pin: $('add-pin').value });
 });
 
 // --- PIN-Reset ---
@@ -2479,14 +2525,28 @@ function openPinModal(p) {
   pinPlayerId = p.id;
   $('pin-name').textContent = p.name;
   $('pin-form').reset();
+  $('pin-error').hidden = true;
   enter($('pin-modal'));
   $('pin-value').focus();
 }
 $('close-pin').addEventListener('click', () => { leave($('pin-modal')); });
 $('pin-form').addEventListener('submit', (e) => {
   e.preventDefault();
-  send({ type: 'setPin', id: pinPlayerId, pin: $('pin-value').value });
-  leave($('pin-modal'));
+  sendFromDialog('pin', { type: 'setPin', id: pinPlayerId, pin: $('pin-value').value });
+});
+
+// --- Konto löschen ---
+let delPlayerId = null;
+function openDelModal(p) {
+  delPlayerId = p.id;
+  $('del-name').textContent = p.name;
+  $('del-error').hidden = true;
+  enter($('del-modal'));
+}
+$('close-del').addEventListener('click', () => { leave($('del-modal')); });
+$('del-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  sendFromDialog('del', { type: 'deletePlayer', id: delPlayerId });
 });
 
 // --- Komplett-Reset: nur mit erneuter Passwort-Eingabe (gleiche .env wie Login) ---
@@ -2499,9 +2559,7 @@ $('reset-btn').addEventListener('click', () => {
 $('close-reset').addEventListener('click', () => { leave($('reset-modal')); });
 $('reset-form').addEventListener('submit', (e) => {
   e.preventDefault();
-  $('reset-error').hidden = true;
-  pendingReset = true;
-  send({ type: 'reset', confirm: 'RESET', password: $('reset-pw').value });
+  sendFromDialog('reset', { type: 'reset', confirm: 'RESET', password: $('reset-pw').value });
 });
 
 // --- Vollsicherung: herunterladen und einspielen (D-034) ---
@@ -2521,7 +2579,8 @@ $('backup-save').addEventListener('click', async () => {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
-      showHint(res.status === 403 ? 'Nur mit Admin-Login – bitte neu anmelden.' : 'Download fehlgeschlagen.');
+      if (res.status === 403) { adminSignedOut(); return; }
+      showHint('Download fehlgeschlagen.');
       return;
     }
     const url = URL.createObjectURL(await res.blob());
@@ -2530,7 +2589,8 @@ $('backup-save').addEventListener('click', async () => {
     a.download = res.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1]
       ?? `${AREA.id}-backup.json`;
     a.click();
-    URL.revokeObjectURL(url);
+    // Erst später freigeben: Safari bricht den Download sonst ab
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
     showHint('Sicherung heruntergeladen.');
   } catch {
     showHint('Download fehlgeschlagen.');
@@ -2587,6 +2647,8 @@ $('import-form').addEventListener('submit', async (e) => {
   }
 });
 
+// Menü wie auf allen Seiten (D-102)
+renderSiteMenu('admin');
 // Bereits angemeldet? (Token überlebt Reload in der Session)
 initLando();
 if (token) enterDashboard();

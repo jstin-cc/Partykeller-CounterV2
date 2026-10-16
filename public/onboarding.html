@@ -106,8 +106,8 @@ try {
     transform-origin: right;
     transition: transform 0.45s var(--ease);
   }
-  .skip:hover { color: var(--ink); }
-  .skip:hover::after { transform: scaleX(1); transform-origin: left; }
+  @media (hover: hover) and (pointer: fine) { .skip:hover { color: var(--ink); } }
+  @media (hover: hover) and (pointer: fine) { .skip:hover::after { transform: scaleX(1); transform-origin: left; } }
 
   /* --- Schritte --- */
   .ob-stage { flex: 1; display: flex; flex-direction: column; padding: 26px 0 8px; }
@@ -291,14 +291,31 @@ try {
   .band .marquee-track > span::before { content: '✦'; margin-right: 28px; font-family: var(--font-sans); font-size: 10px; color: var(--accent-text); vertical-align: 2px; }
 
   /* --- Schritt 3: Profil --- */
+  /* Gleiche Bausteine wie das Profil im Dashboard, eine Spur kleiner */
   .prof { display: flex; flex-direction: column; gap: 22px; }
-  .prof-card { position: relative; padding: 16px 16px 52px; --notch-fill: var(--surface); }
-  .prof-card .sec { margin-bottom: 14px; }
-  .prof-card .value { font-size: 44px; }
-  .prof-card .value--accent { color: var(--accent-text); }
-  .prof-card .notch-tag .hl { color: var(--accent-text); }
-  .prof-stats { display: flex; flex-direction: column; gap: 14px; padding: 0 2px; }
-  .prof-stats .value { font-size: 30px; }
+  .rank-card {
+    position: relative; display: flex; flex-direction: column; gap: 12px;
+    padding: 16px 16px 56px; --notch-fill: var(--surface); --notch-tag-ink: var(--ink);
+  }
+  .rank-card > :not(.notch-bg):not(.topo):not(.notch-tag) { position: relative; z-index: 1; }
+  .rank-topo { -webkit-mask-image: url('assets/topo.svg'); mask-image: url('assets/topo.svg'); }
+  .rank-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+  .rank-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .rank-word { font-size: 24px; line-height: 0.9; }
+  .rank-num { font-size: clamp(64px, 20vw, 96px); line-height: 0.78; letter-spacing: -0.055em; }
+  .rank-side { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; padding-left: 16px; border-left: 1px solid var(--line); }
+  .rank-total { font-size: 38px; line-height: 0.82; color: var(--accent-text); }
+  .rival { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 0 0; border-top: 1px solid var(--line); }
+  .rival .icon { font-size: 11px; color: var(--accent); text-align: center; }
+  .rival .who { font-weight: 750; font-size: 13px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rival .gap { font-size: 10.5px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); white-space: nowrap; }
+  .rank-card .notch-tag { font-weight: 700; }
+  .prof-stats { display: flex; flex-direction: column; gap: 14px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .stat-cell { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; padding: 10px 8px 12px 12px; border-left: 1px solid var(--line); }
+  .stat-cell:first-child { border-left: 0; padding-left: 0; }
+  .stat-cell .num { font-size: clamp(32px, 9vw, 44px); line-height: 0.82; }
+  .stat-cell .stat-best { color: var(--accent-text); }
 
   /* --- Fuß: Fortschritt + Weiter (klebt unten am Handy) --- */
   .ob-foot {
@@ -449,22 +466,32 @@ try {
         <h1 id="t3" class="t-impact step-title" data-reveal="words">Dein <span class="scribbled"><span class="t-serif t-accent">Profil</span><svg class="scribble scribble--underline" data-draw="650" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1"/></svg></span></h1>
         <p class="step-lead" data-reveal="up" data-delay="250">Im Profil stehen dein Platz heute und all-time, deine Mischung und die Abzeichen, die du über die Abende sammelst.</p>
       </div>
+      <!-- Wie das echte Profil (D-040, D-093): Ranglisten-Karte mit Platz,
+           Nachbar und Kerbe, darunter Statistik-Raster und Abzeichen -->
       <div class="prof">
-        <div class="prof-card" data-notch="tabW:150;tabH:34;r:14;slant:20" data-reveal="up" data-delay="300">
+        <div class="rank-card" data-notch="tabW:206;tabH:40;r:14;slant:20" data-reveal="up" data-delay="300">
+          <span class="topo topo--abs notch-clip rank-topo" aria-hidden="true"></span>
           <div class="sec"><span class="sec-title">Rangliste</span></div>
-          <div class="split">
-            <div class="cell"><div class="num value" data-count="5">5</div><div class="label label--plain">Getränke</div></div>
-            <div class="sep"></div>
-            <div class="cell"><div class="num value value--accent">#1</div><div class="label label--plain">von 12 heute</div></div>
+          <div class="rank-hero">
+            <div class="rank-main">
+              <span class="rank-word t-serif t-accent">Dein Platz</span>
+              <span class="num rank-num">#1</span>
+              <span class="eyebrow">von 12 heute</span>
+            </div>
+            <div class="rank-side">
+              <span class="num rank-total" data-count="5">5</span>
+              <span class="eyebrow">Getränke</span>
+            </div>
           </div>
-          <span class="notch-tag">All-Time <span class="hl num">#4</span></span>
+          <div class="rival"><span class="icon">▼</span><span class="who">Hinter dir: Lena</span><span class="gap">1 Getränk Rückstand</span></div>
+          <span class="notch-tag">Ganze Rangliste ansehen <span class="i-arrow"></span></span>
         </div>
         <div class="prof-stats" data-reveal="up" data-delay="420">
           <div class="sec"><span class="sec-title">Deine Statistik</span></div>
-          <div class="split">
-            <div class="cell"><div class="num value" data-count="13">13</div><div class="label label--plain">Abende</div></div>
-            <div class="cell"><div class="num value value--gold" data-count="11">11</div><div class="label label--plain">Bester Abend</div></div>
-            <div class="cell"><div class="num value">4,5</div><div class="label label--plain">Ø pro Abend</div></div>
+          <div class="stat-grid">
+            <div class="stat-cell"><span class="eyebrow">Abende</span><span class="num" data-count="13">13</span></div>
+            <div class="stat-cell"><span class="eyebrow">Bester Abend</span><span class="num stat-best" data-count="11">11</span></div>
+            <div class="stat-cell"><span class="eyebrow">Ø pro Abend</span><span class="num">4,5</span></div>
           </div>
           <div class="badges">
             <div class="badge is-won" data-notch="tabW:58;tabH:28;r:12;slant:14;stroke">

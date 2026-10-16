@@ -664,7 +664,7 @@ function initBoot() {
     // Platz fliegen (die Fläche wischt dicht dahinter nach oben weg, die
     // Farbe kippt erst, wenn die Wortmarke den dunklen Grund erreicht) und
     // mit einem kleinen Nachfedern einrasten.
-    const wind = big.replace(/scale(([d.]+))/, (_, v) => `scale(${v * 1.07})`);
+    const wind = big.replace(/scale\(([\d.]+)\)/, (_, v) => `scale(${v * 1.07})`);
     const fly = mark.animate([
       { transform: `${big} rotate(0deg)`, color: from, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
       { transform: `${wind} rotate(-4deg)`, color: from, offset: 0.2, easing: 'cubic-bezier(0.7, 0, 0.15, 1)' },

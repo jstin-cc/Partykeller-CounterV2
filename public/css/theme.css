@@ -221,7 +221,7 @@ input, button, select, textarea { font-family: inherit; }
 ::selection { background: var(--accent); color: var(--accent-ink); }
 
 a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 3px; }
-a:hover { color: var(--accent-text); }
+@media (hover: hover) and (pointer: fine) { a:hover { color: var(--accent-text); } }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -446,13 +446,15 @@ button { cursor: pointer; }
   transition: transform 0.12s ease, background-color 0.3s var(--ease), color 0.3s var(--ease), border-color 0.3s var(--ease), translate 0.35s var(--ease-out);
 }
 .btn:hover { color: var(--btn-ink); }
+/* Hover-Zustände nur mit Maus: auf dem Handy blieben sie nach dem Tippen
+   stehen (z. B. ein angetippter Tab bliebe hell) */
 .btn:disabled, .btn[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
 .btn--ghost { --btn-bg: transparent; --btn-ink: var(--ink); --btn-line: var(--line-strong); }
-.btn--ghost:hover { --btn-line: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .btn--ghost:hover { --btn-line: var(--ink); } }
 .btn--dark { --btn-bg: var(--ink); --btn-ink: var(--bg); --btn-line: var(--ink); }
 .btn--quiet { --btn-bg: var(--surface-2); --btn-ink: var(--ink); --btn-line: transparent; }
 .btn--danger { --btn-bg: transparent; --btn-ink: var(--danger); --btn-line: color-mix(in srgb, var(--danger) 55%, transparent); }
-.btn--danger:hover { --btn-bg: var(--danger); --btn-ink: var(--lando-black); }
+@media (hover: hover) and (pointer: fine) { .btn--danger:hover { --btn-bg: var(--danger); --btn-ink: var(--lando-black); } }
 .btn--block { width: 100%; }
 .btn--lg { min-height: 54px; font-size: 14.5px; padding: 0 22px; }
 .btn--sm { min-height: 34px; font-size: 11.5px; padding: 0 12px; gap: 7px; }
@@ -470,8 +472,10 @@ button { cursor: pointer; }
   transition: transform 0.5s var(--ease);
 }
 .i-arrow::after { transform: translate(-120%, 120%); }
-:is(.btn, a, button):hover > .i-arrow::before { transform: translate(120%, -120%); }
-:is(.btn, a, button):hover > .i-arrow::after { transform: translate(0, 0); }
+@media (hover: hover) and (pointer: fine) {
+  :is(.btn, a, button):hover > .i-arrow::before { transform: translate(120%, -120%); }
+  :is(.btn, a, button):hover > .i-arrow::after { transform: translate(0, 0); }
+}
 .i-arrow--back { transform: rotate(-135deg); }
 
 /* Menü-Icon wie bei Lando (ein langer, ein kurzer Strich) */
@@ -599,7 +603,7 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
   position: relative; z-index: 1;
   -webkit-tap-highlight-color: transparent;
 }
-.tab-btn:hover { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .tab-btn:not(.active):hover { color: var(--ink); } }
 .tab-btn.active { color: var(--accent-ink); }
 .tab-indicator {
   position: absolute; top: 4px; bottom: 4px; left: 4px;
@@ -799,7 +803,8 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
   opacity: 0; transform: translateY(40px);
   transition: opacity 0.6s var(--ease), transform 0.8s var(--ease), color 0.3s ease;
 }
-.menu-link:hover { color: var(--accent-text); }
+.site-menu > .topbar { position: relative; z-index: 1; }
+@media (hover: hover) and (pointer: fine) { .menu-link:hover { color: var(--accent-text); } }
 .menu-open .menu-link { opacity: 1; transform: none; transition-delay: calc(0.18s + var(--i, 0) * 0.06s); }
 /* Strich hinter der Schrift (eigene Ebene je Link, sonst rutscht er hinter das Menü) */
 .menu-link { isolation: isolate; }
@@ -808,13 +813,21 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
    stehen sonst alle Striche fertig da) */
 .menu-link:not(.is-current) .scribble { visibility: hidden; }
 .menu-foot { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; }
+/* Gemeinsames Menü aller Seiten (js/site-menu.js, D-102): oben die eigenen
+   Ziele groß, unter „Mehr" die übrigen eine Stufe kleiner */
+.menu-link--sm { font-size: clamp(26px, 7.4vw, 48px); line-height: 1.02; padding: 8px 0; min-height: 44px; }
+.menu-eyebrow { margin: 14px 0 6px; }
+.menu-eyebrow:first-child { margin-top: 0; }
+.menu-foot .eyebrow { line-height: 1.4; }
+.menu-me { text-align: right; }
+.menu-me b { color: var(--ink); font-weight: 700; }
 
 /* ==========================================================================
    Laufband (lando.js initMarquee)
    ========================================================================== */
 .marquee { overflow: hidden; position: relative; }
 .marquee-track { display: flex; width: max-content; animation: marquee var(--marquee-dur, 30s) linear infinite; }
-.marquee:hover .marquee-track { animation-play-state: paused; }
+@media (hover: hover) and (pointer: fine) { .marquee:hover .marquee-track { animation-play-state: paused; } }
 @keyframes marquee { to { transform: translateX(-50%); } }
 
 /* ==========================================================================
