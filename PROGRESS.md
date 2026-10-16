@@ -7,6 +7,11 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16: **Auswahlseite auf dem iPhone repariert** — bei niedriger
+Bildhöhe wurden die Karten gestaucht und die Live-Zeile lief in die Kerbe
+(jetzt so hoch wie der Inhalt); der Tipp sprang statt zu gleiten (die
+Einblend-Regel überschrieb die Übergänge) und die zweite Karte klappte auf
+dem Handy schlagartig weg (jetzt blendet sie nur aus).
 Seit 2026-10-16 (D-110): **Youngstars wieder da**, im gleichen Design wie
 der Partykeller (nur Wortmarke „Young / Stars“, kein SV-Logo), mit der alten
 `data/youngstars.db` und eigenem Admin-Passwort. `/` ist die neue
