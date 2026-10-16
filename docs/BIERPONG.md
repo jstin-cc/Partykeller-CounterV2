@@ -1,6 +1,6 @@
 # Bierpong-Counter — zwei Entwürfe (Stand 2026-09-18, nicht umgesetzt)
 
-Ausgangspunkt ist die Idee aus [ideen.md](../ideen.md): Bierpong-Siege im
+Ausgangspunkt ist die Idee aus [IDEEN.md](IDEEN.md): Bierpong-Siege im
 Counter festhalten. Hier stehen zwei Ausbaustufen mit Anleitung zur Umsetzung.
 **Entwurf 2 baut auf Entwurf 1 auf** — wer mit 1 anfängt, wirft nichts weg.
 

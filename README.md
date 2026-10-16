@@ -356,8 +356,7 @@ synthetischer Soundtrack, Frame-genaues Rendering) — Ablauf in
 - [DECISIONS.md](DECISIONS.md) — Entscheidungen mit Begründung
 - [CLAUDE.md](CLAUDE.md) — Projektregeln und Konventionen
 - [docs/DESIGN-LANDO.md](docs/DESIGN-LANDO.md) — Design-System im Stil von landonorris.com (D-078)
-- [Prompt.md](Prompt.md) — ursprüngliche Aufgabenstellung
-- [ideen.md](ideen.md) — Ideensammlung; [docs/BIERPONG.md](docs/BIERPONG.md) — zwei Entwürfe für einen Bierpong-Counter mit Mockups (nicht umgesetzt)
+- [docs/IDEEN.md](docs/IDEEN.md) — Ideensammlung; [docs/BIERPONG.md](docs/BIERPONG.md) — zwei Entwürfe für einen Bierpong-Counter mit Mockups (nicht umgesetzt)
 
 ## Betrieb auf dem Raspberry Pi
 
