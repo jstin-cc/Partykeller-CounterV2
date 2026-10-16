@@ -2490,3 +2490,18 @@ Geister und kein Abdunkeln.
 „Ghost Trails“). Macht Überholmanöver auf dem Fernseher aus der Entfernung
 sichtbar. Geprüft in der Demo-Instanz per WS-Testskript (echte Überholungen
 mit und ohne laufende Rotation, keine Konsolenfehler).
+
+## D-107 (2026-10-16): TV ohne Abstand und Bestwert-Etiketten
+
+**Entscheidung:** Vom Timing-Tower (D-093) bleibt auf dem TV nur ▲▼ mit den
+gewonnenen bzw. verlorenen Plätzen für einige Sekunden. Entfernt sind die
+Spalte „Abstand“ (+X zum Vordermann) in der Liste, das +X über den
+Podestplätzen, die Etiketten „Bestwert“ und „Hausrekord“ sowie die grüne bzw.
+lila Gesamtzahl in der Heute-Ansicht. Die Rekordkurs-Anzeige im Kopf bleibt.
+Die Tokens `--pb`/`--record` bleiben im Theme, werden auf dem TV aber nicht
+mehr benutzt.
+
+**Begründung:** Wunsch des Nutzers — der TV soll ruhiger sein; die Pfeile
+hatte er ausdrücklich freigegeben. Die Liste gewinnt dadurch Platz für die
+Namen. Geprüft in der Demo-Instanz (Überholen per WS-Testskript: ▲▼
+erscheinen, keine Abstands- oder Bestwert-Elemente, keine Konsolenfehler).

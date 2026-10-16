@@ -53,7 +53,7 @@ schwarze oder olivgrüne Variante.
 | `--beer`/`--beer-ink`, `--shot`/`--shot-ink`, `--mixc`/`--mixc-ink` | Getränke: Bier = Akzent, Shots = Zweitakzent, Mischen = Creme |
 | `--rank-1..3` | Podest: Akzent, Off-White, Zweitakzent |
 | `--danger`, `--scrim` | Fehler/Löschen, Abdunklung hinter Blättern |
-| `--gain`, `--loss`, `--pb`, `--record` (+ `-ink`) | TV-Timing-Tower: Plätze gewonnen/verloren, persönlicher Bestwert (Grün), Hausrekord (Lila) — Sektorfarben der F1 (D-093) |
+| `--gain`, `--loss`, `--pb`, `--record` (+ `-ink`) | TV: Plätze gewonnen/verloren (▲▼, D-093); `--pb`/`--record` sind seit D-107 auf dem TV nicht mehr in Gebrauch |
 | `--radius-sm/--radius/--radius-lg/--radius-xl` | 7 / 10 / 14 / 32 px |
 | `--font-sans`, `--font-serif` | Mona Sans / Instrument Serif |
 | `--ease`, `--ease-out`, `--ease-spring`, `--dur` | Bewegung |
@@ -206,8 +206,8 @@ Weitere Klassen: `.card` (flache Karte, 14 px Radius, Haarlinie), `.chip`
   Abzeichen und Lando-Fußkarte.
 - **TV**: 1080p-Bühne, Höhenlinien mit langsamer Drift, Podest als Kerbenkarten
   in den Rangfarben, Liste mit Haarlinien, Fun-Fact-Band in der Serif,
-  Kringel um die neue Nr. 1, Rangliste als Timing-Tower (Abstand, ▲/▼,
-  Bestwert/Hausrekord, D-093).
+  Kringel um die neue Nr. 1, ▲/▼ bei Positionswechseln (D-093), Geisterspur
+  beim Überholen (D-106); keine Abstände und Bestwert-Etiketten (D-107).
 - **Admin**: Werkzeug zuerst — Designsprache über Typo, Farben, Knöpfe, Karten.
 - **Abend-Archiv**: Chronik mit Hintergrundwechsel beim Scrollen: Kennzahlen-
   Statement, „Hall of Fame" der Abendsieger als Kerbenkarten, alle Abende auf Creme.

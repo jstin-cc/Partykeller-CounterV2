@@ -59,7 +59,6 @@ try {
     --w-rank: 78px;
     --w-num: 128px;
     --w-total: 150px;
-    --w-gap: 104px;
   }
   /* Design-Bühne: das Board ist auf 1080 Design-Pixel Höhe ausgelegt und wird
      als Ganzes per transform auf die echte Fensterhöhe skaliert. So sieht das
@@ -255,11 +254,9 @@ try {
 
   .slot-head { position: relative; padding: 0 2px 14px; min-width: 0; display: flex; align-items: flex-end; gap: 14px; }
   .name-wrap { position: relative; display: inline-block; flex: 0 1 auto; min-width: 0; max-width: 100%; vertical-align: bottom; }
-  /* Timing-Tower (D-093): ▲▼, Bestwert/Rekord und Abstand zum Vordermann */
+  /* ▲▼ bei Positionswechseln (D-093) */
   .slot-meta { flex: none; margin-left: auto; display: flex; align-items: center; gap: 12px; padding-bottom: 2px; transition: opacity 0.4s var(--ease); }
   .is-new-leader .slot-meta { opacity: 0; }
-  .pod-gap { font-family: var(--font-sans); font-weight: 800; font-size: 24px; line-height: 1; letter-spacing: -0.02em; color: var(--ink-muted); }
-  .pod-gap:empty { display: none; }
   .slot-name {
     display: block;
     font-family: var(--font-sans); font-weight: 800; text-transform: uppercase;
@@ -353,7 +350,6 @@ try {
   .th-num { width: var(--w-num); display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; }
   .th-num::before { content: ''; width: 7px; height: 7px; border-radius: 1px; background: var(--dot); }
   .th-total { width: var(--w-total); text-align: right; }
-  .th-gap { width: var(--w-gap); text-align: right; }
   .rest-viewport { flex: 1; min-height: 0; overflow: hidden; position: relative; }
   /* Wenn rotiert wird, läuft die Liste unten über die Deckkraft ganzer Zeilen
      aus (applyFade, D-055/D-056); die angeschnittene Zeile schneidet
@@ -388,11 +384,6 @@ try {
     white-space: nowrap;
   }
   .col-name > .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .col-gap {
-    width: var(--w-gap); flex: none; text-align: right;
-    font-family: var(--font-sans); font-weight: 800; font-size: 26px; letter-spacing: -0.02em;
-    color: var(--ink-muted);
-  }
   /* Positionswechsel: Dreieck + Plätze, einige Sekunden lang */
   .mv {
     flex: none; display: inline-flex; align-items: center; gap: 6px;
@@ -407,19 +398,8 @@ try {
   @keyframes tv-mv-in { from { opacity: 0; transform: translateY(8px); } }
   /* Geisterspur beim Überholen (L33): Umriss-Kopien von Name und Gesamtzahl */
   .row-ghost { border-top-color: transparent; pointer-events: none; }
-  .row-ghost > :not(.col-name):not(.col-total), .row-ghost .mv, .row-ghost .best { visibility: hidden; }
+  .row-ghost > :not(.col-name):not(.col-total), .row-ghost .mv { visibility: hidden; }
   .row-ghost .nm, .row-ghost .col-total > span { color: transparent; background: none; -webkit-text-stroke: 1.5px var(--accent); }
-  /* Bestwert (grün) und Hausrekord (lila) wie die Sektorfarben der F1 */
-  .best {
-    flex: none; padding: 6px 9px 5px; border-radius: 6px;
-    font-family: var(--font-sans); font-weight: 800; font-size: 13px; line-height: 1;
-    text-transform: uppercase; letter-spacing: 0.06em;
-    background: var(--pb); color: var(--pb-ink);
-  }
-  .best.is-record { background: var(--record); color: var(--record-ink); }
-  .best:empty { display: none; }
-  #board[data-mode="today"] .row.is-pb .col-total > span { background: var(--pb); color: var(--pb-ink); }
-  #board[data-mode="today"] .row.is-record .col-total > span { background: var(--record); color: var(--record-ink); }
   .col-beer, .col-shot, .col-mix {
     width: var(--w-num); flex: none; text-align: right;
     font-family: var(--font-sans); font-weight: 800; font-size: 32px; letter-spacing: -0.03em;
@@ -614,7 +594,7 @@ try {
 
         <div id="podium">
           <div id="pod-2" class="slot" hidden data-reveal="up" data-delay="380">
-            <div class="slot-head"><span class="name-wrap"><span class="slot-name" data-f="name"></span></span><span class="slot-meta"><span class="mv"></span><span class="best"></span><span class="pod-gap num"></span></span></div>
+            <div class="slot-head"><span class="name-wrap"><span class="slot-name" data-f="name"></span></span><span class="slot-meta"><span class="mv"></span></span></div>
             <div class="podium-card" data-notch="tabW:252;tabH:36;r:14;slant:22">
               <span class="topo topo--abs notch-clip pod-topo" aria-hidden="true"></span>
               <span class="podium-badge">2</span>
@@ -627,7 +607,7 @@ try {
             <div class="slot-head">
               <span class="lead-note" aria-hidden="true">Neue Nr. 1</span>
               <span class="name-wrap"><span class="slot-name" data-f="name"></span></span>
-              <span class="slot-meta"><span class="mv"></span><span class="best"></span></span>
+              <span class="slot-meta"><span class="mv"></span></span>
             </div>
             <div class="podium-card" data-notch="tabW:284;tabH:40;r:14;slant:24">
               <span class="topo topo--abs notch-clip pod-topo" aria-hidden="true"></span>
@@ -638,7 +618,7 @@ try {
             </div>
           </div>
           <div id="pod-3" class="slot" hidden data-reveal="up" data-delay="460">
-            <div class="slot-head"><span class="name-wrap"><span class="slot-name" data-f="name"></span></span><span class="slot-meta"><span class="mv"></span><span class="best"></span><span class="pod-gap num"></span></span></div>
+            <div class="slot-head"><span class="name-wrap"><span class="slot-name" data-f="name"></span></span><span class="slot-meta"><span class="mv"></span></span></div>
             <div class="podium-card" data-notch="tabW:252;tabH:36;r:14;slant:22">
               <span class="topo topo--abs notch-clip pod-topo" aria-hidden="true"></span>
               <span class="podium-badge">3</span>
@@ -654,7 +634,6 @@ try {
         <div class="thead eyebrow" aria-hidden="true">
           <span class="th-rank">Rang</span>
           <span class="th-name">Name</span>
-          <span class="th-gap">Abstand</span>
           <span class="th-num" style="--dot: var(--beer)">Bier</span>
           <span class="th-num" style="--dot: var(--shot)">Shots</span>
           <span class="th-num" style="--dot: var(--mixc)">Mischen</span>
@@ -856,7 +835,6 @@ function buildRow(p, prev) {
   for (const [cls, text, key] of [
     ['col-rank', p.rank, null],
     ['col-name', p.name, null],
-    ['col-gap', '', null],
     ['col-beer', p.beers, 'beers'],
     ['col-shot', p.shots, 'shots'],
     ['col-mix', p.mixes, 'mixes'],
@@ -871,8 +849,8 @@ function buildRow(p, prev) {
       cell.appendChild(pill);
     } else if (cls === 'col-name') {
       // Name zuerst (firstElementChild: updateRowsInPlace schreibt hinein),
-      // dahinter die Tower-Etiketten, die paintTower() füllt
-      cell.innerHTML = '<span class="nm"></span><span class="mv"></span><span class="best"></span>';
+      // dahinter ▲▼, das paintTower() füllt
+      cell.innerHTML = '<span class="nm"></span><span class="mv"></span>';
       cell.firstElementChild.textContent = text;
     } else {
       cell.textContent = text;
@@ -1217,26 +1195,23 @@ function applyState(state, mode) {
   fillPodium($('pod-3'), rows[2], 3);
 
   updateRest(rows.slice(3));
-  trackTower(rows, mode, state);
+  trackTower(rows, mode);
   updateFacts(state.players.filter((p) => !p.hidden), state.records, state.customFacts, state.funStats);
   updatePace(state.funStats?.pace, mode);
 }
 
 // --- Timing-Tower (Idee L18, D-093) ---
-// Wie die F1-Grafik: Abstand zum Vordermann, ▲▼ für ein paar Sekunden, wenn
-// jemand Plätze gewinnt oder verliert, und in den Live-Ansichten Grün für
-// einen neuen persönlichen Bestwert (mehr als am bisher besten Abend) bzw.
-// Lila für einen neuen Hausrekord (mehr als je eine Person an einem Abend).
-// Positionswechsel zählen nur innerhalb derselben Ansicht, nicht beim
+// ▲▼ für ein paar Sekunden, wenn jemand Plätze gewinnt oder verliert.
+// Abstand zum Vordermann, Bestwert und Hausrekord stehen seit D-107 nicht
+// mehr auf dem TV. Positionswechsel zählen nur innerhalb derselben Ansicht, nicht beim
 // ersten Stand und nicht beim Moduswechsel.
 const MOVE_MS = 10 * 1000;
 const moves = new Map();      // id -> { d: gewonnene Plätze (negativ = verloren), until }
 let prevRanks = null;         // id -> Platz im vorigen Stand derselben Ansicht
 let towerRows = [];
-let towerFlags = new Map();   // id -> 'pb' | 'record'
 let moveTimer = null;
 
-function trackTower(rows, mode, state) {
+function trackTower(rows, mode) {
   const now = Date.now();
   if (modeSwitching || mode === 'archive') moves.clear();
   else if (prevRanks) {
@@ -1247,56 +1222,33 @@ function trackTower(rows, mode, state) {
   }
   prevRanks = mode === 'archive' ? null : new Map(rows.map((r) => [r.id, r.rank]));
 
-  towerFlags = new Map();
-  if (mode !== 'archive') {
-    const house = state.houseBestNight ?? 0;
-    for (const p of state.players) {
-      const tonight = p.beersToday + p.shotsToday + p.mixesToday;
-      if (!tonight) continue;
-      if (house > 0 && tonight > house && !p.hidden) towerFlags.set(p.id, 'record');
-      else if (p.bestNight > 0 && tonight > p.bestNight) towerFlags.set(p.id, 'pb');
-    }
-  }
   $('board').dataset.mode = mode;
   towerRows = rows;
   paintTower();
 }
 
-// Etiketten einer Zeile bzw. eines Podestplatzes; liefert die Bestwert-Art
-function paintTags(mvEl, bestEl, r) {
+// ▲▼ einer Zeile bzw. eines Podestplatzes
+function paintTags(mvEl, r) {
   const m = moves.get(r.id);
   const live = !!m && m.until > Date.now();
   if (m && !live) moves.delete(r.id);
   const txt = live ? String(Math.abs(m.d)) : '';
   if (mvEl.textContent !== txt) mvEl.textContent = txt;
   mvEl.classList.toggle('is-down', live && m.d < 0);
-  const flag = towerFlags.get(r.id);
-  const label = flag === 'record' ? 'Hausrekord' : flag === 'pb' ? 'Bestwert' : '';
-  if (bestEl.textContent !== label) bestEl.textContent = label;
-  bestEl.classList.toggle('is-record', flag === 'record');
-  return flag;
 }
 
 function paintTower() {
-  const gapText = (i) => (i > 0 && towerRows[i] ? `+${towerRows[i - 1].total - towerRows[i].total}` : '');
   [1, 2, 3].forEach((slot) => {
     const el = $(`pod-${slot}`);
     const r = towerRows[slot - 1];
     if (!r) return;
-    paintTags(el.querySelector('.slot-meta .mv'), el.querySelector('.slot-meta .best'), r);
-    const gap = el.querySelector('.pod-gap');
-    if (gap) gap.textContent = gapText(slot - 1);
+    paintTags(el.querySelector('.slot-meta .mv'), r);
   });
   if (track) {
     [...track.children].forEach((row, i) => {
       const r = towerRows[i + 3];
       if (!r || row.dataset.id !== r.id) return;
-      const flag = paintTags(row.querySelector('.mv'), row.querySelector('.best'), r);
-      row.classList.toggle('is-pb', flag === 'pb');
-      row.classList.toggle('is-record', flag === 'record');
-      const gap = row.querySelector('.col-gap');
-      const t = gapText(i + 3);
-      if (gap.textContent !== t) gap.textContent = t;
+      paintTags(row.querySelector('.mv'), r);
     });
   }
   // beim nächsten auslaufenden ▲▼ neu malen
