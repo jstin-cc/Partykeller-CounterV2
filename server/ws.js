@@ -12,25 +12,17 @@ function createHandlers(area) {
   const db = area.db;
 
   return {
+    // Ein Getränk zählen: nur Gäste, nur der eigene Zähler, nur +1 (D-004).
+    // Admins korrigieren seit D-104 ausschließlich im Getränke-Protokoll
+    // (editLog/deleteLog/addLog) — so bleiben Zähler und Protokoll gleich.
     increment(auth, { playerId, drink, delta }) {
       if (!['beer', 'shot', 'mix'].includes(drink)) throw new Error('Unbekanntes Getränk');
-      if (!Number.isInteger(delta)) throw new Error('delta muss ganzzahlig sein');
-
-      if (auth?.role === 'player') {
-        if (auth.sub !== playerId) throw new Error('Nur der eigene Zähler ist erlaubt');
-        if (delta !== 1) throw new Error('Nutzer dürfen nur +1 zählen (D-004)');
-      } else {
-        requireAdmin(auth);
-        if (Math.abs(delta) > 1000) throw new Error('delta außerhalb des erlaubten Bereichs');
-      }
-
-      // Nur echte Getränke landen im Log; Admin-Korrekturen nicht (D-005).
+      if (auth?.role !== 'player') throw new Error('Korrekturen bitte im Getränke-Protokoll');
+      if (auth.sub !== playerId) throw new Error('Nur der eigene Zähler ist erlaubt');
+      if (delta !== 1) throw new Error('Nutzer dürfen nur +1 zählen (D-004)');
       // Zähler und Log-Eintrag als eine Transaktion (D-046): nie das eine
       // ohne das andere, auch nicht bei einem Absturz genau dazwischen.
-      const ok = auth.role === 'player'
-        ? db.logDrink(playerId, drink)
-        : db.incrementDrink(playerId, drink, delta);
-      if (!ok) throw new Error('Nutzer nicht gefunden');
+      if (!db.logDrink(playerId, drink)) throw new Error('Nutzer nicht gefunden');
     },
 
     addPlayer(auth, { name, pin }) {
@@ -57,13 +49,6 @@ function createHandlers(area) {
       const hasPin = pin != null && pin !== '';
       if (hasPin && !validPin(pin)) throw new Error('PIN muss 4 Ziffern haben');
       if (!db.setPinHash(id, hasPin ? hashPin(pin) : '')) throw new Error('Nutzer nicht gefunden');
-    },
-
-    setCounter(auth, { id, drink, value }) {
-      requireAdmin(auth);
-      if (!['beer', 'shot', 'mix'].includes(drink)) throw new Error('Unbekanntes Getränk');
-      if (!Number.isInteger(value) || value < 0) throw new Error('Wert muss >= 0 sein');
-      if (!db.setCounter(id, drink, value)) throw new Error('Nutzer nicht gefunden');
     },
 
     setHidden(auth, { id, hidden }) {

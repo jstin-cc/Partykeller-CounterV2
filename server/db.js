@@ -127,7 +127,6 @@ export function createDb(dbPath) {
     increment: db.prepare(
       'UPDATE players SET beers = MAX(0, beers + ?), shots = MAX(0, shots + ?), mixes = MAX(0, mixes + ?) WHERE id = ?'
     ),
-    setCounter: db.prepare('UPDATE players SET beers = ?, shots = ?, mixes = ? WHERE id = ?'),
     rename: db.prepare('UPDATE players SET name = ? WHERE id = ?'),
     setHidden: db.prepare('UPDATE players SET hidden = ? WHERE id = ?'),
     setPinHash: db.prepare('UPDATE players SET pin_hash = ? WHERE id = ?'),
@@ -406,15 +405,6 @@ export function createDb(dbPath) {
     addLogEntry(id, drink, ts);
     return true;
   });
-
-  function setCounter(id, drink, value) {
-    const p = getPlayer(id);
-    if (!p) return false;
-    const beers = drink === 'beer' ? value : p.beers;
-    const shots = drink === 'shot' ? value : p.shots;
-    const mixes = drink === 'mix' ? value : p.mixes;
-    return stmts.setCounter.run(beers, shots, mixes, id).changes > 0;
-  }
 
   function renamePlayer(id, name) {
     return stmts.rename.run(name, id).changes > 0;
@@ -1243,7 +1233,7 @@ export function createDb(dbPath) {
   return {
     getSetting, setSetting,
     createPlayer, getPlayer, getPlayerByName, countPlayers,
-    incrementDrink, addLogEntry, logDrink, setCounter, renamePlayer, setHidden,
+    logDrink, renamePlayer, setHidden,
     getRecords, listFacts, addFact, updateFact, deleteFact,
     getArchive, getArchiveDay, getExportNights, getPlayerStats, getPlayerReview,
     getDayLog, editLogEntry, deleteLogEntry, addLogAdmin,

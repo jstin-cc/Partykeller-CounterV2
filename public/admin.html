@@ -228,30 +228,18 @@ try {
   .chip-muted { background: transparent; color: var(--ink-muted); border: 1px solid var(--line-strong); }
   .chip-brick { background: transparent; color: var(--accent-2); border: 1px solid color-mix(in srgb, var(--accent-2) 60%, transparent); }
 
-  /* Zähler: − | Zahl (direkt editierbar) | + in der Getränkefarbe */
+  /* Zähler nur zur Anzeige (D-104): korrigiert wird im Getränke-Protokoll
+     (⋯ → „Im Protokoll ansehen"), damit Zähler und Protokoll nie auseinanderlaufen */
   .st-group { display: contents; }
-  .st { width: 124px; display: flex; align-items: center; justify-content: center; gap: 4px; flex: none; }
-  .st.beer { --c: var(--beer); --on: var(--beer-ink); }
-  .st.shot { --c: var(--shot); --on: var(--shot-ink); }
-  .st.mix { --c: var(--mixc); --on: var(--mixc-ink); }
-  .st button {
-    width: 30px; height: 30px; flex: none; padding: 0; border-radius: var(--radius-sm);
-    border: 1px solid var(--line-strong); background: transparent; color: var(--ink-muted);
-    font-size: 16px; font-weight: 600; line-height: 1; transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  .st {
+    width: 124px; flex: none; display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-weight: 800; font-size: 17px; letter-spacing: -0.02em; color: var(--ink);
   }
-  .st button:hover { color: var(--ink); border-color: var(--ink-muted); }
-  .st .plus { border-color: var(--c); background: var(--c); color: var(--on); font-weight: 800; }
-  .st .plus:hover { color: var(--on); border-color: var(--c); filter: brightness(1.08); }
-  .st input {
-    width: 48px; height: 32px; text-align: center; padding: 0;
-    background: var(--surface-alt); border: 1px solid var(--line); border-radius: var(--radius-sm);
-    color: var(--ink); font-family: var(--font-sans); font-weight: 800; font-size: 16px;
-    font-variant-numeric: proportional-nums; letter-spacing: -0.02em;
-    -moz-appearance: textfield; appearance: textfield; transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-  .st input:hover { border-color: var(--line-strong); }
-  .st input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
-  .st input::-webkit-outer-spin-button, .st input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .st::before { content: ''; width: 8px; height: 8px; border-radius: 2px; flex: none; background: var(--c); box-shadow: inset 0 0 0 1px var(--line-strong); }
+  .st.beer { --c: var(--beer); }
+  .st.shot { --c: var(--shot); }
+  .st.mix { --c: var(--mixc); }
+  .st .st-l { display: none; }
   .k-total { width: 64px; flex: none; text-align: right; font-size: 24px; color: var(--accent-text); }
 
   /* ⋯-Menü als Popover (Konten und eigene Fun-Facts) */
@@ -637,14 +625,10 @@ try {
     .k-name form .field { width: 100%; }
     .k-total { grid-column: 3; grid-row: 1; width: auto; }
     .more-wrap { grid-column: 4; grid-row: 1; }
-    .st-group { display: grid; grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .st { width: auto; display: grid; grid-template-columns: 30px 40px 30px; justify-content: center; align-items: center; row-gap: 6px; column-gap: 3px; }
-    .st::before { grid-column: 1 / -1; text-align: center; font-weight: 700; font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c); }
-    .st.beer::before { content: 'Bier'; }
-    .st.shot::before { content: 'Shots'; }
-    .st.mix::before { content: 'Mischen'; }
-    .st button { width: 30px; height: 34px; }
-    .st input { width: 40px; height: 34px; font-size: 16px; }
+    .k-row { row-gap: 6px; }
+    .st-group { display: flex; grid-column: 2 / -1; grid-row: 2; gap: 16px; }
+    .st { width: auto; justify-content: flex-start; gap: 6px; font-size: 14px; }
+    .st .st-l { display: inline; font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
     .sl { grid-template-columns: 88px minmax(0, 1fr) 60px; }
     /* Protokoll am Handy: kompakte Zeilen, ein Tipp öffnet das Blatt */
     .p-tools { flex-wrap: wrap; }
@@ -2461,41 +2445,25 @@ function renderRows() {
       nameCell.append(name, meta);
     }
 
-    // Zähler-Stepper; die Zahl ist direkt editierbar
-    const stepper = (drink, value, cls, label) => {
+    // Zähler nur zur Anzeige (D-104); Korrekturen im Getränke-Protokoll
+    const counter = (value, cls, label) => {
       const cell = document.createElement('div');
-      cell.className = `st ${cls}`;
-      const dec = document.createElement('button');
-      dec.type = 'button';
-      dec.textContent = '–';
-      dec.setAttribute('aria-label', `${label} −1`);
-      dec.addEventListener('click', () => send({ type: 'increment', playerId: p.id, drink, delta: -1 }));
-      const input = document.createElement('input');
-      input.type = 'number';
-      input.min = 0;
-      input.inputMode = 'numeric';
-      input.value = value;
-      input.setAttribute('aria-label', `${label} von ${p.name}`);
-      input.addEventListener('change', () => {
-        const v = Math.max(0, Math.round(Number(input.value)) || 0);
-        send({ type: 'setCounter', id: p.id, drink, value: v });
-      });
-      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
-      const inc = document.createElement('button');
-      inc.type = 'button';
-      inc.className = 'plus';
-      inc.textContent = '+';
-      inc.setAttribute('aria-label', `${label} +1`);
-      inc.addEventListener('click', () => send({ type: 'increment', playerId: p.id, drink, delta: 1 }));
-      cell.append(dec, input, inc);
+      cell.className = `st ${cls} num`;
+      cell.title = label;
+      cell.append(String(value));
+      const l = document.createElement('span');
+      l.className = 'st-l';
+      l.textContent = label;
+      cell.append(l);
       return cell;
     };
     const steppers = document.createElement('div');
     steppers.className = 'st-group';
+    steppers.setAttribute('aria-label', `${p.beers} Bier, ${p.shots} Shots, ${p.mixes} Mischen`);
     steppers.append(
-      stepper('beer', p.beers, 'beer', 'Bier'),
-      stepper('shot', p.shots, 'shot', 'Shots'),
-      stepper('mix', p.mixes, 'mix', 'Mischen'),
+      counter(p.beers, 'beer', 'Bier'),
+      counter(p.shots, 'shot', 'Shots'),
+      counter(p.mixes, 'mix', 'Mischen'),
     );
 
     const total = document.createElement('div');

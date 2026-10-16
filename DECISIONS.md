@@ -2425,3 +2425,29 @@ Admin-Menü. Geprüft in der Demo-Instanz in Handybreite: Übergangsnamen auf
 Quell- und Zielseite (der eingebaute Test-Browser bricht View Transitions
 grundsätzlich ab, auch auf einer leeren Seite), Rückblick und Platz-Flug mit
 Zwischenbildern, Onboarding Schritt 3 landet im Profil.
+
+## D-104 (2026-10-16): Keine Zähler-Korrekturen mehr in der Kontenliste
+
+**Entscheidung:** Die −/+-Knöpfe und eintippbaren Zahlen je Getränk in der
+Admin-Kontenliste entfallen; Bier, Shots und Mischen stehen dort nur noch zur
+Ansicht (farbiger Punkt und Zahl, am Handy kompakt unter dem Namen).
+Korrigiert wird ausschließlich im Getränke-Protokoll (D-073; aus der
+Kontenliste über ⋯ → „Im Protokoll ansehen"). Serverseitig: Der WS-Handler
+`setCounter` ist weg, `increment` erlaubt nur noch Gästen ihr eigenes +1 —
+ein Admin bekommt „Korrekturen bitte im Getränke-Protokoll". Das Dev-Seed
+(`npm run seed`) legt seine Testdaten als echte Protokolleinträge an
+(drei vergangene Samstage plus heute).
+
+**Begründung:** Wunsch des Nutzers. Korrekturen am Zähler standen nicht im
+Protokoll; Zähler und Protokoll konnten so auseinanderlaufen (Archiv,
+Rekorde und Meilensteine rechnen aus dem Protokoll, die Rangliste aus den
+Zählern). Ab jetzt gilt immer Zähler = Protokoll. Die echte Datenbank hatte
+vorher keine Abweichungen (19 Konten geprüft), es bleibt also nichts Schiefes
+zurück. Geprüft: WS-Test (Admin-increment und setCounter abgewiesen, Gast
++1 quittiert), Seed gegen Wegwerf-DB, Kontenliste in Handy- und
+Desktopbreite.
+
+Nachtrag D-103: Der Rückblick-Titel flog nach dem Übergang ein zweites Mal
+herein — die Klasse, die seine Einblendung während des Übergangs abschaltet,
+wurde nach 0,8 s entfernt und startete sie neu. Sie bleibt jetzt bis zum
+nächsten Seitenwechsel in der Story stehen.
