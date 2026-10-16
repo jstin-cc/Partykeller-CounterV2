@@ -999,3 +999,7 @@ html[data-season="oktoberfest"] [data-deco-top] > .screen-inner { padding-top: 3
   .season-deco, .season-deco * { animation: none !important; }
 }
 
+
+/* Youngstars (D-110): gleiches Design wie der Partykeller, nur ohne das
+   SV-Logo — dort steht allein die Wortmarke „Young / Stars“ */
+html[data-area="youngstars"] :is(.pk-logo, .tv-emblem) { display: none !important; }

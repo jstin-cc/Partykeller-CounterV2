@@ -1,5 +1,6 @@
 import { getSession, getPlayerName, clearSession } from './api.js';
 import { go } from './lando.js';
+import { AREA } from './area.js';
 
 // Ein Vollbild-Menü für alle Seiten (D-102): gleiche Einträge, gleiche
 // Reihenfolge, gleiche Wörter — auf Anmeldung, Dashboard, Abend-Archiv und
@@ -16,6 +17,8 @@ import { go } from './lando.js';
 // current: 'login' | 'dashboard' | 'archive' | 'admin'. Im Dashboard sind
 // Zählen und Profil Knöpfe mit data-go-tab, die Seite schaltet damit ihre
 // Tabs um und pflegt is-current selbst.
+// „Bereich wechseln" (D-110) führt zur Auswahlseite; dort gleitet die
+// Wortmarke in die Karte des Bereichs (Schlüssel 'pick').
 
 const STRIKE = '<svg class="scribble scribble--strike" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 18c26-8 44 6 70-2s46-9 74-2 52 5 88-6" pathLength="1"/></svg>';
 
@@ -41,6 +44,7 @@ export function renderSiteMenu(current) {
       { key: 'archive', label: 'Abend-Archiv', href: 'abende', sm: true, morph: 'archive' },
       { key: 'tv', label: 'TV', href: 'tv', sm: true, newTab: true },
       { key: 'admin', label: 'Admin', href: 'admin', sm: true, morph: 'admin' },
+      { key: 'areas', label: 'Bereich wechseln', href: '/?wahl', sm: true, morph: 'pick' },
       { key: 'logout', label: 'Abmelden', sm: true, logout: true },
     ]
     : [
@@ -50,6 +54,7 @@ export function renderSiteMenu(current) {
       { key: 'archive', label: 'Abend-Archiv', href: 'abende', sm: true, morph: 'archive' },
       { key: 'tv', label: 'TV', href: 'tv', sm: true, newTab: true },
       { key: 'admin', label: 'Admin', href: 'admin', sm: true, morph: 'admin' },
+      { key: 'areas', label: 'Bereich wechseln', href: '/?wahl', sm: true, morph: 'pick' },
     ];
 
   nav.className = 'site-menu area-pk';
@@ -59,7 +64,7 @@ export function renderSiteMenu(current) {
 
   const bar = el('div', { class: 'topbar' });
   const mark = el('span', { class: 'wordmark', 'aria-hidden': 'true' });
-  mark.append(el('span', { class: 'wm-top' }, 'Party'), el('span', { class: 'wm-bottom' }, 'Keller'));
+  mark.append(el('span', { class: 'wm-top' }, AREA.mark[0]), el('span', { class: 'wm-bottom' }, AREA.mark[1]));
   const close = el('button', { class: 'btn btn--ghost btn--icon', type: 'button', 'data-menu-toggle': true, 'aria-label': 'Menü schließen' });
   close.append(el('span', { class: 'i-menu' }));
   bar.append(mark, close);

@@ -9,10 +9,11 @@
 // (die Seite benennt daraufhin ihr Gegenstück), nach dem Übergang lösen.
 try {
   var h = document.documentElement, ss = sessionStorage;
+  var kp = location.pathname.indexOf('/youngstars') === 0 ? 'ys' : 'pk';   // Storage-Prefix des Bereichs (js/area.js)
   // Schon angemeldet (z. B. QR-Code am TV gescannt): direkt zum Zähler, ohne
   // erst die Namensliste zu zeigen. Ein ungültiges Token meldet das Dashboard
   // ab und schickt hierher zurück.
-  if (localStorage.getItem('pk_token') && localStorage.getItem('pk_player_id')) {
+  if (localStorage.getItem(kp + '_token') && localStorage.getItem(kp + '_player_id')) {
     h.style.visibility = 'hidden';
     location.replace('dashboard' + location.search);
     throw 0;
@@ -98,6 +99,8 @@ try {
   }
   .hero-meta { margin-left: auto; text-align: right; line-height: 1.35; }
   .hero-meta .eyebrow { display: block; }
+  /* Youngstars (D-110): ohne Logo steht die Zeile allein, dann ganz weg */
+  html[data-area="youngstars"] .hero-emblems { display: none; }
 
   .hero-eyebrow { margin: 6px 0 0; display: flex; align-items: center; gap: 10px; }
   .hero-eyebrow::before { content: ''; width: 22px; height: 1px; background: var(--accent); }
@@ -410,12 +413,13 @@ try {
           // das Modul übernimmt nach dem Übergang.
           (() => {
             if (document.documentElement.dataset.morph !== 'me') return;
+            const kp = location.pathname.indexOf('/youngstars') === 0 ? 'ys' : 'pk';
             let players;
-            try { players = JSON.parse(localStorage.getItem('pk_players_cache') || 'null'); } catch (e) { return; }
+            try { players = JSON.parse(localStorage.getItem(kp + '_players_cache') || 'null'); } catch (e) { return; }
             if (!Array.isArray(players)) return;
             players = players.filter((p) => !p.hidden);
             if (!players.length) return;
-            const last = localStorage.getItem('pk_last_player_id');
+            const last = localStorage.getItem(kp + '_last_player_id');
             const at = players.findIndex((p) => p.id === last);
             if (at > 0) players.unshift(players.splice(at, 1)[0]);
             const el = (tag, cls, text) => { const n = document.createElement(tag); n.className = cls; if (text) n.textContent = text; return n; };
@@ -479,6 +483,7 @@ try {
 
 <script type="module">
 import { post, fetchPlayers, setSession, getLastPlayerId } from './js/api.js';
+import { AREA } from './js/area.js';
 import { initLando, leave, enter, go } from './js/lando.js';
 import { renderSiteMenu } from './js/site-menu.js';
 
@@ -669,12 +674,12 @@ $('create-form').addEventListener('submit', async (e) => {
   }
 });
 
-// Die Liste kommt sofort aus dem letzten Abruf (pk_players_cache) und wird
+// Die Liste kommt sofort aus dem letzten Abruf (pk_/ys_players_cache) und wird
 // nur neu aufgebaut, wenn der frische Abruf abweicht. Kommt ein Morph vom
 // Dashboard herein (D-085), hat das Inline-Skript unter der Liste sie schon
 // fürs erste Bild gesetzt — dann erst nach dem Übergang übernehmen, sonst
 // verschwände die Zeile, in die Namenskreis und Name gerade gleiten.
-const CACHE_KEY = 'pk_players_cache';
+const CACHE_KEY = `${AREA.keyPrefix}_players_cache`;
 const slim = (players) => JSON.stringify(players.map(({ id, name, hasPin, hidden }) => ({ id, name, hasPin, hidden })));
 const prerendered = $('user-list').childElementCount > 0;
 if (prerendered) firstRender = false;
