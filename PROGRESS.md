@@ -7,6 +7,9 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16 (D-107): **TV ohne Abstand und Bestwert-Etiketten** — die
+Spalte „Abstand“, das +X am Podest sowie „Bestwert“/„Hausrekord“ (samt
+Grün/Lila an der Gesamtzahl) sind weg; ▲▼ bei Positionswechseln bleibt.
 Seit 2026-10-16 (D-106): **Geisterspur auf dem TV** (L33) — wer in der
 Rangliste überholt, zieht Umriss-Kopien seines Namens hinter sich her, die
 Überholten dimmen kurz ab. In der Demo-Instanz per WS-Testskript geprüft.
