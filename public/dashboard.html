@@ -692,7 +692,6 @@ try {
           <div class="ident-meta">
             <span id="win-chip" class="chip chip--accent" hidden></span>
             <span id="season-chip" class="chip chip--accent" hidden></span>
-            <span id="player-since" class="eyebrow"></span>
           </div>
           <h1 id="player-name" class="ident-name"></h1>
         </div>
@@ -809,6 +808,7 @@ try {
         <section class="block stats">
           <div class="block-head">
             <h2 class="t-title block-title" data-reveal="words">Deine <span class="t-serif t-accent">Statistik</span></h2>
+            <span id="player-since" class="eyebrow"></span>
           </div>
           <div id="alltime-stack" class="alltime-stack" data-reveal="up"></div>
           <div class="stat-grid" data-reveal="up">
@@ -1482,8 +1482,6 @@ if (!token || !playerId) {
       loadReview();
       paceCurve = pace ?? null;
       renderPace();
-      statDays = days;
-      renderSince();
       bump('stat-days', days);
       if (best) {
         // Datum nur im Tooltip: in der Beschriftung bräche es die Zelle auf
@@ -1740,14 +1738,10 @@ if (!token || !playerId) {
     $('share-note').textContent = `${me.total} von ${house} Getränken · ${pct} %`;
   }
 
-  // Kopfzeile: „Dabei seit …" kommt aus dem Zustand, die Abende aus der Statistik
-  let statDays = null;
+  // „Dabei seit …" im Statistik-Kopf, aus dem Zustand (created_at)
   let joinedAt = null;
   function renderSince() {
-    const parts = [];
-    if (joinedAt) parts.push(`Dabei seit ${joinedAt}`);
-    if (statDays) parts.push(statDays === 1 ? '1 Abend' : `${statDays} Abende`);
-    $('player-since').textContent = parts.join(' · ');
+    $('player-since').textContent = joinedAt ? `Dabei seit ${joinedAt}` : '';
   }
 
   // Verteilungsbalken aus den All-Time-Zählern

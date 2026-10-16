@@ -466,6 +466,11 @@ try {
   .switch:checked { background: var(--accent); border-color: var(--accent); }
   .switch:checked::after { transform: translateX(20px); background: var(--accent-ink); }
   .switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  /* Effekt-Demo (D-099): Knopfraster, ein übrig bleibender Knopf geht über
+     beide Spalten; kurz orange, wenn der Effekt rausgegangen ist */
+  .demo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .demo-grid > .btn:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .btn[data-demo].is-sent { --btn-bg: var(--accent); --btn-ink: var(--accent-ink); --btn-line: var(--accent); }
   .quick-links { display: flex; flex-direction: row; gap: 8px; }
   .quick-links .btn { flex: 1; }
 
@@ -845,6 +850,44 @@ try {
                 </div>
               </div>
               <span class="notch-tag"><span class="live-dot"></span>Live <span class="hl">TV</span></span>
+            </div>
+          </section>
+
+          <!-- Effekt-Demo (D-099): spielt einen Effekt einmal auf den Fernsehern ab -->
+          <section class="side-block">
+            <h3 class="t-h3 side-title" data-reveal="up">Effekt-<span class="t-serif t-accent">Demo</span></h3>
+            <div class="card side" data-reveal="up" data-delay="80">
+              <div class="set-row">
+                <div class="lbl">Momente</div>
+                <div class="demo-grid">
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="poster">Namens-Plakat</button>
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="milestone">Meilenstein</button>
+                </div>
+              </div>
+              <div class="set-row">
+                <div class="lbl">Effekte</div>
+                <div class="demo-grid">
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="confetti">Konfetti</button>
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="bat">Fledermaus</button>
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="bubbles">Bierbläschen</button>
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="fireworks">Feuerwerk</button>
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="snow">Schneefall</button>
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="countdown">Silvester-Countdown</button>
+                </div>
+              </div>
+              <div class="set-row">
+                <div class="lbl">Saison-Deko</div>
+                <div class="demo-grid">
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="season" data-season="oktoberfest">Oktoberfest</button>
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="season" data-season="halloween">Halloween</button>
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="season" data-season="winter">Winter</button>
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="season" data-season="silvester">Silvester</button>
+                  <button type="button" class="btn btn--quiet btn--sm" data-demo="season" data-season="fasching">Fasching</button>
+                </div>
+              </div>
+              <div class="set-row">
+                <button type="button" class="btn btn--ghost btn--sm btn--block" data-demo="clear">Alle Effekte beenden</button>
+              </div>
             </div>
           </section>
 
@@ -1498,6 +1541,15 @@ function updateSeasonal(on) {
 $('seasonal-toggle').addEventListener('change', (e) => send({ type: 'setSeasonal', on: e.target.checked }));
 // Schnitt-Vergleich im Dashboard (D-075)
 $('pace-toggle').addEventListener('change', (e) => send({ type: 'setPaceCompare', on: e.target.checked }));
+
+// Effekt-Demo (D-099): der Server reicht den Effekt an die Fernseher weiter
+for (const b of document.querySelectorAll('[data-demo]')) {
+  b.addEventListener('click', () => {
+    send({ type: 'demoEffect', effect: b.dataset.demo, season: b.dataset.season });
+    b.classList.add('is-sent');
+    setTimeout(() => b.classList.remove('is-sent'), 1200);
+  });
+}
 
 $('join-save').addEventListener('click', () => {
   send({ type: 'setJoinUrl', url: $('join-url').value });

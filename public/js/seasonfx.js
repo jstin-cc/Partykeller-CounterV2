@@ -32,6 +32,7 @@ export function createSeasonFx(stage) {
   let snow = [];
   let bursts = [];
   let running = false;
+  const bats = new Set();
 
   // Token lesen und prüfen, ob der Canvas die Farbe versteht; sonst Fallback
   const probe = document.createElement('canvas').getContext('2d');
@@ -119,7 +120,10 @@ export function createSeasonFx(stage) {
         grad.addColorStop(0, p.c); grad.addColorStop(1, 'rgba(0,0,0,0)');
         g.strokeStyle = grad; g.lineWidth = 3;
         g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(p.x, p.y + 60); g.stroke();
-        if (p.y <= p.ty) {
+        // Platzen am Ziel — oder wenn der Schwung vorher ausgeht (die Bremse
+        // trägt eine langsame Rakete nicht bis ganz nach oben; sonst bliebe
+        // ihre Spur als Striemen in der Luft stehen)
+        if (p.y <= p.ty || p.vy > -2) {
           p.life = 0;
           spawned.push({ t: 'ring', x: p.x, y: p.y, r: 8, c: p.c, life: 1 });
           for (let i = 0; i < 56; i++) {
@@ -196,6 +200,7 @@ export function createSeasonFx(stage) {
         + `<path d="M54 25 L55 17 L58.5 22.5 L61.5 22.5 L65 17 L66 25 C67.5 29 67.5 38 60 43 C52.5 38 52.5 29 54 25 Z" ${body}/>`
         + '<circle cx="57.5" cy="28.5" r="1.5" fill="var(--accent, #d2ff00)"/><circle cx="62.5" cy="28.5" r="1.5" fill="var(--accent, #d2ff00)"/></svg>';
       stage.append(el);
+      bats.add(el);
       for (const wing of el.querySelectorAll('.wing')) {
         wing.animate([{ transform: 'scaleY(1)' }, { transform: 'scaleY(0.35)' }], { duration: 220, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
       }
@@ -205,7 +210,16 @@ export function createSeasonFx(stage) {
         { transform: `translate(${W * 0.5}px, ${H * 0.39}px) rotate(-6deg)` },
         { transform: `translate(${W * 0.77}px, ${H * 0.19}px) rotate(8deg)` },
         { transform: `translate(${W + 180}px, ${H * 0.31}px) rotate(-4deg)` },
-      ], { duration: 4200, easing: 'cubic-bezier(0.45, 0.05, 0.55, 0.95)' }).finished.then(() => el.remove());
+      ], { duration: 4200, easing: 'cubic-bezier(0.45, 0.05, 0.55, 0.95)' }).finished
+        .then(() => { el.remove(); bats.delete(el); }, () => {});
+    },
+    // Effekt-Demo beenden (D-099): laufende Momente sofort weg, Schnee bleibt
+    // Sache von setSnow
+    clear() {
+      bursts = [];
+      clear(front);
+      for (const el of bats) el.remove();
+      bats.clear();
     },
   };
 }

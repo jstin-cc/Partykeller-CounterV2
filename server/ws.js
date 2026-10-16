@@ -196,8 +196,21 @@ function createHandlers(area) {
       }
       area.setFactIndex(index);
     },
+
+    // Effekt-Demo (D-099): spielt einen Effekt einmal auf den Fernsehern ab.
+    // Ändert nichts an Daten oder Einstellungen, deshalb kein State-Broadcast.
+    demoEffect(auth, { effect, season }) {
+      requireAdmin(auth);
+      if (!DEMO_EFFECTS.includes(effect)) throw new Error('Unbekannter Effekt');
+      if (effect === 'season' && !DEMO_SEASONS.includes(season)) throw new Error('Unbekannte Saison');
+      area.broadcastDemo(effect === 'season' ? { effect, season } : { effect });
+      return false;
+    },
   };
 }
+
+const DEMO_EFFECTS = ['poster', 'milestone', 'confetti', 'bat', 'bubbles', 'fireworks', 'snow', 'countdown', 'season', 'clear'];
+const DEMO_SEASONS = ['oktoberfest', 'halloween', 'winter', 'silvester', 'fasching'];
 
 function checkLogFields(playerId, drink, ts) {
   if (typeof playerId !== 'string' || !playerId) throw new Error('Ungültiges Konto');
@@ -308,6 +321,13 @@ export function setupWs(server, areas) {
 
     armFactTimer();
 
+    area.broadcastDemo = (demo) => {
+      const msg = JSON.stringify({ type: 'demo', ...demo });
+      for (const client of wss.clients) {
+        if (client.readyState === client.OPEN) client.send(msg);
+      }
+    };
+
     // Heartbeat (D-046): Handys im Standby oder ohne WLAN verschwinden nicht
     // von selbst aus wss.clients — erst das TCP-Timeout nach Minuten räumt sie
     // weg, bis dahin füllt jeder Broadcast ihre Sendepuffer. Deshalb alle 30 s
@@ -366,8 +386,8 @@ export function setupWs(server, areas) {
         }
 
         try {
-          handler(auth, msg);
-          area.broadcast();
+          // false = Handler hat nichts am Zustand geändert (Effekt-Demo)
+          if (handler(auth, msg) !== false) area.broadcast();
         } catch (err) {
           ws.send(JSON.stringify({ type: 'error', message: err.message }));
         }
