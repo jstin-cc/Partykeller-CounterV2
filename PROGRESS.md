@@ -7,6 +7,13 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-16: **Repo ausgemistet** — Rohdateien in `data/` (Original-Logos,
+Wald, Zapfen), `Prompt.md`, die überholte Design-Doku (INSPIRATION-LANDO.md
+mit alten Mockups, DESIGN-REVIEW.md mit `docs/design-review/`) entfernt;
+`ideen.md` liegt jetzt in `docs/IDEEN.md`. Im Code: tote CSS-Regeln
+(Wasserzeichen, Wald-Footer, `.rule-list`, `.value--gold`), unbenutzte
+`fetchState`/`revealNow`, unnötige Exporte. Alle Seiten beider Bereiche
+fehlerfrei geladen, Exporte geprüft.
 Seit 2026-10-16: **Auswahlseite auf dem iPhone repariert** — bei niedriger
 Bildhöhe wurden die Karten gestaucht und die Live-Zeile lief in die Kerbe
 (jetzt so hoch wie der Inhalt); der Tipp sprang statt zu gleiten (die
@@ -207,7 +214,7 @@ Seit 2026-09-28: **Entwürfe nach landonorris.com** in
 `docs/INSPIRATION-LANDO.md` (L1 Kringel bei Führungswechsel auf dem TV, L2
 Headline mit Serif-Akzent, L3 Hall of Fame der Abendsieger, L4 Lorbeer im
 Profil, L5 Höhenlinien auf der Startseite) — **noch nicht umgesetzt**,
-wartet auf Auswahl.
+wartet auf Auswahl. (Datei seit 2026-10-16 entfernt, überholt.)
 Seit 2026-09-24 (D-066): **Schneller bei vielen Getränken** — die
 Heute-Abfragen lesen nicht mehr das ganze Log, und Broadcasts werden
 gebündelt (eine Runde mit 60 Leuten bei ~3 Jahren Historie: 0,12 s statt
@@ -250,6 +257,7 @@ abzuschneiden; am Listenende steht der letzte Platz voll lesbar über dem
 Verlauf. Dazu eine **Design-Analyse mit Entwürfen** in `docs/DESIGN-REVIEW.md`
 (13 Unstimmigkeiten, sechs Entwürfe E1–E6 mit Vorher/Nachher-Bildern in
 `docs/design-review/`) — **noch nicht umgesetzt**, wartet auf Auswahl.
+(Beides seit 2026-10-16 entfernt, durch das Lando-Redesign überholt.)
 Seit 2026-09-21 (D-052): **Onboarding für neue Konten** — nach „Konto
 erstellen & los" kommen drei Willkommens-Seiten (`/<bereich>/onboarding`):
 Getränke tracken, Rangliste auf dem Fernseher, Profil-Tab. Mit Punkten,
