@@ -2451,3 +2451,25 @@ Nachtrag D-103: Der Rückblick-Titel flog nach dem Übergang ein zweites Mal
 herein — die Klasse, die seine Einblendung während des Übergangs abschaltet,
 wurde nach 0,8 s entfernt und startete sie neu. Sie bleibt jetzt bis zum
 nächsten Seitenwechsel in der Story stehen.
+
+## D-105 (2026-10-16): Rückblick blättert aus einem Guss
+
+**Entscheidung:** Der Wechsel zwischen den Story-Seiten des Jahresrückblicks
+ist kein harter Schnitt mit neuer Einblendung mehr. Beide Seiten stehen kurz
+übereinander (Web Animations, ca. 0,7 s):
+- Titel bestehen aus einzelnen Wortblöcken. Wörter, die auch im neuen Titel
+  stehen („Dein"), gleiten an ihren neuen Platz; „Deine" ist „Dein" + „e",
+  damit das Wort auch dort stehen bleibt. Die Kachel ist gleich aufgeteilt
+  („Dein" „Jahr" „2026").
+- Die große Zahl gleitet weiter und zählt dabei vom alten auf den neuen Wert;
+  die Einheit (%, Uhr) läuft durch eine Maske aus und ein.
+- Alle anderen Wörter steigen durch eine unsichtbare Kante aus und ein
+  (Masken-Reveal wie `data-reveal="words"`), der übrige Inhalt blendet
+  versetzt über — alles in Tipprichtung (zurück = von oben).
+- Schnelles Tippen bricht den laufenden Wechsel ab und startet von der
+  aktuell sichtbaren Lage; bei `prefers-reduced-motion` bleibt der harte
+  Wechsel.
+
+**Begründung:** Wunsch des Nutzers — die Übergänge innerhalb des Rückblicks
+wirkten langweilig. Geprüft in der Demo-Instanz in Handybreite (Zwischenbilder
+der Übergänge, Vor/Zurück, schnelles Tippen, keine Konsolenfehler).

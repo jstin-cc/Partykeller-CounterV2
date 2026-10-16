@@ -345,8 +345,9 @@ try {
   .review-card .eyebrow { color: var(--accent-ink); }
   .review-card-title { font-size: clamp(38px, 11vw, 56px); }
   .review-card-title .t-serif { -webkit-text-stroke: 0.022em currentColor; }
-  /* Titelteile als Blöcke: Kachel und erste Story-Seite haben dieselben
-     Teile („Dein Jahr" | „2026"), die beim Öffnen genau ineinander übergehen */
+  /* Titelwörter als Blöcke: Kachel und erste Story-Seite haben dieselben
+     Teile („Dein" „Jahr" | „2026"), die beim Öffnen genau ineinander
+     übergehen; beim Blättern gleiten gleiche Wörter weiter (D-105) */
   .review-card-title > span, .rv-title > span { display: inline-block; }
   .rv-slide.is-in > .rv-morph { animation: none; }
 
@@ -372,6 +373,7 @@ try {
   .review-slides { position: relative; flex: 1; margin-top: 22px; }
   .rv-slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 18px; padding-bottom: 8vh; }
   .rv-slide[hidden] { display: none; }
+  .rv-slide.rv-out { pointer-events: none; }
   .rv-slide.is-in > * { animation: rv-in 0.7s var(--ease) both; animation-delay: calc(var(--k, 0) * 90ms); }
   @keyframes rv-in { from { opacity: 0; transform: translateY(26px); } }
   .rv-title { font-size: clamp(48px, 14vw, 76px); }
@@ -803,7 +805,7 @@ try {
         <!-- Jahresrückblick (L23, D-095): Story-Seiten zum Durchtippen -->
         <button id="review-open" class="review-card" type="button" hidden data-notch="tabW:150;tabH:40;r:14;slant:20" data-reveal="up">
           <span class="eyebrow">Rückblick</span>
-          <span class="t-title review-card-title"><span>Dein Jahr</span> <span class="t-serif" id="review-year"></span></span>
+          <span class="t-title review-card-title"><span>Dein</span> <span>Jahr</span> <span class="t-serif" id="review-year"></span></span>
           <span class="notch-tag">Ansehen <span class="i-arrow"></span></span>
         </button>
 
@@ -1205,13 +1207,19 @@ if (!token || !playerId) {
     if (text !== undefined) n.textContent = text;
     return n;
   };
-  // Überschrift mit Serif-Wort: ['Dein', '|Jahr|', '2026'] — |…| = Serif-Akzent
+  // Überschrift mit Serif-Zeile: rvTitle('Dein Jahr', '|2026|') — |…| =
+  // Serif-Akzent. Jedes Wort ist ein eigener Block, „+" hängt Teile ohne
+  // Leerzeichen an („Dein+e"), damit der Seitenwechsel gleiche Wörter
+  // wiederfindet (D-105).
   const rvTitle = (...lines) => {
     const t = el('h2', 't-title rv-title');
     lines.forEach((line, i) => {
       if (i) t.append(document.createElement('br'));
       const m = /^\|(.*)\|$/.exec(line);
-      t.append(m ? el('span', 't-serif t-accent', m[1]) : el('span', '', line));
+      (m ? m[1] : line).split(' ').forEach((word, j) => {
+        if (j) t.append(' ');
+        for (const part of word.split('+')) t.append(el('span', m ? 't-serif t-accent' : '', part));
+      });
     });
     return t;
   };
@@ -1248,7 +1256,7 @@ if (!token || !playerId) {
       slides.push(sl);
     };
     const nights = `an ${r.nights} ${r.nights === 1 ? 'Abend' : 'Abenden'}`;
-    // Gleiche Teile wie die Kachel („Dein Jahr" | „2026"): der Titel geht beim
+    // Gleiche Teile wie die Kachel („Dein" „Jahr" | „2026"): der Titel geht beim
     // Öffnen Teil für Teil aus der Kachel hervor (D-103)
     add(rvTitle('Dein Jahr', `|${r.year}|`), bigNum(r.total), el('span', 'eyebrow', `Getränke ${nights}`));
 
@@ -1277,7 +1285,7 @@ if (!token || !playerId) {
     }
 
     if (r.topHour) {
-      add(rvTitle('Deine', '|Stunde|'), bigNum(r.topHour.hour, 'Uhr'),
+      add(rvTitle('Dein+e', '|Stunde|'), bigNum(r.topHour.hour, 'Uhr'),
         el('span', 'eyebrow', `${r.topHour.n} ${r.topHour.n === 1 ? 'Getränk' : 'Getränke'} · ${Math.round((r.topHour.n / r.total) * 100)} % von allen`));
     }
 
@@ -1333,18 +1341,27 @@ if (!token || !playerId) {
 
   let rvSlides = [];
   let rvIdx = 0;
+  let rvShown = -1;   // Seite, die gerade im Bild steht (-1: noch keine)
   let rvTimer = null;
   let rvStart = 0;
   let rvLeft = RV_MS;
   function showSlide(i) {
+    const prev = rvShown;
     rvIdx = Math.max(0, Math.min(rvSlides.length - 1, i));
-    rvSlides.forEach((sl, k) => {
-      sl.hidden = k !== rvIdx;
-      sl.classList.remove('is-in');
-      sl.querySelector('.rv-morph')?.classList.remove('rv-morph');   // „Nochmal": wieder normal einblenden
-    });
-    void rvSlides[rvIdx].offsetWidth;   // Einblendung neu starten
-    rvSlides[rvIdx].classList.add('is-in');
+    if (prev !== rvIdx) {
+      if (prev >= 0 && !reducedMotion()) swapSlides(rvSlides[prev], rvSlides[rvIdx], rvIdx > prev ? 1 : -1);
+      else {
+        stopSwap();
+        rvSlides.forEach((sl, k) => {
+          sl.hidden = k !== rvIdx;
+          sl.classList.remove('is-in');
+          sl.querySelector('.rv-morph')?.classList.remove('rv-morph');
+        });
+        void rvSlides[rvIdx].offsetWidth;   // Einblendung neu starten
+        rvSlides[rvIdx].classList.add('is-in');
+      }
+      rvShown = rvIdx;
+    }
     const segs = $('review-segs');
     segs.textContent = '';
     rvSlides.forEach((_, k) => segs.append(el('i', k < rvIdx ? 'done' : k === rvIdx ? 'on' : '')));
@@ -1358,6 +1375,100 @@ if (!token || !playerId) {
     rvStart = Date.now();
     if (rvIdx < rvSlides.length - 1) rvTimer = setTimeout(() => showSlide(rvIdx + 1), rvLeft);
     else $('review-segs').lastChild?.classList.replace('on', 'done');
+  }
+
+  // Seitenwechsel (D-105): Beide Seiten stehen kurz übereinander. Wörter, die
+  // auch im neuen Titel stehen („Dein"), und die große Zahl gleiten an ihren
+  // neuen Platz, die Zahl zählt dabei um. Übrige Wörter laufen durch eine
+  // Maske aus und ein, der Rest blendet versetzt über — alles in Tipprichtung.
+  const RV_SWAP = 700;
+  const RV_OUT = 'cubic-bezier(0.5, 0, 0.75, 0)';
+  const RV_IN = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+  let rvSwap = { anims: [], timer: 0, count: null };
+  const swapAnim = (node, frames, opts) => {
+    const a = node.animate(frames, { easing: RV_EASE, ...opts });
+    rvSwap.anims.push(a);
+    return a;
+  };
+  function stopSwap() {
+    clearTimeout(rvSwap.timer);
+    rvSwap.anims.forEach((a) => a.cancel());
+    rvSwap.count?.();
+    rvSwap = { anims: [], timer: 0, count: null };
+    rvSlides.forEach((sl, k) => {
+      sl.classList.remove('rv-out');
+      if (k !== rvShown) sl.hidden = true;
+    });
+  }
+  // Maske: Das Wort steigt über eine unsichtbare Kante, die etwas größer ist
+  // als sein Kasten (Akzente, Serifen und Kontur bleiben ganz)
+  const MASK = 'inset(-0.35em -0.3em -0.25em -0.3em)';
+  const maskIn = (dir) => (dir > 0
+    ? [{ transform: 'translateY(calc(100% + 0.6em))', clipPath: 'inset(-0.35em -0.3em calc(100% + 0.35em) -0.3em)' }, { transform: 'none', clipPath: MASK }]
+    : [{ transform: 'translateY(calc(-100% - 0.6em))', clipPath: 'inset(calc(100% + 0.25em) -0.3em -0.25em -0.3em)' }, { transform: 'none', clipPath: MASK }]);
+  const maskOut = (dir) => maskIn(-dir).reverse();
+  const hideFor = (node) => swapAnim(node, [{ opacity: 0 }, { opacity: 0 }], { duration: RV_SWAP, fill: 'forwards' });
+  const flyFrom = (node, r) => {
+    const b = node.getBoundingClientRect();
+    swapAnim(node, [{ transform: `translate(${r.left - b.left}px, ${r.top - b.top}px)` }, { transform: 'none' }], { duration: RV_SWAP });
+  };
+  // Zahl von a nach b zählen; die zurückgegebene Funktion springt sofort auf b
+  function countTo(node, a, b) {
+    const t0 = performance.now();
+    let raf = 0;
+    const step = (now) => {
+      const t = Math.min(1, (now - t0) / RV_SWAP);
+      node.textContent = String(Math.round(a + (b - a) * (1 - Math.pow(1 - t, 3))));
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    node.textContent = String(a);
+    raf = requestAnimationFrame(step);
+    return () => { cancelAnimationFrame(raf); node.textContent = String(b); };
+  }
+  function swapSlides(from, to, dir) {
+    // Alte Lage messen, bevor ein laufender Wechsel abbricht (schnelles Tippen)
+    const oldWords = [...from.querySelectorAll('.rv-title > span')]
+      .map((w) => ({ w, key: `${w.className}|${w.textContent}`, r: w.getBoundingClientRect() }));
+    const oldBig = from.querySelector('.rv-big');
+    const oldBigR = oldBig?.getBoundingClientRect();
+    const oldValue = Number(oldBig?.textContent);
+    stopSwap();
+    rvSlides.forEach((sl) => sl.classList.remove('is-in'));
+    from.classList.add('rv-out');
+    to.hidden = false;
+
+    const used = new Set();
+    let k = 0;
+    for (const w of to.querySelectorAll('.rv-title > span')) {
+      const o = oldWords.find((x) => !used.has(x) && x.key === `${w.className}|${w.textContent}`);
+      if (o) { used.add(o); flyFrom(w, o.r); hideFor(o.w); }
+      else swapAnim(w, maskIn(dir), { duration: 750, delay: 60 + k++ * 60, easing: RV_IN, fill: 'backwards' });
+    }
+    let j = 0;
+    for (const o of oldWords) {
+      if (!used.has(o)) swapAnim(o.w, maskOut(dir), { duration: 380, delay: j++ * 35, easing: RV_OUT, fill: 'forwards' });
+    }
+
+    const big = to.querySelector('.rv-big');
+    if (big && oldBig && Number.isFinite(oldValue)) {
+      flyFrom(big, oldBigR);
+      hideFor(oldBig);
+      rvSwap.count = countTo(big, oldValue, Number(big.textContent));
+    } else {
+      if (big) swapAnim(big, maskIn(dir), { duration: 750, delay: 60 + k++ * 60, easing: RV_IN, fill: 'backwards' });
+      if (oldBig) swapAnim(oldBig, maskOut(dir), { duration: 380, delay: j++ * 35, easing: RV_OUT, fill: 'forwards' });
+    }
+    const unit = to.querySelector('.rv-unit');
+    const oldUnit = from.querySelector('.rv-unit');
+    if (oldUnit) swapAnim(oldUnit, maskOut(dir), { duration: 340, easing: RV_OUT, fill: 'forwards' });
+    if (unit) swapAnim(unit, maskIn(dir), { duration: 650, delay: 300, easing: RV_IN, fill: 'backwards' });
+
+    const rest = (sl) => [...sl.children].filter((c) => !c.matches('.rv-title, .rv-big-row'));
+    rest(from).forEach((c, n) => swapAnim(c, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateY(${-22 * dir}px)` }],
+      { duration: 320, delay: n * 40, easing: RV_OUT, fill: 'forwards' }));
+    rest(to).forEach((c, n) => swapAnim(c, [{ opacity: 0, transform: `translateY(${26 * dir}px)` }, { opacity: 1, transform: 'none' }],
+      { duration: 700, delay: 200 + n * 70, easing: RV_IN, fill: 'backwards' }));
+    rvSwap.timer = setTimeout(() => { from.hidden = true; from.classList.remove('rv-out'); }, RV_SWAP + 500);
   }
   // Übergang (D-103): Die Story wächst aus der orangen Kachel ins Vollbild
   // (Ausschnitt und Farbe). Die Titelteile der ersten Seite starten genau auf
@@ -1397,6 +1508,8 @@ if (!token || !playerId) {
     if (!review?.total) return;
     rvAnims.forEach((a) => a.cancel());
     rvAnims = [];
+    rvShown = -1;
+    stopSwap();
     rvSlides = reviewSlides(review);
     $('review-slides').replaceChildren(...rvSlides);
     $('review-kicker').textContent = `Rückblick · ${reviewName}`;
@@ -1427,6 +1540,7 @@ if (!token || !playerId) {
   function closeReview() {
     if (reviewClosing || $('review').hidden) return;
     clearTimeout(rvTimer);
+    stopSwap();
     const done = () => {
       reviewClosing = false;
       $('review').hidden = true;
