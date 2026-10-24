@@ -353,8 +353,8 @@ synthetischer Soundtrack, Frame-genaues Rendering) — Ablauf in
 ## Projekt-Dokumente
 
 - [PLAN.md](PLAN.md) — Architektur, Datenmodell, API-/WS-Contract, Meilensteine
-- [PROGRESS.md](PROGRESS.md) — Meilensteine mit Status (wird laufend abgehakt)
-- [DECISIONS.md](DECISIONS.md) — Entscheidungen mit Begründung
+- [PROGRESS.md](PROGRESS.md) — aktueller Stand, offene Punkte und jüngster Verlauf (älterer Verlauf und Meilensteine M0–M8 in [docs/PROGRESS-ARCHIV.md](docs/PROGRESS-ARCHIV.md))
+- [DECISIONS.md](DECISIONS.md) — Entscheidungen mit Begründung (vollständig abgelöste in [docs/DECISIONS-ARCHIV.md](docs/DECISIONS-ARCHIV.md))
 - [CLAUDE.md](CLAUDE.md) — Projektregeln und Konventionen
 - [docs/DESIGN-LANDO.md](docs/DESIGN-LANDO.md) — Design-System im Stil von landonorris.com (D-078)
 - [docs/IDEEN.md](docs/IDEEN.md) — Ideensammlung; [docs/BIERPONG.md](docs/BIERPONG.md) — zwei Entwürfe für einen Bierpong-Counter mit Mockups (nicht umgesetzt)
