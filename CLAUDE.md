@@ -29,11 +29,13 @@ HTML-Dateien bedienen beide Bereiche: der Server setzt beim Ausliefern
    „Aktueller Stand" und „Offen" pflegen, Verlauf neueste oben) und
    mitcommitten — sie ist die Kontextverlust-Sicherung. Älterer Verlauf
    wandert wortgleich nach `docs/PROGRESS-ARCHIV.md`.
-2. Jede Architektur-/Stack-Entscheidung als neuer Eintrag in **DECISIONS.md**
-   (Datum, Entscheidung, Begründung). Bestehende Einträge nicht umschreiben.
-   Ist ein Eintrag von späteren vollständig abgelöst, wandert er wortgleich
-   nach `docs/DECISIONS-ARCHIV.md` (darüber nur „Abgelöst durch D-xxx“);
-   Nummern werden nie neu vergeben.
+2. Jede Architektur-/Stack-Entscheidung kommt in **DECISIONS.md**: Die Datei
+   beschreibt nach Themen, was **heute gilt** (D-117). Neue Entscheidung =
+   nächste D-Nummer, Regel im passenden Abschnitt ergänzen oder ersetzen
+   (Überholtes streichen), Nummer in Klammern dahinter, eine Zeile im
+   „Verlauf“ unten. Nummern werden nie neu vergeben. Der alte Wortlaut
+   D-001–D-116 liegt unverändert in `docs/DECISIONS-ARCHIV.md` und wird nicht
+   mehr ergänzt.
 3. README.md und CLAUDE.md bei relevanten Änderungen sofort mitziehen.
 4. **Keine CDN-/Internet-Ressourcen im Frontend** — alles wird in `public/`
    vendored (Fonts, Libs). Die App muss offline im WLAN funktionieren.
@@ -52,7 +54,7 @@ HTML-Dateien bedienen beide Bereiche: der Server setzt beim Ausliefern
   [docs/DESIGN-LANDO.md](docs/DESIGN-LANDO.md) (löst die Claude-Design-v3-
   Vorlage und PLAN.md §8 ab).
 - Tokens und Komponenten in `public/css/theme.css` (Lando-Palette:
-  Fast-Schwarz/Off-White/Orange, Lime als Zweitakzent; Schriften Mona Sans +
+  Fast-Schwarz, Orange als Akzent, Off-White als Zweitakzent; Schriften Mona Sans +
   Instrument Serif, lokal), Bewegung und Formen (Kerben-Karten, Kringel,
   Einblendungen, Menü) in `public/js/lando.js`. Referenz-Umsetzung:
   `public/index.html`. Neue Seiten/Komponenten nur mit diesen Bausteinen,
