@@ -2677,3 +2677,11 @@ statt „Sicherung …". Alles andere aus D-113 bleibt.
 
 **Begründung:** Der Nutzer hatte diesen Punkt bei der Rückfrage nicht
 gewählt; er war versehentlich mit umgesetzt worden.
+
+## D-115 (2026-10-24): Rekordkurs-Pille wieder kurz
+
+**Entscheidung:** Die Rekordkurs-Pille auf dem TV zeigt wieder den alten
+Text („🔥 Auf Rekordkurs! 73 : 32 nach 3 h · Rekord-Abend 19.09.2026 (68)",
+D-045); der ausformulierte Satz aus D-113 ist zurückgenommen.
+
+**Begründung:** Wunsch des Nutzers: der Satz war viel zu lang für die Pille.
