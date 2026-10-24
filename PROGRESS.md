@@ -7,6 +7,9 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-24 (D-112): **Meilenstein-Bild öfter** — die Hausmarke fällt
+jetzt bei jedem 50. Getränk im Bereich statt bei jedem 500.; persönliche
+Marken unverändert.
 Seit 2026-10-24 (D-111): **Höhenlinien am PC wie am Handy** — das Leuchten
 folgt nicht mehr der Maus, sondern ein unsichtbarer Finger wischt ab und zu
 in einem Bogen darüber, ein Klick leuchtet auf; Verwirbelung und Verbiegen

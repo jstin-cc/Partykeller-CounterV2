@@ -2617,3 +2617,15 @@ Maus, sondern läuft wie auf dem Handy (D-089):
 **Begründung:** Wunsch des Nutzers: die durchfahrenden Linien vom Handy
 gefallen besser als das Nachlaufen hinter der Maus, und das Wabern soll
 dezenter sein. Klick-Leuchten und Stärke nach Rückfrage beim Nutzer.
+
+## D-112 (2026-10-24): Hausmarke alle 50 statt alle 500 Getränke
+
+**Entscheidung:** Das Meilenstein-Bild auf dem TV (D-095) und der Fun-Fact
+„Hausmarke" (D-036) kommen jetzt bei jedem 50. Getränk im ganzen Bereich
+(50, 100, 150, …) statt nur bei vollen 500ern. Die persönlichen Marken
+bleiben wie bisher (100er gesamt, 50er je Sorte). Die Effekt-Demo im Admin
+zeigt entsprechend die letzte volle 50er-Marke.
+
+**Begründung:** Wunsch des Nutzers: das Meilenstein-Bild soll viel öfter
+kommen. Welche Marke gemeint ist und dass die persönlichen Marken bleiben,
+nach Rückfrage beim Nutzer.
