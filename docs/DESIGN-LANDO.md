@@ -15,7 +15,7 @@ Umsetzung: [`public/start.html`](../public/start.html).
 | Mona Sans fett, Versalien, enge Laufweite, Zeilenhöhe < 0,9 | `.t-impact`, `.t-title`, `.t-h3` |
 | Einzelne Wörter in „Brier" (Serif), oft in Lime-Off | Instrument Serif: `<span class="t-serif t-accent">` im Titel |
 | Winzige Versal-Zeilen („NEXT RACE", „QATAR, 2024") | `.eyebrow` |
-| Höhenlinien als Hintergrund | `.topo` (statisches SVG als Maske, Farbe `--topo-line`), auf Geräten mit Maus `public/js/topo-fluid.js` (Strömungs-Spotlight wie auf landonorris.com: Leuchten fließt der Maus nach, verwirbelt und verblasst, D-081); auf Touch-Geräten wischt ab und zu ein unsichtbarer Finger darüber, ein Tipp leuchtet auf, dazwischen schläft die Simulation (D-089); ohne WebGL2 `.topo-spot` (Lichtkreis unter dem Cursor, nur mit Maus) |
+| Höhenlinien als Hintergrund | `.topo` (statisches SVG als Maske, Farbe `--topo-line`), darüber `public/js/topo-fluid.js` (Strömungs-Spotlight wie auf landonorris.com, D-081): auf allen Geräten wischt ab und zu ein unsichtbarer Finger darüber, ein Tipp oder Klick leuchtet auf, dazwischen schläft die Simulation; der Maus folgt nichts (D-089, D-111); ohne WebGL2 bleiben die stillen Linien |
 | „Helmets Hall of Fame"-Karten mit Kerbe unten rechts und Etikett darin | `data-notch` + `.notch-tag` (lando.js `notch()`) |
 | Handschrift-Kringel und Unterschrift in Lime, die sich selbst zeichnen | `.scribble` / `scribble()` / `data-draw` |
 | Lime-Knopf mit ↗, das beim Hover hinaus- und wieder hineinfliegt | `.btn` + `<span class="i-arrow"></span>` |
@@ -135,7 +135,6 @@ liest. In neuem Code die neuen Namen verwenden.
 
 <!-- Höhenlinien (einmal pro Seite, erstes Kind von body bzw. der Bühne) -->
 <div class="topo" aria-hidden="true"></div>
-<div class="topo-spot" aria-hidden="true"></div>  <!-- nur Seiten mit Maus -->
 ```
 
 Weitere Klassen: `.card` (flache Karte, 14 px Radius, Haarlinie), `.chip`

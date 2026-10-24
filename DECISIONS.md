@@ -2598,3 +2598,22 @@ aber mit dem genau gleichen Design; Auswahlseite nach Recherche
 (Awwwards, Dribbble, landonorris.com) als Variante 1 gewählt, mit schönem
 Übergang ins nächste Fenster. Daten, Startverhalten, Admin-Passwort und
 Logo nach Rückfrage beim Nutzer.
+
+## D-111 (2026-10-24): Höhenlinien-Leuchten am PC wie am Handy; weniger Wasser
+
+**Entscheidung:** Das Strömungs-Leuchten (D-081) folgt am PC nicht mehr der
+Maus, sondern läuft wie auf dem Handy (D-089):
+
+- Auf allen Geräten zieht alle 7–13 s ein unsichtbarer Finger in einem Bogen
+  über das Bild; ein Tipp oder Linksklick lässt die Linien an der Stelle kurz
+  aufleuchten. Mausbewegungen und der Eigen-Schimmer im Leerlauf entfallen,
+  dazwischen schläft die Simulation auch am PC.
+- Am PC bleiben die größeren Simulationsfelder, nur Handys sparen (Akku).
+- Der Wasser-Effekt ist etwa halbiert: Verwirbelung 12 → 6, Verbiegen der
+  Linien durch die Strömung 0,008 → 0,004 (Konstante `BEND`).
+- Der CSS-Ersatz ohne WebGL2 (`.topo-spot`, Lichtkreis unter dem Cursor) ist
+  entfernt; ohne WebGL2 bleiben überall die stillen Linien.
+
+**Begründung:** Wunsch des Nutzers: die durchfahrenden Linien vom Handy
+gefallen besser als das Nachlaufen hinter der Maus, und das Wabern soll
+dezenter sein. Klick-Leuchten und Stärke nach Rückfrage beim Nutzer.

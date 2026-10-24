@@ -1,20 +1,18 @@
 // Höhenlinien mit Flüssigkeits-Spotlight (D-081), nach dem Vorbild von
-// landonorris.com: Die Maus rührt in einer kleinen Strömungssimulation
-// (Stable Fluids, WebGL2) Strömung und „Tinte" an. Die Tinte fließt mit
-// Schwung nach, verwirbelt und verblasst langsam; wo sie steht, leuchten die
+// landonorris.com: In einer kleinen Strömungssimulation (Stable Fluids,
+// WebGL2) wird Strömung und „Tinte" angerührt. Die Tinte fließt mit Schwung
+// nach, verwirbelt leicht und verblasst langsam; wo sie steht, leuchten die
 // Höhenlinien in der Akzentfarbe und werden von der Strömung leicht verbogen.
-// Schnelle Bewegungen färben stärker als langsame. Steht die Maus eine Weile
-// still, zieht ein schwacher Schimmer von selbst über die Linien.
 //
-// Ohne Maus (Handy, D-089) zieht hin und wieder ein unsichtbarer Finger in
-// einem Bogen über das Bild und rührt die Linien an wie die Maus; ein Tipp
-// lässt die Linien an der Stelle kurz aufleuchten. Dazwischen schläft die
-// Simulation (Akku): kein Eigen-Schimmer, kein Bild pro Frame.
+// Angerührt wird auf allen Geräten gleich (D-089, D-111): hin und wieder
+// zieht ein unsichtbarer Finger in einem Bogen über das Bild, ein Tipp oder
+// Klick lässt die Linien an der Stelle kurz aufleuchten. Der Maus folgt
+// nichts mehr. Dazwischen schläft die Simulation: kein Bild pro Frame.
 //
 // Die Linien selbst sind dieselben SVGs wie beim CSS-Hintergrund (.topo),
 // werden hier aber als Textur gezeichnet — der CSS-Hintergrund wird dafür
 // ausgeblendet (html.topo-gl). Ohne WebGL2/Float-Rendering liefert
-// initTopoFluid() false und lando.js nimmt das alte CSS-Spotlight.
+// initTopoFluid() false und es bleiben die stillen CSS-Linien.
 
 const SIM_RES = 112;          // Strömung: Zellen auf der kurzen Seite
 const DYE_RES = 320;          // Tinte: Auflösung auf der kurzen Seite
@@ -22,11 +20,11 @@ const VEL_DISSIPATION = 0.97; // pro Frame bei 60 fps
 const DYE_DISSIPATION = 0.982;
 const PRESSURE_KEEP = 0.8;
 const PRESSURE_ITERATIONS = 16;
-const CURL = 12;              // Verwirbelung
-const FORCE = 5200;           // Schub pro Bildschirmbreite Mausweg
+const CURL = 6;               // Verwirbelung
+const FORCE = 5200;           // Schub pro Bildschirmbreite Fingerweg
 const RADIUS_PX = 90;        // Größe eines Tintentupfers
-const IDLE_AFTER = 3000;      // ms ohne Mausbewegung bis zum Eigen-Schimmer
-// Touch: kleinere Felder, Wischer alle paar Sekunden
+const BEND = 0.004;           // wie weit die Strömung die Linien verbiegt
+// Touch: kleinere Felder (Akku)
 const TOUCH = { SIM_RES: 80, DYE_RES: 224, PRESSURE_ITERATIONS: 10, MAX_PIXELS: 2.5e6 };
 const SWEEP_FIRST = 1200;     // ms bis zum ersten Wischer
 const SWEEP_GAP = [7000, 13000];
@@ -147,10 +145,11 @@ uniform vec2 uSimTexel;
 uniform vec2 uPx;
 uniform vec3 uLineColor;
 uniform vec3 uGlowColor;
+uniform float uBend;
 void main() {
-  vec2 disp = texture(uVelocity, vUv).xy * uSimTexel * 0.008;
+  vec2 disp = texture(uVelocity, vUv).xy * uSimTexel * uBend;
   float dl = length(disp);
-  if (dl > 0.008) disp *= 0.008 / dl;
+  if (dl > uBend) disp *= uBend / dl;
   vec2 uv = vUv - disp;
   float line = texture(uLines, uv).a;
   float dye = texture(uDye, vUv).r;
@@ -210,8 +209,8 @@ function setup(canvas, gl, onFail, touch) {
 
   canvas.className = 'topo-fluid';
   canvas.setAttribute('aria-hidden', 'true');
-  const spot = document.querySelector('body > .topo-spot');
-  if (spot) spot.after(canvas); else document.body.prepend(canvas);
+  const bg = document.querySelector('body > .topo');
+  if (bg) bg.after(canvas); else document.body.prepend(canvas);
   const html = document.documentElement;
 
   // --- Programme ---
@@ -351,7 +350,7 @@ function setup(canvas, gl, onFail, touch) {
       ready = true;
       html.classList.add('topo-gl');
       readColors(true);
-      if (touch) scheduleSweep(SWEEP_FIRST);
+      scheduleSweep(SWEEP_FIRST);
     }
     wake(400);
   }
@@ -367,26 +366,13 @@ function setup(canvas, gl, onFail, touch) {
   new MutationObserver(() => { readColors(false); wake(1200); })
     .observe(html, { attributes: true, attributeFilter: ['data-surface', 'data-area', 'class', 'style'] });
 
-  // --- Maus ---
-  const ptr = { x: 0, y: 0, ex: 0, ey: 0, inside: false, lastMove: performance.now() };
-  addEventListener('pointermove', (e) => {
-    if (e.pointerType === 'touch') return;
-    ptr.x = e.clientX; ptr.y = e.clientY;
-    // Nach dem Betreten des Fensters nicht quer übers Bild nachziehen
-    if (!ptr.inside) { ptr.ex = ptr.x; ptr.ey = ptr.y; ptr.inside = true; }
-    ptr.lastMove = performance.now();
-  }, { passive: true });
-  addEventListener('mouseout', (e) => { if (!e.relatedTarget) ptr.inside = false; });
-
-  // --- Touch: ein Tipp leuchtet kurz auf ---
+  // --- Ein Tipp oder Klick leuchtet kurz auf ---
   const taps = [];
-  if (touch) {
-    addEventListener('pointerdown', (e) => {
-      if (e.pointerType === 'mouse') return;
-      taps.push([e.clientX, e.clientY]);
-      wake();
-    }, { passive: true });
-  }
+  addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    taps.push([e.clientX, e.clientY]);
+    wake();
+  }, { passive: true });
   function burst(x, y) {
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * Math.PI * 2 + 0.4;
@@ -394,7 +380,7 @@ function setup(canvas, gl, onFail, touch) {
     }
   }
 
-  // --- Touch: unsichtbarer Finger, der in einem Bogen übers Bild wischt ---
+  // --- Unsichtbarer Finger, der in einem Bogen übers Bild wischt ---
   let sweep = null, sweepTimer = 0;
   const rand = (a, b) => a + Math.random() * (b - a);
   function edgePoint(side, cw, ch) {
@@ -550,22 +536,13 @@ function setup(canvas, gl, onFail, touch) {
     tex(u.uVelocity, velocity.read);
     gl.uniform3f(u.uLineColor, ...col.line);
     gl.uniform3f(u.uGlowColor, ...col.glow);
+    gl.uniform1f(u.uBend, BEND);
     blit(null);
-  }
-
-  // Eigen-Schimmer: ein virtueller Punkt auf einer langsamen Schleifenbahn
-  let idlePrev = null;
-  function idlePoint(t) {
-    const cw = canvas.clientWidth || innerWidth, ch = canvas.clientHeight || innerHeight;
-    return [
-      cw * (0.5 + 0.38 * Math.sin(t * 0.11) + 0.08 * Math.sin(t * 0.37 + 1.3)),
-      ch * (0.5 + 0.34 * Math.sin(t * 0.083 + 2.1) + 0.08 * Math.cos(t * 0.29)),
-    ];
   }
 
   let last = performance.now();
   let raf = 0;
-  // Touch: die Simulation läuft nur, solange etwas passiert (plus Nachlauf)
+  // Die Simulation läuft nur, solange etwas passiert (plus Nachlauf)
   let awakeUntil = 0;
   function wake(ms = AWAKE_AFTER) {
     awakeUntil = Math.max(awakeUntil, performance.now() + ms);
@@ -584,21 +561,12 @@ function setup(canvas, gl, onFail, touch) {
       for (let i = 0; i < 3; i++) c[i] += (t[i] - c[i]) * a;
     }
 
-    // Die Maus wird gedämpft verfolgt: der Tupfer läuft mit Schwung nach
-    if (ptr.inside) {
-      const f = 1 - Math.exp(-dt * 16);
-      const nx = ptr.ex + (ptr.x - ptr.ex) * f;
-      const ny = ptr.ey + (ptr.y - ptr.ey) * f;
-      stroke(ptr.ex, ptr.ey, nx, ny, 0.01, 0.0, 0.35);
-      ptr.ex = nx; ptr.ey = ny;
-    }
-
     while (taps.length) burst(...taps.shift());
 
     if (sweep) {
       const t = Math.min(1, (now - sweep.t0) / sweep.dur);
       const [x, y] = bezier(sweep.p, easeInOut(t));
-      // gedämpft nachgeführt wie die Maus, damit die Strömung Schwung bekommt
+      // gedämpft nachgeführt, damit die Strömung Schwung bekommt
       const f = 1 - Math.exp(-dt * 16);
       const nx = sweep.ex + (x - sweep.ex) * f, ny = sweep.ey + (y - sweep.ey) * f;
       stroke(sweep.ex, sweep.ey, nx, ny, 0.012, 0.0, 0.3);
@@ -607,21 +575,13 @@ function setup(canvas, gl, onFail, touch) {
       awakeUntil = Math.max(awakeUntil, now + AWAKE_AFTER);
     }
 
-    if (!touch && now - ptr.lastMove > IDLE_AFTER) {
-      const p = idlePoint(now / 1000);
-      if (idlePrev) stroke(idlePrev[0], idlePrev[1], p[0], p[1], 0.0015, 0.0008, 0.0015);
-      idlePrev = p;
-    } else {
-      idlePrev = null;
-    }
-
     step(dt);
     render();
-    if (!touch || now < awakeUntil) raf = requestAnimationFrame(frame);
+    if (now < awakeUntil) raf = requestAnimationFrame(frame);
   }
 
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && ready && !raf) wake(touch ? 600 : 0);
+    if (!document.hidden && ready && !raf) wake(600);
   });
 
   let resizeTimer = 0;

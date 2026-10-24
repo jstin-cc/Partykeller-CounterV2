@@ -330,10 +330,11 @@ Einblend-Animationen. Beide Schriften (OFL) liegen lokal in
 - Design-System und Regeln: [docs/DESIGN-LANDO.md](docs/DESIGN-LANDO.md)
 - Tokens und Komponenten: `public/css/theme.css`, Bewegung und Formen:
   `public/js/lando.js`, Referenz-Umsetzung: `public/index.html`
-- Auf Geräten mit Maus leuchten die Höhenlinien wie auf landonorris.com in
-  einer Strömung auf, die der Maus nachfließt, verwirbelt und langsam
-  verblasst (`public/js/topo-fluid.js`, WebGL2, D-081); ohne WebGL2 bleibt
-  der einfache Lichtkreis unter dem Cursor
+- Die Höhenlinien leuchten wie auf landonorris.com in einer Strömung auf
+  (`public/js/topo-fluid.js`, WebGL2, D-081): auf Handy und PC gleich wischt
+  ab und zu ein unsichtbarer Finger in einem Bogen darüber, ein Tipp oder
+  Klick leuchtet an der Stelle auf (D-089, D-111); ohne WebGL2 bleiben die
+  stillen Linien
 - Die Höhenlinien (`public/assets/topo*.svg`) erzeugt einmalig
   `node tools/gen-topo.mjs …` (Aufruf im Dateikopf)
 - „Bewegung reduzieren“ am Gerät schaltet alle Animationen ab
