@@ -26,10 +26,14 @@ HTML-Dateien bedienen beide Bereiche: der Server setzt beim Ausliefern
 ## Harte Regeln
 
 1. **PROGRESS.md nach jedem abgeschlossenen Schritt aktualisieren** (abhaken,
-   „Aktueller Stand" pflegen) und mitcommitten — sie ist die
-   Kontextverlust-Sicherung.
+   „Aktueller Stand" und „Offen" pflegen, Verlauf neueste oben) und
+   mitcommitten — sie ist die Kontextverlust-Sicherung. Älterer Verlauf
+   wandert wortgleich nach `docs/PROGRESS-ARCHIV.md`.
 2. Jede Architektur-/Stack-Entscheidung als neuer Eintrag in **DECISIONS.md**
    (Datum, Entscheidung, Begründung). Bestehende Einträge nicht umschreiben.
+   Ist ein Eintrag von späteren vollständig abgelöst, wandert er wortgleich
+   nach `docs/DECISIONS-ARCHIV.md` (darüber nur „Abgelöst durch D-xxx“);
+   Nummern werden nie neu vergeben.
 3. README.md und CLAUDE.md bei relevanten Änderungen sofort mitziehen.
 4. **Keine CDN-/Internet-Ressourcen im Frontend** — alles wird in `public/`
    vendored (Fonts, Libs). Die App muss offline im WLAN funktionieren.
