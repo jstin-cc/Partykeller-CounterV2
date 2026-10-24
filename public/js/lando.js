@@ -275,35 +275,15 @@ export function initSurfaceMorph(root = document) {
 }
 
 /* ------------------------------------------------------------------------
-   Spotlight: auf Geräten mit Maus leuchten die Höhenlinien in der
-   Akzentfarbe auf. Standard ist die Strömungs-Variante wie auf
-   landonorris.com (topo-fluid.js, D-081): das Leuchten fließt der Maus mit
-   Schwung nach und verwirbelt. Ohne WebGL2 bleibt der einfache Lichtkreis
-   unter dem Cursor (.topo-spot liest --mx/--my).
-   Ohne Maus (Handy, D-089) wischt ab und zu ein unsichtbarer Finger über
-   die Linien und ein Tipp lässt sie aufleuchten; ohne WebGL2 bleiben dort
-   die stillen Linien.
+   Spotlight: die Höhenlinien leuchten in der Akzentfarbe auf, als Strömung
+   wie auf landonorris.com (topo-fluid.js, D-081). Auf allen Geräten gleich
+   (D-089, D-111): ab und zu wischt ein unsichtbarer Finger über die Linien,
+   ein Tipp oder Klick lässt sie aufleuchten. Ohne WebGL2 bleiben die stillen
+   Linien. Auf Handys mit kleineren Simulationsfeldern (Akku).
    ------------------------------------------------------------------------ */
-export function initSpotlight(target = document.documentElement) {
+export function initSpotlight() {
   if (reducedMotion()) return;
-  if (!finePointer()) { initTopoFluid({ touch: true }); return; }
-  if (initTopoFluid({ onFail: () => initCssSpotlight(target) })) return;
-  initCssSpotlight(target);
-}
-
-function initCssSpotlight(target) {
-  let raf = 0, x = 0, y = 0;
-  addEventListener('pointermove', (e) => {
-    x = e.clientX; y = e.clientY;
-    if (raf) return;
-    raf = requestAnimationFrame(() => {
-      raf = 0;
-      target.style.setProperty('--mx', `${x}px`);
-      target.style.setProperty('--my', `${y}px`);
-      target.classList.add('spot-on');
-    });
-  }, { passive: true });
-  document.addEventListener('pointerleave', () => target.classList.remove('spot-on'));
+  initTopoFluid({ touch: !finePointer() });
 }
 
 /* ------------------------------------------------------------------------
@@ -442,7 +422,7 @@ export function flipFrom(oldRects) {
 // Alles außer den gleitenden Elementen blendet ein bzw. aus: animiert werden
 // die Geschwister entlang der Pfade zu den Morph-Elementen (deren Vorfahren
 // selbst bleiben stehen, sonst blendeten die Morph-Elemente mit)
-const SKIP_FADE = '.topo, .topo-spot, .topo-fluid, .site-menu, script, style, [hidden]';
+const SKIP_FADE = '.topo, .topo-fluid, .site-menu, script, style, [hidden]';
 function fadeTargets(keep, scope = document.body) {
   const anc = new Set([scope]);
   for (const el of keep) for (let p = el.parentElement; p && p !== scope; p = p.parentElement) anc.add(p);

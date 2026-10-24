@@ -7,6 +7,11 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-24 (D-111): **Höhenlinien am PC wie am Handy** — das Leuchten
+folgt nicht mehr der Maus, sondern ein unsichtbarer Finger wischt ab und zu
+in einem Bogen darüber, ein Klick leuchtet auf; Verwirbelung und Verbiegen
+der Linien halbiert; CSS-Lichtkreis ohne WebGL2 entfernt. Am Desktop in
+der Demo-Instanz geprüft (Wischer, Klick, keine Konsolenfehler).
 Seit 2026-10-16: **Repo ausgemistet** — Rohdateien in `data/` (Original-Logos,
 Wald, Zapfen), `Prompt.md`, die überholte Design-Doku (INSPIRATION-LANDO.md
 mit alten Mockups, DESIGN-REVIEW.md mit `docs/design-review/`) entfernt;
