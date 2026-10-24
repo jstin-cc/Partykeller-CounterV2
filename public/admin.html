@@ -465,7 +465,7 @@ try {
   .demo-grid > .btn:last-child:nth-child(odd) { grid-column: 1 / -1; }
   .btn[data-demo].is-sent { --btn-bg: var(--accent); --btn-ink: var(--accent-ink); --btn-line: var(--accent); }
 
-  /* Gefahrenzone: Kerben-Karte mit roter Kontur und feiner Schraffur */
+  /* Danger Zone: Kerben-Karte mit roter Kontur und feiner Schraffur */
   .danger-title { color: var(--danger); }
   .danger-box {
     position: relative; display: flex; flex-direction: column; gap: 10px; padding: 18px 18px 50px; border-radius: var(--radius-lg);
@@ -919,17 +919,17 @@ try {
               </div>
               <div class="set-row">
                 <div class="lbl">Sicherung</div>
-                <button id="backup-save" type="button" class="btn btn--quiet btn--block">Sicherung herunterladen <span class="i-arrow i-down"></span></button>
+                <button id="backup-save" type="button" class="btn btn--quiet btn--block">Backup herunterladen <span class="i-arrow i-down"></span></button>
                 <div id="backup-hint" class="hint"></div>
               </div>
             </div>
           </section>
 
           <section class="side-block">
-            <h3 class="t-h3 side-title danger-title" data-reveal="up">Gefahren<span class="t-serif">zone</span></h3>
+            <h3 class="t-h3 side-title danger-title" data-reveal="up">Danger <span class="t-serif">Zone</span></h3>
             <div class="danger-box" data-notch="tabW:110;tabH:30;r:14;slant:16;stroke" data-reveal="up" data-delay="80">
               <p>Beides braucht das Lösch-Passwort und lässt sich nicht rückgängig machen.</p>
-              <button id="backup-load" type="button" class="btn btn--danger btn--block">Sicherung einspielen <span class="i-arrow i-up"></span></button>
+              <button id="backup-load" type="button" class="btn btn--danger btn--block">Backup einspielen <span class="i-arrow i-up"></span></button>
               <button id="reset-btn" type="button" class="btn btn--danger btn--block">Alles zurücksetzen</button>
               <span class="notch-tag">Vorsicht</span>
             </div>
@@ -991,7 +991,7 @@ try {
 <!-- Dialog: Alles zurücksetzen – Lösch-Passwort nötig -->
 <div id="reset-modal" class="modal-backdrop" hidden>
   <form id="reset-form" class="dialog">
-    <p class="eyebrow danger-title">Gefahrenzone</p>
+    <p class="eyebrow danger-title">Danger Zone</p>
     <h2 class="t-h3 dialog-title">Alles <span class="t-serif t-accent">zurücksetzen</span></h2>
     <p class="t-small">Setzt alle Zähler auf 0 und löscht das Getränke-Log. Konten und PINs bleiben erhalten. Zum Bestätigen bitte das <strong>Lösch-Passwort</strong> eingeben (eigenes Passwort, nicht das Admin-Login).</p>
     <div id="reset-error" class="error-banner" hidden></div>
@@ -1031,11 +1031,11 @@ try {
   </form>
 </div>
 
-<!-- Dialog: Sicherung einspielen – destruktiv, deshalb Lösch-Passwort wie beim Reset (D-034) -->
+<!-- Dialog: Backup einspielen – destruktiv, deshalb Lösch-Passwort wie beim Reset (D-034) -->
 <div id="import-modal" class="modal-backdrop" hidden>
   <form id="import-form" class="dialog">
-    <p class="eyebrow danger-title">Gefahrenzone</p>
-    <h2 class="t-h3 dialog-title">Sicherung <span class="t-serif t-accent">einspielen</span></h2>
+    <p class="eyebrow danger-title">Danger Zone</p>
+    <h2 class="t-h3 dialog-title">Backup <span class="t-serif t-accent">einspielen</span></h2>
     <p class="t-small">Ersetzt Nutzer, Zähler, Getränke-Log, Einstellungen und Fun-Facts dieses Bereichs durch den Inhalt der Datei. Der aktuelle Stand ist danach weg. Zum Bestätigen bitte das <strong>Lösch-Passwort</strong> eingeben.</p>
     <div id="import-error" class="error-banner" hidden></div>
     <!-- Eigener Knopf statt des nativen Datei-Felds: dessen Beschriftung kommt
@@ -2348,7 +2348,7 @@ function showInProtocol(p) {
 }
 
 // Die Seitenleiste läuft mit (sticky). Ist sie höher als das Fenster, klebt
-// sie erst, wenn ihr unteres Ende sichtbar ist — sonst wäre die Gefahrenzone
+// sie erst, wenn ihr unteres Ende sichtbar ist — sonst wäre die Danger Zone
 // bis zum Seitenende nicht erreichbar.
 function fitSide() {
   const side = $('adm-side');

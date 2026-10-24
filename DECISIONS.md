@@ -2668,3 +2668,12 @@ PC, TV) wird Doppeltes entfernt und Unklares klarer gemacht:
 Gesamtbild passt, überladen ist oder fehlt. Welche Punkte umgesetzt werden
 und dass die Youngstars zum SV gehören, nach Rückfrage beim Nutzer; ein
 „Rückgängig“ nach dem Tipp wurde vorgeschlagen, aber nicht gewählt.
+
+## D-114 (2026-10-24): „Danger Zone" und „Backup" bleiben
+
+**Entscheidung:** Der Admin-Punkt aus D-113 wird zurückgenommen: wieder
+„Danger Zone" statt „Gefahrenzone" und „Backup herunterladen/einspielen"
+statt „Sicherung …". Alles andere aus D-113 bleibt.
+
+**Begründung:** Der Nutzer hatte diesen Punkt bei der Rückfrage nicht
+gewählt; er war versehentlich mit umgesetzt worden.
