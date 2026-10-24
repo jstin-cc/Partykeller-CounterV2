@@ -21,7 +21,7 @@ Umsetzung: [`public/start.html`](../public/start.html).
 | Lime-Knopf mit ↗, das beim Hover hinaus- und wieder hineinfliegt | `.btn` + `<span class="i-arrow"></span>` |
 | Vollbild-Menü mit riesigen Versal-Links, aktiver Link mit Kringel | `.site-menu` + `initMenu()` |
 | Wörter gleiten zeilenweise aus einer Maske, Lime-Block wischt über Text | `data-reveal="words"`, `data-reveal="wipe"` |
-| Hintergrund wechselt beim Scrollen (dunkel → oliv → creme) | `data-surface="light|dark|black|olive"` + `initSurfaceMorph()` |
+| Hintergrund wechselt beim Scrollen (dunkel → schwarz → creme) | `data-surface="light|dark|black"` + `initSurfaceMorph()` |
 | Lorbeer-Emblem mit Mini-Zeile („McLaren F1 since 2019") | `.emblem` + `.laurel` |
 | Laufband (Partner-Logos) | `[data-marquee] > .marquee-track` |
 | Wortmarke „LANDO / NORRIS" (Serif über fetter Grotesk) | `.wordmark` → „PARTY / KELLER" bzw. „YOUNG / STARS" |
@@ -37,8 +37,8 @@ bedienbar — Animationen blockieren nie eine Eingabe.
 Alle Farben kommen aus Tokens; nie Hex-Werte in Seiten hart codieren (Ausnahme:
 Rohwerte `--lando-*`). Die Bereichsfarben setzt `html[data-area]`; die Klassen
 `.area-pk` / `.area-ys` geben einem einzelnen Element die Farben eines Bereichs,
-`.surface-light` / `.surface-black` / `.surface-olive` einer Fläche die helle,
-schwarze oder olivgrüne Variante.
+`.surface-black` einer Fläche die schwarze Variante (die helle kommt über
+`html[data-surface="light"]`).
 
 | Token | Bedeutung |
 |---|---|
@@ -70,7 +70,7 @@ liest. In neuem Code die neuen Namen verwenden.
 - Akzentwort: `<span class="t-serif t-accent">Heute</span>` innerhalb eines
   Titels. Die Serif wird in Display-Größen automatisch leicht verstärkt.
 - `.t-quote` — Zitat in der Serif („It doesn't matter where you start …").
-- `.eyebrow` — winzige Versal-Zeile, `.t-body`, `.t-small` — Fließtext.
+- `.eyebrow` — winzige Versal-Zeile, `.t-small` — Fließtext.
 - `.num` — Zahlen: Mona 800 mit **proportionalen** Ziffern. Keine
   `tabular-nums`: Deren durchgestrichene Null und „1" mit Fuß wirken wie
   Code-Schrift. Spalten über feste Breiten und rechtsbündig ausrichten,
@@ -141,7 +141,7 @@ Weitere Klassen: `.card` (flache Karte, 14 px Radius, Haarlinie), `.chip`
 (`.chip--accent`, `.chip--line`), `.badge` (Umriss-Kerbenkarte mit `.badge-icon` als Strich-SVG, `.badge-name`, `.notch-tag.badge-count`; Zustände `.is-won`, `.is-today`, D-093),
 `.tabs`/`.tab-btn`/`.tab-indicator` (Lime-Balken, `data-pos`, `--tabs`),
 `.field`, `.sec`/`.sec-title` (Abschnittszeile mit Lime-Quadrat), `.split`/`.cell`,
-`.avatar` (Initiale in der Serif), `.sheet`/`.sheet-scrim`/`.sheet-grip`,
+`.avatar` (Initiale in der Serif), `.sheet`/`.sheet-grip`,
 `.marquee`, `.emblem`/`.laurel`, `.pk-pop`, `.pk-flash`. Bereichsabhängiges nur über
 `html[data-area="youngstars"]` (z. B. kein `.pk-logo`, D-110).
 
@@ -215,4 +215,4 @@ Weitere Klassen: `.card` (flache Karte, 14 px Radius, Haarlinie), `.chip`
   beim Überholen (D-106); keine Abstände und Bestwert-Etiketten (D-107).
 - **Admin**: Werkzeug zuerst — Designsprache über Typo, Farben, Knöpfe, Karten.
 - **Abend-Archiv**: Chronik mit Hintergrundwechsel beim Scrollen: Kennzahlen-
-  Statement, „Hall of Fame" der Abendsieger als Kerbenkarten, alle Abende auf Creme.
+  Statement, „Hall of Fame" der meisten Abendsiege als Kerbenkarten, alle Abende auf Creme.

@@ -302,6 +302,9 @@ try {
   .drink-unit { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.7; }
   .drink .notch-tag { font-size: 10.5px; font-weight: 700; gap: 7px; padding-right: 6px; }
   .drink .notch-tag .hl { color: var(--notch-fill); font-size: 17px; letter-spacing: -0.02em; }
+  /* Die Mischen-Fläche ist zu dunkel für Schrift auf dem Grund: dort die
+     helle Mischen-Schriftfarbe */
+  #add-mix .notch-tag .hl { color: var(--mix-text); }
   @media (hover: hover) and (pointer: fine) {
     .drink:hover .drink-topo { transform: scale(1.06); }
     .drink:hover .drink-plus { transform: rotate(90deg); }
@@ -1626,8 +1629,9 @@ if (!token || !playerId) {
   });
 
   // All-Time-Stapel im Profil (L20): aus dem aktuellen Stand und den letzten
-  // Abenden zurückgerechnet. Der Abend, der gerade läuft, steht als „Heute"
-  // oben; ohne heutige Getränke trägt die erste Zeile das Datum des letzten Abends.
+  // Abenden zurückgerechnet. Oben steht immer „Gesamt" (der Stand jetzt),
+  // darunter der Stand „nach" den letzten Abenden — „Heute" las sich wie die
+  // Getränke von heute.
   let recentNights = [];
   let meTotal = null;
   function renderStack() {
@@ -1640,13 +1644,14 @@ if (!token || !playerId) {
     const nights = recentNights.slice();
     const lines = [];
     let c = meTotal;
-    if (nights[0]?.day === today) { lines.push([c, 'Heute']); c -= nights.shift().total; }
+    if (nights[0]?.day === today) c -= nights.shift().total;
+    lines.push([meTotal, 'Gesamt']);
+    if (nights[0] && c === meTotal) c -= nights.shift().total;
     for (const r of nights) {
       if (lines.length >= 4 || c <= 0) break;
-      lines.push([c, short(r.day)]);
+      lines.push([c, `nach ${short(r.day)}`]);
       c -= r.total;
     }
-    if (!lines.length) lines.push([meTotal, 'All-Time']);
     const box = $('alltime-stack');
     box.textContent = '';
     for (const [v, label] of lines) {

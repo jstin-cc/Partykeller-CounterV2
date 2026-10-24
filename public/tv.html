@@ -797,9 +797,14 @@ function leaderRing() {
 // --- Rangliste ab Platz 4 ---
 // Feste Zeilenhöhe im Design-Raster; wie viele Zeilen sichtbar sind, ergibt
 // sich aus dem verfügbaren Platz (füllt die Tabelle immer komplett). Passen
-// nicht alle rein, scrollt das Fenster Zeile für Zeile nach unten; unten
+// nicht alle rein, rücken die Zeilen erst zusammen (bis MIN_ROW_H); reicht
+// das nicht, scrollt das Fenster Zeile für Zeile nach unten; unten
 // angekommen springt es schnell wieder ganz nach oben und beginnt von vorne.
 const ROW_H = 66;         // Zeilenhöhe in Design-Pixeln (Haarlinie inklusive)
+// Fehlen nur ein, zwei Zeilen, rücken die Zeilen bis hierhin zusammen, statt
+// zu rotieren (sonst wäre z. B. Platz 4 nur wegen einer Zeile zeitweise weg)
+const MIN_ROW_H = 54;
+let rowH = ROW_H;         // aktuelle Zeilenhöhe (syncScroll)
 const GAP = 0;            // px zwischen den Zeilen (muss zu .rest-track gap passen)
 const SCROLL_MS = 650;    // sanft eine Zeile weiter
 const RESET_MS = 900;     // schnell zurück nach oben
@@ -820,7 +825,7 @@ let modeSwitching = false; // beim Moduswechsel keine Zeilen-Animation (Slide ü
 
 // Wie viele Zeilen passen komplett in die Höhe h?
 function rowsIn(h) {
-  return Math.max(1, Math.floor((h + GAP) / (ROW_H + GAP)));
+  return Math.max(1, Math.floor((h + GAP) / (rowH + GAP)));
 }
 
 function popEl(el) { el.classList.remove('pk-pop'); void el.offsetWidth; el.classList.add('pk-pop'); }
@@ -902,7 +907,7 @@ function scrollStep() {
     pos += 1;
     applyFade(SCROLL_MS);
   }
-  track.style.transform = `translateY(${-pos * (ROW_H + GAP)}px)`;
+  track.style.transform = `translateY(${-pos * (rowH + GAP)}px)`;
 }
 
 // Rotation passend zum aktuellen Stand (Zeilenzahl, Platz) starten/stoppen
@@ -912,17 +917,20 @@ function syncScroll() {
   // darüber Platz hat — am Listenende steht der letzte Platz voll lesbar da.
   // Bei sehr wenig Platz (unter drei Zeilen) entfällt der Verlauf.
   const h = $('rest').clientHeight;
+  const fit = Math.floor((h + GAP) / Math.max(1, others.length) - GAP);
+  rowH = others.length * (ROW_H + GAP) - GAP > h && fit >= MIN_ROW_H ? Math.min(ROW_H, fit) : ROW_H;
+  if (track) for (const r of track.children) r.style.height = `${rowH}px`;
   slots = rowsIn(h);
   const faded = slots > FADE_STEPS.length ? FADE_STEPS.length : 0;
   maxPos = others.length > slots ? others.length - (slots - faded) : 0;
   // Die angeschnittene Zeile unter der letzten ganzen wegschneiden
-  const used = slots * (ROW_H + GAP) - GAP;
+  const used = slots * (rowH + GAP) - GAP;
   $('rest').style.clipPath = maxPos > 0 ? `inset(0 0 ${Math.max(0, h - used)}px 0)` : '';
   if (pos > maxPos) {
     pos = Math.min(pos, maxPos);
     if (track) {
       track.style.transition = 'none';
-      track.style.transform = `translateY(${-pos * (ROW_H + GAP)}px)`;
+      track.style.transform = `translateY(${-pos * (rowH + GAP)}px)`;
       void track.offsetWidth;
     }
   }
@@ -973,7 +981,7 @@ function ghostTrail(row, delta, layer, opacity) {
     g.removeAttribute('data-id');
     g.querySelectorAll('.pk-pop').forEach((e) => e.classList.remove('pk-pop'));
     g.setAttribute('aria-hidden', 'true');
-    g.style.cssText = `position:absolute;left:0;right:0;top:${row.offsetTop}px;height:${ROW_H}px`;
+    g.style.cssText = `position:absolute;left:0;right:0;top:${row.offsetTop}px;height:${rowH}px`;
     layer.insertBefore(g, layer.firstChild);
     g.animate([
       { transform: `translateY(${delta}px)`, opacity: o * opacity, easing: 'cubic-bezier(0.65, 0.05, 0, 1)' },
@@ -1002,13 +1010,10 @@ function rebuildRest(animate) {
   for (const p of others) track.appendChild(buildRow(p, modeSwitching ? null : prevVals[p.id]));
   viewport.appendChild(track);
 
-  // feste Zeilenhöhe im Design-Raster: bleibt auf jeder Auflösung gleich,
-  // nur die Anzahl sichtbarer Zeilen variiert mit dem Platz
-  for (const r of track.children) r.style.height = `${ROW_H}px`;
   track.style.transition = 'none';
   track.style.transform = 'translateY(0)';
-  // Rotation und Verlauf zuerst, damit neue Zeilen unten gleich auf ihre
-  // Deckkraft im Verlauf einblenden statt auf voll
+  // Zeilenhöhe, Rotation und Verlauf zuerst (syncScroll), damit neue Zeilen
+  // unten gleich auf ihre Deckkraft im Verlauf einblenden statt auf voll
   syncScroll();
 
   if (animate && !modeSwitching) {
@@ -1272,9 +1277,9 @@ function updatePace(pace, mode) {
   const show = mode !== 'archive' && !!pace && pace.onPace && pace.todayTotal >= 3;
   el.hidden = !show;
   if (show) {
-    // „27 : 9 nach 2 h" = heute 27 Getränke, der Rekord-Abend hatte nach derselben
-    // Zeit seit seinem ersten Getränk erst 9 (D-045)
-    el.textContent = `🔥 Auf Rekordkurs! ${pace.todayTotal} : ${pace.recordAtSameTime} nach ${fmtElapsed(pace.elapsedMin)} · Rekord-Abend ${fmtDay(pace.recordDay)} (${pace.recordTotal})`;
+    // Heute X Getränke, der Rekord-Abend hatte nach derselben Zeit seit seinem
+    // ersten Getränk erst Y (D-045) — als Satz statt „X : Y", das las keiner
+    el.textContent = `🔥 Auf Rekordkurs: ${pace.todayTotal} Getränke nach ${fmtElapsed(pace.elapsedMin)}, der Rekord-Abend (${pace.recordTotal}) hatte da erst ${pace.recordAtSameTime}`;
   }
 }
 

@@ -103,9 +103,8 @@
 }
 
 /* --- Helle Fläche (Creme), wie die hellen Abschnitte auf landonorris.com.
-   Als Klasse auf einem Abschnitt oder über html[data-surface="light"]
-   (Hintergrundwechsel beim Scrollen, siehe lando.js initSurfaceMorph). --- */
-.surface-light,
+   Über html[data-surface="light"] (Hintergrundwechsel beim Scrollen, siehe
+   lando.js initSurfaceMorph). --- */
 html[data-surface="light"] {
   --bg: var(--lando-white);
   --bg-hi: #ffffff;
@@ -137,13 +136,6 @@ html[data-surface="black"] {
   --surface-alt: #020305;
   --topo-line: #121722;
 }
-.surface-olive,
-html[data-surface="olive"] {
-  --bg: #6c705c;
-  --surface: #767a66;
-  --topo-line: #7a7e69;
-  --ink-muted: #e3e6d6;
-}
 
 /* --- Abgeleitete Tokens. Stehen in einem eigenen Block, der für JEDEN
    Farbbereich neu ausgewertet wird — sonst erbten z. B. .area-pk-Elemente
@@ -151,7 +143,7 @@ html[data-surface="olive"] {
    story.js) liest einige davon per getComputedStyle; die Werte sind daher
    immer canvas-lesbare Farben. --- */
 :root, .area-pk,
-.surface-light, .surface-black, .surface-olive, html[data-surface] {
+.surface-black, html[data-surface] {
   /* Getränkefarben: Bier = Akzent, Shots = Zweitakzent, Mischen = Navy-Grau */
   --beer: var(--accent);
   --beer-ink: var(--accent-ink);
@@ -265,7 +257,7 @@ a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offs
 }
 /* Instrument Serif ist feiner als Landos „Brier Bold" — in Display-Größen
    mit einer hauchdünnen Kontur (nur nach außen) etwas kräftiger. */
-.t-impact .t-serif, .t-title .t-serif, .t-serif--bold {
+.t-impact .t-serif, .t-title .t-serif {
   -webkit-text-stroke: 0.022em currentColor;
   paint-order: stroke fill;
 }
@@ -278,7 +270,6 @@ a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offs
   color: var(--ink-2);
 }
 .t-quote b, .t-quote strong { color: var(--ink); font-weight: 400; font-style: italic; }
-.t-body { font-size: 15px; line-height: 1.5; color: var(--ink-2); }
 .t-small { font-size: 13px; line-height: 1.4; color: var(--ink-muted); }
 
 /* Winzige Versal-Zeile („NEXT RACE", „QATAR, 2024") */
@@ -472,8 +463,6 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
   border-radius: var(--radius-lg);
   padding: 20px;
 }
-.card--flat { background: transparent; }
-.card--accent { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .glass { border: 1px solid var(--line); }
 
 /* Kerben-Karte (Form über lando.js notch()): Etikett in der Stufe unten.
@@ -550,7 +539,6 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
   border-radius: 1px;
   transform: translateY(-1px);
 }
-.sec-hint { font-size: 12.5px; color: var(--ink-muted); }
 .sec::after {
   content: '';
   flex: 1;
@@ -802,7 +790,6 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 /* ==========================================================================
    Blatt von unten (Sheet) und Dialog — gemeinsame Grundform
    ========================================================================== */
-.sheet-scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 80; }
 .sheet {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 81;
   max-height: 88vh; overflow: auto;

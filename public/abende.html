@@ -57,8 +57,8 @@ try {
 <link rel="stylesheet" href="css/theme.css">
 <style>
   /* Abend-Archiv als „Chronik" im Stil von landonorris.com (D-078):
-     dunkler Hero mit Kennzahlen-Satz (L2), schwarze „Hall of Fame" der
-     Abendsieger als Kerben-Karten (L3), alle Abende auf Creme. Beim Scrollen
+     dunkler Hero mit Kennzahlen-Satz (L2), schwarze „Hall of Fame" mit den
+     meisten Abendsiegen als Kerben-Karten (L3), alle Abende auf Creme. Beim Scrollen
      färbt initSurfaceMorph die ganze Seite um (html[data-surface]). */
   body { overflow-x: clip; }
   .page { position: relative; z-index: 1; }
@@ -97,7 +97,7 @@ try {
   html[data-morph="archive"] .morph-archive { view-transition-name: morph-archive; }
   html[data-morph="archive"] .hero-emblem[data-reveal] { opacity: 1; transform: none; transition: none; }
 
-  /* Höhe mitdenken: auf flachen Desktop-Fenstern soll das Laufband noch
+  /* Höhe mitdenken: auf flachen Desktop-Fenstern soll „Letzter Abend" noch
      im ersten Bild stehen */
   .hero-title { font-size: clamp(38px, min(10.6vw, 15.5vh), 168px); line-height: 0.88; }
   .hero-title .t-serif { font-size: 1.06em; line-height: 0.8; }
@@ -211,17 +211,6 @@ try {
       grid-area: wn; font-size: 18px; font-weight: 800; letter-spacing: -0.02em; line-height: 1;
     }
   }
-
-  /* Laufband mit den Abendsiegern */
-  .hero-marquee {
-    --marquee-speed: 46;
-    border-top: 1px solid var(--line);
-    padding: 14px 0 max(14px, env(safe-area-inset-bottom));
-  }
-  .mq-item { display: inline-flex; align-items: baseline; gap: 12px; padding-right: 30px; white-space: nowrap; }
-  .mq-item .t-serif { font-size: clamp(24px, 3vw, 34px); line-height: 1; color: var(--ink); }
-  .mq-item .eyebrow { color: var(--ink-muted); }
-  .mq-item::after { content: ''; width: 7px; height: 7px; margin-left: 18px; align-self: center; background: var(--accent); border-radius: 1px; }
 
   /* ---------------- Abschnitte ---------------- */
   .chapter { position: relative; padding: clamp(72px, 12vh, 140px) 0; }
@@ -572,7 +561,7 @@ try {
      breiten Verlaufsstopps und einem statischen Innenschatten in der
      Seitenfarbe (::after), der den Rand nach außen ausblendet. Gedreht wird
      nur die Kind-Ebene (transform) – und nur EINMAL beim Erscheinen der
-     Karte, keine Endlos-Animation neben dem Laufband. */
+     Karte, keine Endlos-Animation. */
   .foot-zone { --halo-fade: var(--bg); }
   .foot-halo {
     position: absolute;
@@ -627,7 +616,7 @@ try {
   .foot-sign { width: 170px; height: 89px; margin-top: 18px; --scribble-color: var(--accent-text); --scribble-width: 2.4; --draw-dur: 2.2s; }
   .foot-links { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); min-width: min(100%, 300px); }
   .foot-links li { border-bottom: 1px solid var(--line); }
-  .foot-links a, .foot-links button {
+  .foot-links button {
     display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%;
     padding: 14px 2px;
     background: none; border: 0; color: var(--ink);
@@ -635,7 +624,7 @@ try {
     text-decoration: none; text-align: left;
     transition: color 0.3s var(--ease), padding 0.5s var(--ease);
   }
-  @media (hover: hover) and (pointer: fine) { .foot-links a:hover, .foot-links button:hover { color: var(--accent-text); padding-left: 10px; } }
+  @media (hover: hover) and (pointer: fine) { .foot-links button:hover { color: var(--accent-text); padding-left: 10px; } }
   .foot-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; margin-top: 40px; }
 
   /* ---------------- Toast und Dialog ---------------- */
@@ -747,12 +736,9 @@ try {
         </div>
       </div>
     </div>
-    <div class="marquee hero-marquee" id="hero-marquee" data-marquee hidden aria-label="Die letzten Abendsieger">
-      <div class="marquee-track" id="hero-marquee-track"></div>
-    </div>
   </section>
 
-  <!-- 2) Hall of Fame der Abendsieger (L3) -->
+  <!-- 2) Hall of Fame: meiste Abendsiege (L3) -->
   <section class="chapter" id="hof" data-surface="black" hidden>
     <div class="wrap">
       <div class="sec-head">
@@ -810,9 +796,6 @@ try {
             <svg class="scribble scribble--signature foot-sign" data-draw="1100" viewBox="0 0 268 141" fill="none" aria-hidden="true"><path d="M 33.3 80.9 C 38.1 91.8 58.4 82.1 58.9 68.3 C 59.3 57.7 39.8 64.2 47.2 46.1 C 53 32.1 69 25.5 74.1 32.7 C 70.4 50.1 68.3 65.4 66.4 80 C 76.8 58.9 88.6 37 102.8 17.1 C 89.2 53 72.5 97 57.4 136.9 C 71.5 96.5 89.3 50.5 104.1 18.7 C 141.6 -4.7 149.1 23.2 118.2 42.9 C 108.1 49.1 101.2 46.6 99 39.2 C 102.6 46.3 106.9 52.3 107.3 55.9 C 105.1 53.8 99 62.7 99.7 69.8 C 99.9 73.2 103.3 69.1 107 57.2 C 106.6 63.7 103.1 71.4 107.5 69.7 C 108.4 65.4 110.5 57.9 112.4 55.7 C 112.3 58.9 114.5 56.8 116.4 54.3 C 115.2 60.5 114.2 65.6 115.9 67.9 C 116.7 63 122.7 47.5 128.1 31.9 C 123.2 48.5 118 63.3 120.4 66.7 C 121.9 64.7 122.9 57.2 125.6 53.8 C 122.4 62.3 123.6 65.8 125.6 63.8 C 127.7 60.9 129.7 54.9 131 51.3 C 125.8 69.3 122.7 81.9 118.7 82.9 C 116 86.2 119.3 77 124.6 71.4 C 126.5 69.8 129.1 66 130.4 64.9 C 135.4 53.9 140.1 38.1 146 19.3 C 140.5 38.4 134.9 55 131.4 65.8 C 135.9 55.6 140.5 48.9 141.1 51.3 C 141.2 56.2 136.7 58.8 135 57.1 C 136.5 60.6 137.5 65.2 139.9 65.1 C 142.2 62.3 146.3 54.7 145.7 50.7 C 146.9 46.8 141.7 53.5 141.5 57.6 C 139.7 65.9 142.4 64.9 146.3 60.9 C 149.7 52.2 154.7 37.6 157.2 28.6 C 157.2 24.2 155.5 24.6 152.1 38.8 C 147.7 52.2 145.5 64.1 148 63.4 C 153.5 52.6 157.5 41 160.2 32.4 C 160 27.4 157.5 29 154.5 40.4 C 150.9 53.2 150.4 63.3 151.8 62.6 C 154.8 60 158.3 54.4 157.9 50.9 C 158.7 48.3 154.7 54.6 154.2 56.6 C 153.5 63.3 156.1 61 158.3 57.2 C 159.5 55.2 161.3 51.1 161.3 50.6 C 162.1 52.1 163.9 50.7 166.8 46.8 C 163.9 51.5 164.5 56.5 165.4 55.2 C 197.5 50.7 231.7 29.1 252.8 11.1 C 260.2 4.9 258.7 1.4 251.7 6.4 C 204 38.4 116.6 88.6 12.2 126.2 C 1.5 130 1.2 135.6 11.5 131.3 C 70.3 112.9 152.6 82.8 210.6 58.3 C 236.3 47.6 252.6 39.7 264 33.4 M 120.8 48.7 C 128.7 44.8 137.8 40.7 149.5 33.1" pathLength="1"/></svg>
           </div>
           <ul class="foot-links">
-            <li><a href="./" data-home><span data-home-label>Anmeldung</span><span class="i-arrow"></span></a></li>
-            <li><a href="tv">TV-Ansicht <span class="i-arrow"></span></a></li>
-            <li><a href="admin" data-morph="admin" data-morph-self>Admin <span class="i-arrow"></span></a></li>
             <li><button type="button" id="to-top">Nach oben <span class="i-arrow i-arrow--up"></span></button></li>
           </ul>
         </div>
@@ -855,7 +838,7 @@ import { connectState } from './js/ws-client.js';
 import { buildCurve } from './js/curve.js';
 import { getSession } from './js/api.js';
 import {
-  initLando, initReveal, notch, scribble, drawScribble, countUp, initMarquee, reducedMotion, leave, enter,
+  initLando, initReveal, notch, scribble, drawScribble, countUp, reducedMotion, leave, enter,
 } from './js/lando.js';
 import { renderSiteMenu } from './js/site-menu.js';
 
@@ -866,7 +849,6 @@ if (getSession().token) {
   $('back').href = 'dashboard';
   $('back').querySelector('.back-label').textContent = 'Zurück';
   document.querySelectorAll('[data-home]').forEach((a) => { a.href = 'dashboard'; });
-  document.querySelectorAll('[data-home-label]').forEach((el) => { el.textContent = 'Zählen'; });
 }
 
 // Admin-Werkzeuge (Name, Protokoll, TV-Anzeige) erscheinen nur mit Admin-Login aus
@@ -1383,7 +1365,10 @@ function jumpToNight(day) {
   drawScribble(when.lastElementChild, { delay: rm ? 0 : 1100 });
 }
 
-// --- Hall of Fame (L3): Sieger der letzten Abende, Rekord als Akzentkarte ---
+// --- Hall of Fame (L3): Bestenliste der Abendsiege (wer wie oft gewonnen
+// hat), damit sie nicht nur die Chronik wiederholt. Die Karte mit den meisten
+// Siegen ist gefüllt; „Rekord" trägt, wem der Abend mit den meisten
+// Getränken eines Siegers gehört. Ein Tipp springt zu dessen bestem Abend.
 const HOF_MAX = 8;
 const HOF_NOTCH = { tabW: 112, tabH: 30, r: 14, slant: 18 };
 const hofSeen = new Set();
@@ -1396,42 +1381,49 @@ function renderHof() {
   if (!withWinner.length) return;
   // Rekord = meiste Getränke eines Abendsiegers (bei Gleichstand der jüngere)
   const record = withWinner.reduce((a, b) => (b.winner.total > a.winner.total ? b : a));
-  let list = withWinner.slice(0, HOF_MAX);
-  if (!list.includes(record)) list = [...list.slice(0, HOF_MAX - 1), record];
-  $('hof-kicker').textContent = list.length === 1 ? 'Der letzte Abend' : `Die letzten ${list.length} Abende`;
+  const byName = new Map();
+  for (const n of withWinner) {   // nights ist neu → alt sortiert
+    const e = byName.get(n.winner.name) ?? { name: n.winner.name, wins: 0, best: n, last: n.day };
+    e.wins += 1;
+    if (n.winner.total > e.best.winner.total) e.best = n;
+    byName.set(e.name, e);
+  }
+  const list = [...byName.values()]
+    .sort((a, b) => b.wins - a.wins || b.best.winner.total - a.best.winner.total || b.last.localeCompare(a.last))
+    .slice(0, HOF_MAX);
+  $('hof-kicker').textContent = `${withWinner.length} ${withWinner.length === 1 ? 'Abend' : 'Abende'} · ${byName.size} Sieger`;
 
   let fresh = 0;
-  for (const night of list) {
-    const isRecord = night === record && withWinner.length > 1;
-    const { short, weekday } = fmtDay(night.day);
-    const a = h('a', 'hof-card' + (isRecord ? ' is-record' : ''));
-    a.href = `#night-${night.day}`;
-    a.setAttribute('aria-label', `${night.winner.name}, Abendsieger am ${fmtDay(night.day).date} mit ${drinks(night.winner.total)} – zum Abend springen`);
+  list.forEach((e, i) => {
+    const top1 = i === 0 && list.length > 1;
+    const hasRecord = e.best === record && withWinner.length > 1;
+    const a = h('a', 'hof-card' + (top1 ? ' is-record' : ''));
+    a.href = `#night-${e.best.day}`;
+    a.setAttribute('aria-label', `${e.name}, ${e.wins}× Abendsieger, bester Abend ${fmtDay(e.best.day).date} mit ${drinks(e.best.winner.total)} – zum Abend springen`);
     const top = h('span', 'hof-top');
-    top.append(h('span', 'eyebrow', weekday));
-    if (isRecord) top.append(h('span', 'chip', 'Rekord'));
+    top.append(h('span', 'eyebrow', `Platz ${i + 1}`));
+    if (hasRecord) top.append(h('span', 'chip', 'Rekord'));
     const crest = h('span', 'hof-crest');
-    crest.append(h('span', 'avatar', initial(night.winner.name)));
+    crest.append(h('span', 'avatar', initial(e.name)));
     const count = h('span', 'hof-count');
-    count.append(h('span', 'num', String(night.winner.total)), document.createTextNode(night.winner.total === 1 ? 'Getränk' : 'Getränke'));
-    const tag = h('span', 'notch-tag', `${short} · `);
-    tag.append(h('span', 'hl num', String(night.winner.total)));
-    a.append(top, crest, h('span', 'hof-name', night.winner.name), count, tag);
-    a.addEventListener('click', (e) => { e.preventDefault(); jumpToNight(night.day); });
-    if (!hofSeen.has(night.day)) {
-      hofSeen.add(night.day);
+    count.append(h('span', 'num', String(e.wins)), document.createTextNode(e.wins === 1 ? 'Abendsieg' : 'Abendsiege'));
+    const tag = h('span', 'notch-tag', `Bester ${fmtDay(e.best.day).short} · `);
+    tag.append(h('span', 'hl num', String(e.best.winner.total)));
+    a.append(top, crest, h('span', 'hof-name', e.name), count, tag);
+    a.addEventListener('click', (ev) => { ev.preventDefault(); jumpToNight(e.best.day); });
+    if (!hofSeen.has(e.name)) {
+      hofSeen.add(e.name);
       a.dataset.reveal = 'up';
       a.dataset.delay = String(Math.min(fresh++, 7) * 60);
     }
     grid.appendChild(a);
-    notch(a, { ...HOF_NOTCH, stroke: !isRecord });
-  }
+    notch(a, { ...HOF_NOTCH, stroke: !top1 });
+  });
   initReveal(grid);
 }
 
-// --- Hero: Kennzahlen-Satz (L2), „Letzter Abend", Laufband der Sieger ---
+// --- Hero: Kennzahlen-Satz (L2) und „Letzter Abend" ---
 let heroShown = false;
-let marqueeKey = '';
 
 function setNum(el, to) {
   const from = Number(el.dataset.v ?? 0);
@@ -1456,22 +1448,6 @@ function renderHero() {
     $('last-date').textContent = short;
     $('last-winner').textContent = last.winner ? `${last.winner.name} · ${last.winner.total}` : `${last.total} Getränke`;
     $('last-winner-label').textContent = last.winner ? 'Abendsieger' : 'Gesamt';
-  }
-
-  // Laufband nur neu aufbauen, wenn sich die Sieger geändert haben
-  const winners = nights.filter((n) => n.winner).slice(0, 12);
-  const key = winners.map((n) => `${n.day}${n.winner.name}${n.winner.total}`).join('|');
-  if (key !== marqueeKey) {
-    marqueeKey = key;
-    const track = $('hero-marquee-track');
-    track.textContent = '';
-    for (const n of winners) {
-      const item = h('span', 'mq-item');
-      item.append(h('span', 't-serif', n.winner.name), h('span', 'eyebrow num', `${fmtDay(n.day).short} · ${drinks(n.winner.total)}`));
-      track.append(item);
-    }
-    $('hero-marquee').hidden = winners.length === 0;
-    if (winners.length) initMarquee($('hero-marquee'));
   }
 
   // Zeilenweise Einblendung erst, wenn die Zahlen da sind
