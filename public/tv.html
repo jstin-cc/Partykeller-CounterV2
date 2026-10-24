@@ -1311,7 +1311,7 @@ function slideSwap(rebuild) {
 // Namens-Plakat (L21): wenn der Admin einen Abend auf den TV legt, steht
 // dessen Sieger groß da; live, wenn heute jemand Neues die Führung übernimmt
 // (höchstens alle drei Minuten, ab drei Getränken). Meilenstein-Bild (L24):
-// wenn im Haus eine runde 500er-Marke fällt oder jemand eine persönliche
+// wenn im Haus eine runde 50er-Marke fällt oder jemand eine persönliche
 // Marke knackt (Werte kommen fertig aus funStats). Momente laufen
 // nacheinander ab, nie übereinander. Nie beim ersten Stand nach dem Laden —
 // ein Neustart des TV soll nichts wiederholen.
@@ -1651,7 +1651,7 @@ function playDemo({ effect, season: s }) {
       : { name, total: top?.total ?? 9, label: 'All-Time-Spitze', kicker: 'Platz 1' });
   } else if (effect === 'milestone') {
     const house = players.reduce((n, p) => n + p.total, 0);
-    milestoneMoment(Math.max(500, Math.floor(house / 500) * 500), 'Getränk im Keller');
+    milestoneMoment(Math.max(50, Math.floor(house / 50) * 50), 'Getränk im Keller');
   } else if (effect === 'confetti') {
     seasonFx.confetti();
     showMoment('Helau', `${name} ist die neue Nummer 1.`);

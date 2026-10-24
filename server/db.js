@@ -1020,11 +1020,11 @@ export function createDb(dbPath) {
 
   // --- Momente fürs Fun-Fact-Band (D-036) -----------------------------------
   // Meilensteine: volle 50er je Sorte und volle 100er gesamt pro Person, volle
-  // 500er fürs ganze Haus. Grundlage ist das Log und nicht die All-Time-Zähler,
+  // 50er fürs ganze Haus (D-112). Grundlage ist das Log und nicht die All-Time-Zähler,
   // weil nur dort steht, WANN eine Marke gefallen ist.
   const MILESTONE_DRINK = 50;
   const MILESTONE_PLAYER = 100;
-  const MILESTONE_HOUSE = 500;
+  const MILESTONE_HOUSE = 50;
   const MILESTONE_WINDOW_MS = 30 * 60 * 1000;
   // Comeback erst ab einem Monat Pause — kürzer ist keine Rückkehr, sondern Alltag
   const COMEBACK_MIN_DAYS = 30;
@@ -1061,7 +1061,7 @@ export function createDb(dbPath) {
     }
 
     // Eine persönliche Marke ist ein Moment, kein Dauerzustand: nur eine halbe
-    // Stunde zeigen. Die Hausmarke fällt selten, sie darf den Abend über bleiben.
+    // Stunde zeigen. Die Hausmarke bleibt bis zur nächsten stehen.
     const fresh = player && Date.now() - player.ts <= MILESTONE_WINDOW_MS;
     return {
       milestone: fresh ? { name: player.name, kind: player.kind, n: player.n } : null,
