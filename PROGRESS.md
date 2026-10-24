@@ -32,6 +32,11 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-10-24 (D-117): **DECISIONS.md neu geschrieben** — nach Themen
+geordnet, beschreibt nur noch, was heute gilt (je Regel die D-Nummern in
+Klammern, unten ein Verlauf je Nummer); alle Einträge D-001–D-116 stehen im
+alten Wortlaut in `docs/DECISIONS-ARCHIV.md`. Regel 2 in CLAUDE.md
+entsprechend geändert.
 Seit 2026-10-24 (D-116): **Doku aufgeräumt** — 8 vollständig abgelöste
 Entscheidungen wortgleich nach `docs/DECISIONS-ARCHIV.md`, der Verlauf bis
 2026-10-16 samt Meilensteinen M0–M8 und Verifikationen wortgleich nach
