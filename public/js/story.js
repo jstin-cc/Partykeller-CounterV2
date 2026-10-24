@@ -229,7 +229,7 @@ const drinks = (n) => (n === 1 ? 'Getränk' : 'Getränke');
 
 // Kopf: Wortmarke links (Serif über fetter Grotesk), rechts Lorbeer + Zeile
 function topBlock(c, laurel, lines = ['Abendrückblick', 'aus dem Abend-Archiv']) {
-  const [top, bottom] = ['Party', 'Keller'];
+  const [top, bottom] = AREA.mark;
   return {
     height: 86,
     draw(ctx, y) {

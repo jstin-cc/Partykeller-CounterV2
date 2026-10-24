@@ -260,9 +260,9 @@ export function initMenu() {
 }
 
 /* ------------------------------------------------------------------------
-   Hintergrund wechselt beim Scrollen (dunkel → oliv → creme), wie die
+   Hintergrund wechselt beim Scrollen (dunkel → schwarz → creme), wie die
    Abschnitte auf landonorris.com: Abschnitte mit data-surface="light|dark|
-   black|olive" setzen html[data-surface], sobald sie die Bildmitte erreichen.
+   black" setzen html[data-surface], sobald sie die Bildmitte erreichen.
    ------------------------------------------------------------------------ */
 export function initSurfaceMorph(root = document) {
   const sections = [...root.querySelectorAll('[data-surface]')];

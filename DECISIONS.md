@@ -2629,3 +2629,42 @@ zeigt entsprechend die letzte volle 50er-Marke.
 **Begründung:** Wunsch des Nutzers: das Meilenstein-Bild soll viel öfter
 kommen. Welche Marke gemeint ist und dass die persönlichen Marken bleiben,
 nach Rückfrage beim Nutzer.
+
+## D-113 (2026-10-24): Feinschliff nach Gesamtdurchsicht
+
+**Entscheidung:** Nach einer Durchsicht aller Seiten (beide Bereiche, Handy,
+PC, TV) wird Doppeltes entfernt und Unklares klarer gemacht:
+
+- **Story-Bild:** Die Wortmarke auf dem Abend- und Jahresrückblick-Bild kommt
+  aus dem Bereich (`AREA.mark`); Youngstars bekamen bisher „Party Keller“.
+  „SV Partykeller“ (Unterschrift, ©, Emblem) bleibt in beiden Bereichen
+  stehen, die Youngstars gehören zum SV.
+- **Profil-Stapel:** oben „Gesamt“ statt „Heute“, darunter „nach 10.10.“
+  usw.; „46 · Heute“ las sich wie 46 Getränke heute.
+- **Mischen-Karte:** die Gesamtzahl im Etikett in `--mix-text` (die
+  Flächenfarbe war auf dem Grund kaum lesbar).
+- **Abend-Archiv:** Das Laufband der Abendsieger ist weg. Die Hall of Fame
+  zeigt nicht mehr die letzten Abende (das wiederholte die Chronik), sondern
+  eine Bestenliste: wer wie oft Abendsieger war, mit dem besten Abend im
+  Etikett; Platz 1 gefüllt, „Rekord“ an dem, dem der stärkste Siegerabend
+  gehört. Die Links Anmeldung/TV-Ansicht/Admin in der Fußkarte entfallen
+  („Nach oben“ bleibt), sie stehen im Menü.
+- **Anmeldung:** ohne die Zeile „SV Partykeller“ neben dem Logo und ohne die
+  Fußlinks (Menü); der obere Sprungknopf heißt „Neu hier“ (nicht zweimal
+  „Konto anlegen“); „optional“ steht nur noch im PIN-Label (Platzhalter
+  „4 Ziffern“, kein Kerben-Etikett mehr).
+- **TV:** Die Rekordkurs-Pille spricht in einem Satz („73 Getränke nach 3 h,
+  der Rekord-Abend (68) hatte da erst 32“) statt „73 : 32“. Passen ab Platz 4
+  nur ein, zwei Zeilen nicht hinein, rücken die Zeilen bis 54 statt 66
+  Design-Pixel zusammen, statt zu rotieren; reicht das nicht, rotiert die
+  Liste wie bisher.
+- **Admin:** „Gefahrenzone“ statt „Danger Zone“, durchgehend „Sicherung“
+  statt „Backup“.
+- Ungenutzte CSS-Regeln entfernt (`card--flat`, `card--accent`, `sec-hint`,
+  `sheet-scrim`, `t-body`, `t-serif--bold`, `surface-light`/`surface-olive`
+  als Klasse und die olivgrüne Fläche).
+
+**Begründung:** Wunsch des Nutzers nach einer Prüfung, ob etwas nicht ins
+Gesamtbild passt, überladen ist oder fehlt. Welche Punkte umgesetzt werden
+und dass die Youngstars zum SV gehören, nach Rückfrage beim Nutzer; ein
+„Rückgängig“ nach dem Tipp wurde vorgeschlagen, aber nicht gewählt.
