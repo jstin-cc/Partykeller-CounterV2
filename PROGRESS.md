@@ -7,12 +7,14 @@ die Wahrheit über den Projektstand (Kontextverlust-sicher).
 funktional komplett (Login, Dashboard mit Profil-Tab, TV-Scoreboard mit QR,
 Admin, Abend-Archiv mit Bearbeitung und CSV-Export) und end-to-end im Browser
 getestet.
+Seit 2026-10-24 (D-114): Im Admin wieder „Danger Zone" und „Backup" (die
+Umbenennung aus D-113 war nicht gewünscht).
 Seit 2026-10-24 (D-113): **Feinschliff nach Gesamtdurchsicht** — Story-Bild
 mit der Wortmarke des Bereichs, Profil-Stapel „Gesamt / nach …“, Mischen-
 Gesamtzahl lesbar, Archiv ohne Laufband und mit Hall of Fame als Bestenliste
 der Abendsiege, Anmeldung und Archiv-Fuß ohne Doppeltes, TV-Rekordkurs als
 Satz und Liste rückt zusammen statt wegen einer Zeile zu rotieren,
-„Gefahrenzone“/„Sicherung“ im Admin, tote CSS-Regeln raus. In der
+tote CSS-Regeln raus. In der
 Demo-Instanz geprüft (beide Bereiche, Handy, Desktop, TV 1600 × 900 und
 1280 × 720 mit vielen Teilnehmern, Story-Bild Youngstars).
 Seit 2026-10-24 (D-112): **Meilenstein-Bild öfter** — die Hausmarke fällt
