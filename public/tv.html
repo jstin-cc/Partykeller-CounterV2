@@ -1277,9 +1277,9 @@ function updatePace(pace, mode) {
   const show = mode !== 'archive' && !!pace && pace.onPace && pace.todayTotal >= 3;
   el.hidden = !show;
   if (show) {
-    // Heute X Getränke, der Rekord-Abend hatte nach derselben Zeit seit seinem
-    // ersten Getränk erst Y (D-045) — als Satz statt „X : Y", das las keiner
-    el.textContent = `🔥 Auf Rekordkurs: ${pace.todayTotal} Getränke nach ${fmtElapsed(pace.elapsedMin)}, der Rekord-Abend (${pace.recordTotal}) hatte da erst ${pace.recordAtSameTime}`;
+    // „27 : 9 nach 2 h" = heute 27 Getränke, der Rekord-Abend hatte nach derselben
+    // Zeit seit seinem ersten Getränk erst 9 (D-045)
+    el.textContent = `🔥 Auf Rekordkurs! ${pace.todayTotal} : ${pace.recordAtSameTime} nach ${fmtElapsed(pace.elapsedMin)} · Rekord-Abend ${fmtDay(pace.recordDay)} (${pace.recordTotal})`;
   }
 }
 
