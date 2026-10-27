@@ -235,10 +235,6 @@ try {
   .tv-headline.is-long .bt-l2 { margin-top: 0.1em; }
   .tv-headline .bt-l2 { position: relative; display: inline-block; max-width: 100%; }
   .tv-headline .bt-l2 .t-serif { display: block; font-size: 1.1em; line-height: 0.92; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tv-headline .bt-scribble {
-    position: absolute; left: -3%; bottom: -0.1em; width: 106%; height: 0.22em;
-    --scribble-width: 4; --draw-dur: 1.1s;
-  }
 
   /* Podest (D-051, im Lando-Stil D-078): Name in Versalien darüber, Karte
      mit Kerbe in der Rangfarbe, große Serif-Rangziffer, riesige
@@ -1108,9 +1104,8 @@ function boardRows(players, mode) {
   return rows;
 }
 
-// Headline im Lando-Stil: erste Zeile Grotesk, zweite Zeile ein Serif-Wort
-// mit Kringel darunter. Neu gesetzt (und der Kringel neu gezeichnet) nur,
-// wenn sich der Text ändert.
+// Headline im Lando-Stil: erste Zeile Grotesk, zweite Zeile ein Serif-Wort.
+// Neu gesetzt nur, wenn sich der Text ändert.
 let titleKey = '';
 function setBoardTitle(sans, serif) {
   const key = `${sans}|${serif}`;
@@ -1125,10 +1120,8 @@ function setBoardTitle(sans, serif) {
   word.className = 't-serif t-accent';
   word.textContent = serif;
   l2.append(word);
-  l2.insertAdjacentHTML('beforeend', scribble('underline', { cls: 'bt-scribble' }));
   $('board-subtitle').replaceChildren(l1, ' ', l2);
   fitHeadline();
-  drawScribble(l2.lastElementChild, { delay: 380 });
 }
 
 // Lange Zeilen (Archiv: Abend-Namen) verkleinern die Headline in Schritten,

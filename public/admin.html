@@ -147,13 +147,12 @@ try {
   .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
   .brand .chip { align-self: center; }
 
-  /* Kopf: Titel mit Kringel, Kennzahlen des Abends, „Neues Konto“ */
+  /* Kopf: Titel, Kennzahlen des Abends, „Neues Konto“ */
   .adm-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px 40px; flex-wrap: wrap; margin-bottom: clamp(24px, 4vh, 40px); }
   .hero-text { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
   .sub-row { display: flex; align-items: baseline; gap: 6px 16px; flex-wrap: wrap; }
   .sub-row .sub { font-variant-numeric: proportional-nums; }
   .adm-title { font-size: clamp(40px, 6.4vw, 92px); line-height: 0.88; }
-  .adm-title .scribbled > .scribble--underline { --scribble-width: 4; bottom: -0.02em; height: 0.2em; }
   .hero-side { display: flex; align-items: flex-end; gap: 28px; }
   .hero-stats { display: flex; gap: 26px; }
   .hs { display: flex; flex-direction: column; gap: 8px; min-width: 64px; }
@@ -716,7 +715,7 @@ try {
           <a id="back" class="back" href="./">Zur Anmeldung</a>
           <div id="adm-sub" class="sub eyebrow"></div>
         </div>
-        <h1 class="t-title adm-title" data-reveal="words"><span class="morph-admin">Admin</span> <span class="scribbled"><span class="t-serif t-accent">Zentrale</span><svg class="scribble scribble--underline" data-draw="600" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1"/></svg></span></h1>
+        <h1 class="t-title adm-title" data-reveal="words"><span class="morph-admin">Admin</span> <span class="scribbled"><span class="t-serif t-accent">Zentrale</span></span></h1>
       </div>
       <div class="hero-side" data-reveal="up" data-delay="250">
         <div class="hero-stats">
