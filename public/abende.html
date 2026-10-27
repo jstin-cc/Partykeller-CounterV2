@@ -118,9 +118,12 @@ try {
     --scribble-color: var(--accent);
     --scribble-width: 5;
     --draw-dur: 1.1s;
-    bottom: 0.02em;
-    height: 0.22em;
+    bottom: -0.2em;
+    height: 0.2em;
   }
+  /* Der Strich sitzt unter dem Wort; die Zeile braucht dafür unten Platz,
+     sonst schneidet die Maske ihn ab */
+  .hero-title .ln:has(.scribbled) { padding-bottom: 0.2em; margin-bottom: -0.2em; }
 
   .hero-foot {
     display: grid;
