@@ -127,12 +127,11 @@ try {
 
   .hero-foot {
     display: grid;
-    grid-template-columns: 1fr auto auto;
-    grid-template-areas: "btn crest card";
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "crest card";
     align-items: end;
     gap: 18px;
   }
-  .hero-foot > .hf-btn { grid-area: btn; }
   .hero-foot > .hero-crest { grid-area: crest; }
   .hero-foot > .hf-card { grid-area: card; }
   .pk-logo {
@@ -174,16 +173,17 @@ try {
 
   /* Handy (D-092): kein bildschirmhoher Kopf mit Leere darüber. Unter dem
      Satz steht „Letzter Abend" als Datenleiste zwischen Haarlinien, darunter
-     Hall-of-Fame-Knopf und Logo in einer Reihe. */
+     das Logo. */
   @media (max-width: 640px) {
     .hero { min-height: 0; }
     .hero-body { justify-content: flex-start; padding: 52px 0 26px; gap: 22px; }
     .hero-foot {
       grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-areas: "card card" "btn crest";
+      grid-template-areas: "card card" "crest crest";
       align-items: center;
       gap: 22px 16px;
     }
+    .hero-crest { justify-self: end; }
     .hero-crest .pk-logo { width: 74px; }
     .last-card {
       display: grid;
@@ -716,9 +716,6 @@ try {
           <span class="ln"><span class="ln-i" style="--i:2">ein <span class="scribbled"><span class="t-serif t-accent">Keller</span><svg class="scribble scribble--underline" id="hero-scribble" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1"/></svg></span>.</span></span>
         </h1>
         <div class="hero-foot">
-          <div class="hf-btn" data-reveal="up" data-delay="450">
-            <a class="btn btn--ghost btn--sm" href="#hof">Hall of Fame <span class="i-arrow i-arrow--down"></span></a>
-          </div>
           <div class="hero-crest" data-reveal="up" data-delay="520">
             <span class="pk-logo" role="img" aria-label="SV Partykeller Logo" style="view-transition-name:area-logo"></span>
           </div>
