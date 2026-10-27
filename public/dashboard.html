@@ -331,9 +331,6 @@ try {
   .alltime-stack { display: flex; flex-direction: column; margin: 2px 0 26px; }
   .as-line { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
   .as-line .num { font-size: clamp(72px, 25vw, 120px); line-height: 0.84; letter-spacing: -0.055em; }
-  .as-line:nth-child(2) .num { opacity: 0.5; }
-  .as-line:nth-child(3) .num { opacity: 0.28; }
-  .as-line:nth-child(4) .num { opacity: 0.14; }
   .as-line:first-child .eyebrow { color: var(--accent-text); }
 
   /* --- Jahresrückblick (L23, D-095): Akzentkarte im Profil öffnet Story-
@@ -1628,30 +1625,12 @@ if (!token || !playerId) {
     if (e.key === 'ArrowLeft') showSlide(rvIdx - 1);
   });
 
-  // All-Time-Stapel im Profil (L20): aus dem aktuellen Stand und den letzten
-  // Abenden zurückgerechnet. Oben steht immer „Gesamt" (der Stand jetzt),
-  // darunter der Stand „nach" den letzten Abenden — „Heute" las sich wie die
-  // Getränke von heute.
-  let recentNights = [];
+  // All-Time-Stapel im Profil (L20): nur noch der aktuelle Stand als „Gesamt".
+  // Die Stände „nach" den letzten Abenden sind entfallen.
   let meTotal = null;
   function renderStack() {
     if (meTotal === null) return;
-    const t = seasonNow();
-    if (t.getHours() < 6) t.setDate(t.getDate() - 1);
-    const p2 = (n) => String(n).padStart(2, '0');
-    const today = `${t.getFullYear()}-${p2(t.getMonth() + 1)}-${p2(t.getDate())}`;
-    const short = (day) => `${day.slice(8, 10)}.${day.slice(5, 7)}.`;
-    const nights = recentNights.slice();
-    const lines = [];
-    let c = meTotal;
-    if (nights[0]?.day === today) c -= nights.shift().total;
-    lines.push([meTotal, 'Gesamt']);
-    if (nights[0] && c === meTotal) c -= nights.shift().total;
-    for (const r of nights) {
-      if (lines.length >= 4 || c <= 0) break;
-      lines.push([c, `nach ${short(r.day)}`]);
-      c -= r.total;
-    }
+    const lines = [[meTotal, 'Gesamt']];
     const box = $('alltime-stack');
     box.textContent = '';
     for (const [v, label] of lines) {
@@ -1726,8 +1705,7 @@ if (!token || !playerId) {
     try {
       const res = await fetch(`${AREA.base}/api/players/${encodeURIComponent(playerId)}/stats`);
       if (!res.ok) return;
-      const { days, best, avgPerNight, achievements, visitBadge, pace, recentNights: rn } = await res.json();
-      recentNights = rn ?? [];
+      const { days, best, avgPerNight, achievements, visitBadge, pace } = await res.json();
       renderStack();
       loadReview();
       paceCurve = pace ?? null;
