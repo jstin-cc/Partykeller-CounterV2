@@ -9,8 +9,8 @@ gibt es wieder **zwei Bereiche im gleichen Design** (Fast-Schwarz/Orange,
 D-080): **Partykeller** (`/partykeller/*`) und **Youngstars**
 (`/youngstars/*`), getrennt nach Datenbank, Tokens und Admin-Passwort; sie
 unterscheiden sich nur über die Wortmarke (und das SV-Logo, das nur der
-Partykeller zeigt). `/` ist die Auswahlseite (`public/start.html`). Dieselben
-HTML-Dateien bedienen beide Bereiche: der Server setzt beim Ausliefern
+Partykeller zeigt, auf dem TV beide). `/` ist die Auswahlseite
+(`public/start.html`). Dieselben HTML-Dateien bedienen beide Bereiche: der Server setzt beim Ausliefern
 `html[data-area]`, Wortmarke und Titel (`server/index.js` `renderPage`),
 `public/js/area.js` erkennt den Bereich am Pfad. Vollständiger Plan in
 [PLAN.md](PLAN.md), Entscheidungen in [DECISIONS.md](DECISIONS.md), Stand in

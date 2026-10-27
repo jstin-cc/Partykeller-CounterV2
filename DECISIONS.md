@@ -8,7 +8,7 @@ D-001 bis D-116, mit Entstehungsgeschichte und ausführlicher Begründung,
 steht unverändert in [docs/DECISIONS-ARCHIV.md](docs/DECISIONS-ARCHIV.md).
 
 **Pflege (D-116, D-117):** Eine neue Entscheidung bekommt die nächste Nummer
-(zuletzt D-118) und wird im passenden Abschnitt eingearbeitet: neue Regel
+(zuletzt D-119) und wird im passenden Abschnitt eingearbeitet: neue Regel
 ergänzen oder die bestehende ersetzen, Überholtes streichen statt daneben
 stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
 (Datum, worum es ging). Nummern werden nie neu vergeben; D-082 gibt es nicht.
@@ -60,8 +60,8 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
 - **Gleiches Design:** beide sehen gleich aus (Fast-Schwarz/Orange, D-080) und
   haben dieselbe Getränke-Reihenfolge. Unterschied ist nur die Wortmarke
   („Party / Keller“ bzw. „Young / Stars“) und das SV-Logo, das nur der
-  Partykeller zeigt. „SV Partykeller“ (Unterschrift, ©, Emblem) steht in beiden
-  Bereichen, die Youngstars gehören zum SV. (D-110, D-113)
+  Partykeller zeigt; auf dem TV steht es in beiden Bereichen. „SV Partykeller“ (Unterschrift, ©, Emblem) steht in beiden
+  Bereichen, die Youngstars gehören zum SV. (D-110, D-113, D-119)
 - **Eine Codebasis:** dieselben HTML-Dateien bedienen beide Bereiche. Der
   Server setzt beim Ausliefern `html[data-area]`, Wortmarke und Titel
   (`renderPage`), damit schon das erste Bild stimmt; `public/js/area.js`
@@ -482,3 +482,4 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-116 | 2026-10-24 | Archive für DECISIONS und PROGRESS |
 | D-117 | 2026-10-24 | DECISIONS nach Themen neu geschrieben |
 | D-118 | 2026-10-27 | Weniger Kringel |
+| D-119 | 2026-10-27 | SV-Logo auch auf dem Youngstars-TV |
