@@ -184,7 +184,7 @@ try {
       align-items: center;
       gap: 22px 16px;
     }
-    .hero-crest { justify-self: end; }
+    .hero-foot > .hero-crest { justify-self: end; }
     .hero-crest .pk-logo { width: 74px; }
     .last-card {
       display: grid;
@@ -229,6 +229,16 @@ try {
   @media (min-width: 900px) {
     .sec-head { grid-template-columns: 1fr minmax(0, 420px); align-items: end; }
     .sec-head .sec-kicker { grid-column: 1 / -1; }
+  }
+  /* Handy: Hall of Fame rückt direkt unter die Abendkarte; „16 Abende · 8 Sieger"
+     wandert unter die Überschrift */
+  @media (max-width: 640px) {
+    #hof { padding-top: 12px; }
+    #hof .sec-head { display: flex; flex-direction: column; align-items: flex-start; }
+    #hof .sec-kicker { display: contents; }
+    #hof .sec-kicker > .eyebrow:first-child { order: 0; }
+    #hof .sec-head .t-title { order: 1; }
+    #hof-kicker { order: 2; }
   }
 
   /* ---------------- Hall of Fame (L3) ---------------- */
