@@ -233,12 +233,12 @@ try {
   /* Handy: Hall of Fame rückt direkt unter die Abendkarte; „16 Abende · 8 Sieger"
      wandert unter die Überschrift */
   @media (max-width: 640px) {
-    #hof { padding-top: 12px; }
+    #hof { padding-top: 12px; margin-top: -74px; }
     #hof .sec-head { display: flex; flex-direction: column; align-items: flex-start; }
     #hof .sec-kicker { display: contents; }
     #hof .sec-kicker > .eyebrow:first-child { order: 0; }
     #hof .sec-head .t-title { order: 1; }
-    #hof-kicker { order: 2; }
+    #hof-kicker { order: 2; align-self: flex-end; }
   }
 
   /* ---------------- Hall of Fame (L3) ---------------- */
