@@ -132,7 +132,8 @@ try {
     align-items: end;
     gap: 18px;
   }
-  .hero-foot > .hero-crest { grid-area: crest; justify-self: end; }
+  .hero-foot > .hero-crest { grid-area: crest; justify-self: start; }
+  .hero-body > .hf-btn { align-self: flex-end; }
   .hero-foot > .hf-card { grid-area: card; }
   .pk-logo {
     display: block;
@@ -706,6 +707,9 @@ try {
       </header>
 
       <div class="hero-body">
+        <div class="hf-btn" data-reveal="up" data-delay="450">
+          <a class="btn btn--ghost btn--sm" href="#hof">Hall of Fame <span class="i-arrow i-arrow--down"></span></a>
+        </div>
         <div class="emblem hero-emblem" data-reveal="fade">
           <span class="laurel"></span>
           <span class="eyebrow"><span class="morph-archive">Abend-Archiv</span> · seit <span id="hero-since" class="num">–</span></span>
