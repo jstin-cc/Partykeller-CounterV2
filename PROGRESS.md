@@ -32,6 +32,9 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-10-27 (D-119): **SV-Logo auf dem Youngstars-TV** — der TV zeigt
+in beiden Bereichen links das Logo vor der Wortmarke; auf den übrigen
+Youngstars-Seiten bleibt es weg.
 Seit 2026-10-27 (D-118): **Weniger Kringel** — höchstens einer pro Seite im
 Kopf, dazu nur noch die mit Bedeutung (neue Nr. 1, Sprung zu einem Abend,
 Pfeile, Menü-Strich, Unterschrift). Weg sind die Kringel unter „Zentrale“
