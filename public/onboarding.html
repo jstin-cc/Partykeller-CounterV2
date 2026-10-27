@@ -124,12 +124,10 @@ try {
   }
   .step-title .scribbled > .scribble--underline { --scribble-width: 4; bottom: -0.02em; height: 0.2em; }
   /* Das Serif-Wort steht immer in einer eigenen Zeile, mit etwas Luft darüber:
-     Umlaut-Punkte („zählen") stießen sonst an die Grundlinie der Versalzeile,
-     und der Kringel um „live" liefe durch deren Fuß. Als eigener Block, weil
-     die Wort-Masken (.rw) oben ausgerichtet sind – ein Rand in derselben
-     Zeile würde das Wort nach unten verschieben. */
+     Umlaut-Punkte („zählen") stießen sonst an die Grundlinie der Versalzeile.
+     Als eigener Block, weil die Wort-Masken (.rw) oben ausgerichtet sind –
+     ein Rand in derselben Zeile würde das Wort nach unten verschieben. */
   .step-title .scribbled { display: block; width: fit-content; margin-top: 0.26em; }
-  .step-title .scribbled > .scribble--circle { --scribble-width: 3.5; left: -20%; top: -17%; width: 142%; height: 132%; }
   .step-lead { margin: 0; max-width: 36ch; font-size: 15.5px; line-height: 1.5; color: var(--ink-2); }
   .hint { margin: 0; font-size: 13px; line-height: 1.45; color: var(--ink-muted); max-width: 40ch; }
   /* Riesige Schritt-Nummer als Wasserzeichen in der Serif */
@@ -428,7 +426,7 @@ try {
       <div class="step-text">
         <span class="step-no" aria-hidden="true">02</span>
         <p class="eyebrow step-eyebrow" data-reveal="up">Im Keller</p>
-        <h1 id="t2" class="t-impact step-title" data-reveal="words">Rangliste <span class="scribbled"><span class="t-serif t-accent">live</span><svg class="scribble scribble--circle" data-draw="700" viewBox="0 0 260 130" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M176 14C128 1 58 6 24 34-4 58 12 104 88 118c64 12 150 0 164-40 11-32-26-64-92-72-40-5-80 1-104 12" pathLength="1"/></svg></span></h1>
+        <h1 id="t2" class="t-impact step-title" data-reveal="words">Rangliste <span class="scribbled"><span class="t-serif t-accent">live</span></span></h1>
         <p class="step-lead" data-reveal="up" data-delay="250">Auf dem Fernseher steht die Rangliste, Podest oben, alle anderen darunter. Sie wechselt zwischen Heute und All-Time.</p>
       </div>
       <div class="tv-wrap" style="display:flex;flex-direction:column;gap:12px;">
@@ -462,7 +460,7 @@ try {
       <div class="step-text">
         <span class="step-no" aria-hidden="true">03</span>
         <p class="eyebrow step-eyebrow" data-reveal="up">Profil-Tab</p>
-        <h1 id="t3" class="t-impact step-title" data-reveal="words">Dein <span class="scribbled"><span class="t-serif t-accent">Profil</span><svg class="scribble scribble--underline" data-draw="650" viewBox="0 0 240 30" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M5 19C52 10 118 6 168 9c25 1 46 4 66 9M22 25c44-6 104-8 160-4" pathLength="1"/></svg></span></h1>
+        <h1 id="t3" class="t-impact step-title" data-reveal="words">Dein <span class="scribbled"><span class="t-serif t-accent">Profil</span></span></h1>
         <p class="step-lead" data-reveal="up" data-delay="250">Im Profil stehen dein Platz heute und all-time, deine Mischung und die Abzeichen, die du über die Abende sammelst.</p>
       </div>
       <!-- Wie das echte Profil (D-040, D-093): Ranglisten-Karte mit Platz,

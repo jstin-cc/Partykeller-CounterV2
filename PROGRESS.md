@@ -32,6 +32,11 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-10-27 (D-118): **Weniger Kringel** — höchstens einer pro Seite im
+Kopf, dazu nur noch die mit Bedeutung (neue Nr. 1, Sprung zu einem Abend,
+Pfeile, Menü-Strich, Unterschrift). Weg sind die Kringel unter „Zentrale“
+(Admin), dem TV-Titel, „nächsten“ (Archiv-Fuß), „Abende“ (Archiv leer) und
+„live“/„Profil“ (Onboarding). In der Demo-Instanz geprüft.
 Seit 2026-10-24 (D-117): **DECISIONS.md neu geschrieben** — nach Themen
 geordnet, beschreibt nur noch, was heute gilt (je Regel die D-Nummern in
 Klammern, unten ein Verlauf je Nummer); alle Einträge D-001–D-116 stehen im

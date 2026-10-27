@@ -8,7 +8,7 @@ D-001 bis D-116, mit Entstehungsgeschichte und ausführlicher Begründung,
 steht unverändert in [docs/DECISIONS-ARCHIV.md](docs/DECISIONS-ARCHIV.md).
 
 **Pflege (D-116, D-117):** Eine neue Entscheidung bekommt die nächste Nummer
-(zuletzt D-117) und wird im passenden Abschnitt eingearbeitet: neue Regel
+(zuletzt D-118) und wird im passenden Abschnitt eingearbeitet: neue Regel
 ergänzen oder die bestehende ersetzen, Überholtes streichen statt daneben
 stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
 (Datum, worum es ging). Nummern werden nie neu vergeben; D-082 gibt es nicht.
@@ -313,6 +313,12 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
   proportionalen Ziffern, Spalten über feste Breiten. (D-078)
 - **Signaturen:** Höhenlinien, Kerbenkarten, selbstzeichnende Kringel, die
   „SV Partykeller“-Unterschrift, Vollbild-Menü, Wortmarke. (D-078, D-088)
+- **Kringel sparsam:** höchstens einer pro Seite, im Kopf (Auswahl „heute“,
+  Anmeldung „du?“, Admin-Login „Zugang“, Archiv „Keller“, Onboarding Schritt 1).
+  Dazu nur Kringel mit Bedeutung: Ereignisse (neue Nr. 1 auf dem TV, Sprung zu
+  einem Abend im Archiv), Hinweis-Pfeile, der Menü-Strich und die
+  Unterschrift. Kein Kringel unter Zwischen- und Fußüberschriften, im
+  Admin-Kopf oder unter dem TV-Titel. (D-118)
 - **Bewusst weggelassen:** Glas-Optik und `backdrop-filter`, Fotos, 3D-Modelle.
   (D-078)
 - **Höhenlinien-Leuchten:** Strömungssimulation in WebGL2
@@ -475,3 +481,4 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-115 | 2026-10-24 | Rekordkurs-Pille wieder kurz |
 | D-116 | 2026-10-24 | Archive für DECISIONS und PROGRESS |
 | D-117 | 2026-10-24 | DECISIONS nach Themen neu geschrieben |
+| D-118 | 2026-10-27 | Weniger Kringel |
