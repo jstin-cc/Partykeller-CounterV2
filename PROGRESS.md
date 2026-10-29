@@ -32,6 +32,8 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-10-29: **Strich unter „Zugang“** — beim Admin-Login lag der
+Kringel auf den Buchstaben, jetzt sitzt er wie auf den übrigen Seiten darunter.
 Seit 2026-10-27 (D-119): **SV-Logo auf dem Youngstars-TV** — der TV zeigt
 in beiden Bereichen links das Logo vor der Wortmarke; auf den übrigen
 Youngstars-Seiten bleibt es weg.
