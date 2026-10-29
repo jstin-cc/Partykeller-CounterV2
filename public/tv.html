@@ -1430,6 +1430,7 @@ function checkMoments(state, mode, switched) {
 let build = null;
 
 connectState({
+  kind: 'tv',
   onBuild(id) {
     if (build && id !== build) location.reload();
     build = id;

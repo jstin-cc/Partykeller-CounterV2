@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { config } from './config.js';
@@ -14,6 +15,8 @@ import { parseBackup } from './backup.js';
 import { loginLimiter, createRateLimiter } from './ratelimit.js';
 
 // Datum fürs Dateinamens-Suffix der Sicherung (lokal, nicht UTC)
+const STARTED_AT = Date.now();
+
 function todayStamp() {
   const d = new Date();
   const p = (n) => String(n).padStart(2, '0');
@@ -127,6 +130,21 @@ function createApiRouter(area) {
     res.type('application/json; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${area.id}-backup-${todayStamp()}.json"`);
     res.send(JSON.stringify(backup));
+  });
+
+  // Server-Status für den Admin (D-123): verbundene Geräte, Adressen im WLAN
+  // (für die QR-Adresse), letzte automatische Sicherung, Laufzeit
+  router.get('/admin/status', (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const addresses = Object.values(os.networkInterfaces()).flat()
+      .filter((a) => a && a.family === 'IPv4' && !a.internal)
+      .map((a) => `http://${a.address}:${config.port}${area.base}/`);
+    res.json({
+      startedAt: STARTED_AT,
+      clients: area.clients?.() ?? { tv: 0, handy: 0, admin: 0 },
+      addresses,
+      lastBackup: area.backups.latest(),
+    });
   });
 
   // Gegenstück: eine Sicherung wieder einspielen. Das ersetzt den kompletten

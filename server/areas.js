@@ -9,8 +9,8 @@ import { createAutoBackup } from './autobackup.js';
 // fetter Grotesk), `title` der Name im Fenstertitel, `label` der
 // Kurzname (Manifest). `broadcast` wird von
 // setupWs() gesetzt und schickt den State an alle WebSocket-Clients.
-// `autoBackup` sichert beim ersten Getränk des Tages nach `backups/` neben
-// der Datenbank (D-121).
+// `backups` sichert beim ersten Getränk des Tages nach `backups/` neben der
+// Datenbank (D-121); `clients` zählt die verbundenen Geräte (D-123).
 export const areas = [
   {
     id: 'partykeller',
@@ -38,5 +38,5 @@ export const areas = [
 
 for (const area of areas) {
   const dbPath = area.id === 'youngstars' ? config.youngstarsDbPath : config.dbPath;
-  area.autoBackup = createAutoBackup(area, path.join(path.dirname(dbPath), 'backups'));
+  area.backups = createAutoBackup(area, path.join(path.dirname(dbPath), 'backups'));
 }
