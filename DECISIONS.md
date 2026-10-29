@@ -85,8 +85,10 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
 - **Datenmodell:** `players` mit All-Time-Zählern (`beers`, `shots`, `mixes`,
   `hidden`, `pin_hash`, `created_at`), `drink_log` mit jedem Getränk
   (`player_id`, `drink` ∈ beer/shot/mix, `ts`), `settings` als
-  Schlüssel-Wert-Speicher, `facts` für eigene Fun-Facts. Schema-Änderungen
-  laufen beim Start idempotent als Migration. (D-005, D-010, D-012, D-015)
+  Schlüssel-Wert-Speicher, `facts` für eigene Fun-Facts, `taps` mit den
+  Kennungen gezählter Tipps (älter als 7 Tage fliegt beim Start raus). Schema-Änderungen
+  laufen beim Start idempotent als Migration. (D-005, D-010, D-012, D-015,
+  D-120)
 - **Drei Getränke:** Bier, Shots, Mischen (Code `beer`, `shot`, `mix`); ab zwei
   heißt es „Mischen“. (D-012, D-038)
 - **Zähler = Protokoll:** jedes Getränk ist ein Log-Eintrag, Zähler +1 und
@@ -134,7 +136,16 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
 - **WebSocket:** Fehler-Listener, `maxPayload` 16 KB, Heartbeat alle 30 s,
   Handler nur über `Object.hasOwn`. Nachrichten dürfen ein `ref` mitschicken;
   der Server antwortet dann mit `ack` oder `error` — Admin-Dialoge schließen
-  erst auf Quittung. (D-046, D-101)
+  erst auf Quittung. Die Quittung geht vor dem neuen Stand raus; die Drossel
+  meldet `code: 'throttle'`. (D-046, D-101, D-120)
+- **Tipps ohne WLAN gehen nicht verloren:** Jeder Tipp bekommt im Dashboard
+  eine Kennung (`tapId`, 32 Hex-Zeichen) und wartet im `localStorage`, bis der
+  Server ihn quittiert; gesendet wird einer nach dem anderen. Reißt die
+  Verbindung ab, zählt die Anzeige trotzdem sofort mit, und nach dem
+  Wiederverbinden (auch nach Neuladen) geht alles raus, mit dem Alter `ago`,
+  damit der Tipp zu seiner Tippzeit zählt (höchstens 12 h zurück). Eine schon
+  bekannte Kennung wird nur quittiert, nicht noch einmal gezählt. Nachgereichte
+  Tipps warten an der Drossel, statt zu verfallen. (D-120)
 - **Bewusst offen:** `/api/state` ist öffentlich (TV), Klartext-HTTP im WLAN,
   4-stellige PINs. (D-017)
 - **Anmeldeliste** kommt aus `GET /api/players` (nur id, Name, ausgeblendet,
@@ -483,3 +494,4 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-117 | 2026-10-24 | DECISIONS nach Themen neu geschrieben |
 | D-118 | 2026-10-27 | Weniger Kringel |
 | D-119 | 2026-10-27 | SV-Logo auch auf dem Youngstars-TV |
+| D-120 | 2026-10-29 | Tipps ohne WLAN puffern und nachreichen |

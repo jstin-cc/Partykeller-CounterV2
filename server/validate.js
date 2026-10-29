@@ -6,6 +6,11 @@ export function validPin(pin) {
   return typeof pin === 'string' && /^\d{4}$/.test(pin);
 }
 
+// Kennung eines Tipps vom Handy (D-120): 32 Hex-Zeichen
+export function validTapId(id) {
+  return typeof id === 'string' && /^[0-9a-f]{32}$/.test(id);
+}
+
 // Eigene Fun-Facts: Titel kurz (wie „Fun Fact"), Text eine Zeile fürs TV-Band
 export function validFactTitle(title) {
   return typeof title === 'string' && title.trim().length >= 1 && title.trim().length <= 30;

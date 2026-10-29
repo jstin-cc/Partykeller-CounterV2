@@ -2,8 +2,11 @@ import { WebSocketServer } from 'ws';
 import { config } from './config.js';
 import { verifyToken, tokenArea, hashPin, checkPassword } from './auth.js';
 import { loginLimiter } from './ratelimit.js';
-import { validName, validPin, validFactTitle, validFactText, validNightName, normalizeJoinUrl } from './validate.js';
+import { validName, validPin, validFactTitle, validFactText, validNightName, validTapId, normalizeJoinUrl } from './validate.js';
 import { validDayString, partyDayStartMs } from './db.js';
+
+// Ältester Tipp, den ein Handy noch nachreichen darf (D-120)
+const MAX_TAP_AGE_MS = 12 * 3600 * 1000;
 
 // Nachrichten-Contract siehe PLAN.md §5; Server validiert alles.
 // Ein Handler-Satz pro Bereich (D-019): db und Increment-Buckets hängen am
@@ -15,14 +18,21 @@ function createHandlers(area) {
     // Ein Getränk zählen: nur Gäste, nur der eigene Zähler, nur +1 (D-004).
     // Admins korrigieren seit D-104 ausschließlich im Getränke-Protokoll
     // (editLog/deleteLog/addLog) — so bleiben Zähler und Protokoll gleich.
-    increment(auth, { playerId, drink, delta }) {
+    // Ohne WLAN getippt (D-120): das Handy reicht den Tipp später mit seiner
+    // Kennung (tapId) und seinem Alter (ago, ms) nach; gezählt wird er zur
+    // Tippzeit und nur einmal.
+    increment(auth, { playerId, drink, delta, tapId, ago }) {
       if (!['beer', 'shot', 'mix'].includes(drink)) throw new Error('Unbekanntes Getränk');
       if (auth?.role !== 'player') throw new Error('Korrekturen bitte im Getränke-Protokoll');
       if (auth.sub !== playerId) throw new Error('Nur der eigene Zähler ist erlaubt');
       if (delta !== 1) throw new Error('Nutzer dürfen nur +1 zählen (D-004)');
+      if (tapId != null && !validTapId(tapId)) throw new Error('Ungültige Tipp-Kennung');
+      const age = Number.isFinite(ago) ? Math.min(Math.max(ago, 0), MAX_TAP_AGE_MS) : 0;
       // Zähler und Log-Eintrag als eine Transaktion (D-046): nie das eine
       // ohne das andere, auch nicht bei einem Absturz genau dazwischen.
-      if (!db.logDrink(playerId, drink)) throw new Error('Nutzer nicht gefunden');
+      const counted = db.logDrink(playerId, drink, Date.now() - age, tapId ?? null);
+      if (counted === null) return false;   // schon gezählt, nur quittieren
+      if (!counted) throw new Error('Nutzer nicht gefunden');
     },
 
     addPlayer(auth, { name, pin }) {
@@ -410,14 +420,17 @@ export function setupWs(server, areas) {
 
         // Spieler-Increments drosseln (pro Spieler; Admins bleiben ungedrosselt)
         if (msg.type === 'increment' && auth.role === 'player' && !allowIncrement(auth.sub)) {
-          fail('Immer mit der Ruhe – gleich geht’s weiter. 🍺');
+          fail('Immer mit der Ruhe – gleich geht’s weiter. 🍺', 'throttle');
           return;
         }
 
         try {
-          // false = Handler hat nichts am Zustand geändert (Effekt-Demo)
-          if (handler(auth, msg, { ip }) !== false) area.broadcast();
+          // false = Handler hat nichts am Zustand geändert (Effekt-Demo).
+          // Quittung vor dem Stand (D-120): das Dashboard nimmt den Tipp so
+          // aus seiner Warteschlange, bevor der neue Stand ihn mitzählt.
+          const changed = handler(auth, msg, { ip }) !== false;
           if (ref) reply(ws, { type: 'ack', ref });
+          if (changed) area.broadcast();
         } catch (err) {
           fail(err.message);
         }

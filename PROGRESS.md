@@ -32,6 +32,14 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-10-29 (D-120): **Tipps ohne WLAN puffern** — das Dashboard
+zählt bei Verbindungsabriss sofort weiter und reicht die Tipps nach dem
+Wiederverbinden (auch nach Neuladen) zur Tippzeit nach; der Server erkennt
+doppelte Tipps an ihrer Kennung (Tabelle `taps`). In der Demo-Instanz
+geprüft: online +1, offline drei Tipps mit sofortiger Anzeige, Nachreichen
+nach dem Wiederverbinden, Neuladen mit wartenden Tipps, doppelter Tipp zählt
+einmal, ungültige Kennung abgelehnt.
+
 Seit 2026-10-29: **Strich unter „Zugang“** — beim Admin-Login lag der
 Kringel auf den Buchstaben, jetzt sitzt er wie auf den übrigen Seiten darunter.
 Seit 2026-10-27 (D-119): **SV-Logo auf dem Youngstars-TV** — der TV zeigt
