@@ -30,8 +30,19 @@ export function createAutoBackup(area, dir) {
     for (const old of files().slice(0, -KEEP)) await fs.promises.rm(path.join(dir, old), { force: true });
   }
 
+  // Jüngste Sicherung für den Server-Status im Admin (D-123)
+  function latest() {
+    const name = files().at(-1);
+    if (!name) return null;
+    try {
+      return { file: name, at: fs.statSync(path.join(dir, name)).mtimeMs };
+    } catch {
+      return null;
+    }
+  }
+
   // Nach jedem gezählten Getränk aufrufen; schreibt nur beim ersten des Tages
-  return function afterDrink() {
+  function afterDrink() {
     const day = partyDayString();
     if (day === lastDay) return;
     const previous = lastDay;
@@ -43,5 +54,7 @@ export function createAutoBackup(area, dir) {
         console.warn(`[${area.id}] Automatische Sicherung fehlgeschlagen: ${err.message}`);
       });
     });
-  };
+  }
+
+  return { afterDrink, latest };
 }

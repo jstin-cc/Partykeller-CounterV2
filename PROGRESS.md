@@ -32,6 +32,11 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-10-29 (D-123): **Server-Status im Admin** — verbundene Geräte
+nach TV/Handys/Admin, Adresse im WLAN mit „Als QR“, letzte automatische
+Sicherung, Laufzeit; alle 10 s neu. In der Demo-Instanz geprüft (Zählung je
+Art, QR übernehmen, Sicherung erscheint nach dem ersten Getränk, Desktop und
+Handy ohne Überlauf).
 Seit 2026-10-29 (D-121, D-122): **Automatische Sicherung und TV-Neuladen**
 — das erste Getränk eines Abends legt je Bereich eine Sicherung nach
 `data/backups/` (drei rollierend, gitignored); der TV lädt nach einem Update

@@ -272,6 +272,13 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
   Menüknopf wie überall, „Admin abmelden“, „‹ Zurück“ bzw. „‹ Zur Anmeldung“.
   Das Admin-Token liegt in der `sessionStorage`. (D-061, D-065, D-073,
   D-102)
+- **Server-Status** in der Seitenleiste (auf dem Handy unter Mehr), über der
+  Einrichtung: verbundene Geräte nach TV, Handys und Admin (TV und Admin
+  melden sich mit `?kind=` in der WS-Adresse, alles andere zählt als Handy),
+  die IPv4-Adressen des Rechners im WLAN mit „Als QR“ (setzt die
+  QR-Adresse), die letzte automatische Sicherung und seit wann der Server
+  läuft. Kommt aus `GET /<bereich>/api/admin/status` (Admin-Token), alle 10 s
+  neu, solange die Seite sichtbar ist. (D-123)
 - **Konten:** alphabetisch, Suche und Filter Alle / Heute dabei /
   Ausgeblendet, Zähler nur zur Ansicht. Umbenennen, PIN, Ausblenden, Löschen
   (eigener Dialog) und „Im Protokoll ansehen“ im ⋯-Menü; ausgeblendete Konten
@@ -505,3 +512,4 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-120 | 2026-10-29 | Tipps ohne WLAN puffern und nachreichen |
 | D-121 | 2026-10-29 | Automatische Sicherung beim ersten Getränk, drei rollierend |
 | D-122 | 2026-10-29 | TV lädt nach einem Update selbst neu |
+| D-123 | 2026-10-29 | Server-Status im Admin |

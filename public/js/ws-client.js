@@ -6,16 +6,17 @@ import { AREA } from './area.js';
 // `ref`, kommt dazu genau eine Antwort: onAck(ref) bei Erfolg oder
 // onError(text, { code, ref }) — code 'auth' heißt neu anmelden (D-101).
 // onOpen/onClose melden Verbindung und Abriss (Tipp-Warteschlange, D-120),
-// onBuild nach jedem Verbinden den Stand des Frontends (D-122).
+// onBuild nach jedem Verbinden den Stand des Frontends (D-122). `kind`
+// ('tv', 'admin') meldet die Art des Geräts für den Server-Status (D-123).
 // Verbindet sich mit dem WS-Endpunkt des eigenen Bereichs (D-019).
-export function connectState({ onState, onFact, onDemo, onError, onAck, onOpen, onClose, onBuild } = {}) {
+export function connectState({ onState, onFact, onDemo, onError, onAck, onOpen, onClose, onBuild, kind } = {}) {
   let ws = null;
   let retryMs = 500;
   let closed = false;
 
   function open() {
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    ws = new WebSocket(`${proto}//${location.host}${AREA.base}/ws`);
+    ws = new WebSocket(`${proto}//${location.host}${AREA.base}/ws${kind ? `?kind=${kind}` : ''}`);
 
     ws.onopen = () => { retryMs = 500; onOpen?.(); };
 

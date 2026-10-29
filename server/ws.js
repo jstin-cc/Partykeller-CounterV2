@@ -33,7 +33,7 @@ function createHandlers(area) {
       const counted = db.logDrink(playerId, drink, Date.now() - age, tapId ?? null);
       if (counted === null) return false;   // schon gezählt, nur quittieren
       if (!counted) throw new Error('Nutzer nicht gefunden');
-      area.autoBackup();
+      area.backups.afterDrink();
     },
 
     addPlayer(auth, { name, pin }) {
@@ -264,6 +264,14 @@ export function setupWs(server, areas, { build } = {}) {
     const allowIncrement = createIncrementThrottle();
     area.wss = wss;
 
+    // Verbundene Geräte nach Art (D-123): TV und Admin melden sich in der
+    // WS-Adresse (?kind=…), alles andere sind Handys
+    area.clients = () => {
+      const n = { tv: 0, handy: 0, admin: 0 };
+      for (const client of wss.clients) n[client.kind] += 1;
+      return n;
+    };
+
     // Broadcasts bündeln (D-066): Der erste geht sofort raus, alles was in
     // den nächsten 100 ms dazukommt, als EIN Stand hinterher. Sonst rechnet
     // bei einer Runde (alle tippen gleichzeitig) der Server den State für
@@ -375,6 +383,9 @@ export function setupWs(server, areas, { build } = {}) {
       // UTF-8, zu große Nachricht) eine unbehandelte Exception und der ganze
       // Server stirbt (D-046). ws schließt die Verbindung danach selbst.
       ws.on('error', (err) => console.warn(`[${area.id}] WebSocket-Client: ${err.message}`));
+      let kind = null;
+      try { kind = new URL(req?.url ?? '', 'http://localhost').searchParams.get('kind'); } catch { /* egal */ }
+      ws.kind = kind === 'tv' || kind === 'admin' ? kind : 'handy';
       ws.isAlive = true;
       ws.on('pong', () => { ws.isAlive = true; });
 

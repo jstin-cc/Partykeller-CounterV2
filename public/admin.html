@@ -439,6 +439,14 @@ try {
   .own form { display: flex; flex-direction: column; gap: 8px; flex: 1; padding: 6px 0; }
   .own-btns { display: flex; gap: 8px; justify-content: flex-end; }
 
+  /* --- Server-Status (D-123) -------------------------------------------- */
+  .st-addr { display: flex; flex-direction: column; gap: 8px; }
+  .st-addr-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .st-url { font-size: 13px; line-height: 1.35; color: var(--ink); overflow-wrap: anywhere; }
+  .set-row.st-pair { flex-direction: row; gap: 14px; }
+  .st-pair > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .st-val { font-size: 14px; line-height: 1.35; color: var(--ink-2); }
+
   /* --- Einrichtung ------------------------------------------------------ */
   .set-row { display: flex; flex-direction: column; gap: 9px; }
   .set-row + .set-row { border-top: 1px solid var(--line); padding-top: 14px; }
@@ -892,6 +900,24 @@ try {
         </div>
 
         <div class="grp grp-more">
+          <!-- Server-Status (D-123): Geräte, Adressen im WLAN, Sicherung, Laufzeit -->
+          <section class="side-block">
+            <h3 class="t-h3 side-title" data-reveal="up">Server-<span class="t-serif t-accent">Status</span></h3>
+            <div class="card side" data-reveal="up" data-delay="80">
+              <div class="set-row">
+                <div id="st-clients" class="p-totals"></div>
+              </div>
+              <div class="set-row">
+                <div class="lbl">Adresse im WLAN</div>
+                <div id="st-addr" class="st-addr"></div>
+              </div>
+              <div class="set-row st-pair">
+                <div><div class="lbl">Letzte Sicherung</div><div id="st-backup" class="st-val"></div></div>
+                <div><div class="lbl">Läuft seit</div><div id="st-uptime" class="st-val"></div></div>
+              </div>
+            </div>
+          </section>
+
           <section class="side-block">
             <h3 class="t-h3 side-title" data-reveal="up">Technik &amp; <span class="t-serif t-accent">Einrichtung</span></h3>
             <div class="card side" data-reveal="up" data-delay="80">
@@ -1199,6 +1225,7 @@ function enterDashboard() {
   $('login-view').hidden = true;
   $('dash-view').hidden = false;
   loadArchiveDays();
+  loadStatus();
   // Aus dem Abend-Archiv: admin?protokoll=<tag> öffnet gleich das Protokoll
   // dieses Abends (D-076)
   const wanted = new URLSearchParams(location.search).get('protokoll');
@@ -1207,6 +1234,8 @@ function enterDashboard() {
     setSection('protokoll');
   }
   ws = connectState({
+    kind: 'admin',
+    onOpen() { loadStatus(); },   // zählt sich dann selbst schon mit
     onState(state) {
       players = state.players;
       lastState = state;
@@ -1217,6 +1246,7 @@ function enterDashboard() {
       renderPersonFilter();
       scheduleProtoLoad();
       updateJoinField(state.joinUrl ?? '');
+      renderStatus();
       updateSeasonal(state.seasonal !== false);
       $('pace-toggle').checked = state.paceCompare !== false;
       updateBoardMode(state.boardMode ?? 'alltime', state.boardDay);
@@ -1598,6 +1628,86 @@ for (const b of document.querySelectorAll('[data-demo]')) {
     setTimeout(() => b.classList.remove('is-sent'), 1200);
   });
 }
+
+// --- Server-Status (D-123) ---
+// Alle 10 s neu, solange der Admin sichtbar ist; die Adresse im WLAN lässt
+// sich mit einem Tipp als QR-Adresse übernehmen.
+let status = null;
+const STATUS_MS = 10000;
+
+async function loadStatus() {
+  if (!token || document.hidden) return;
+  try {
+    const res = await fetch(`${AREA.base}/api/admin/status`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return;
+    status = await res.json();
+    renderStatus();
+  } catch { /* Server weg: der nächste Versuch kommt */ }
+}
+
+function clock(ms) {
+  const d = new Date(ms);
+  const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  const today = new Date().toDateString() === d.toDateString();
+  return today ? `Heute ${time}` : `${d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} ${time}`;
+}
+
+function since(ms) {
+  const min = Math.floor((Date.now() - ms) / 60000);
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60);
+  return h < 48 ? `${h} h ${min % 60} min` : `${Math.floor(h / 24)} Tagen`;
+}
+
+function renderStatus() {
+  if (!status) return;
+  const clients = $('st-clients');
+  clients.textContent = '';
+  for (const [k, label] of [['tv', 'TV'], ['handy', 'Handys'], ['admin', 'Admin']]) {
+    const cell = document.createElement('div');
+    const num = document.createElement('span');
+    num.className = 'num';
+    num.textContent = status.clients[k] ?? 0;
+    const lbl = document.createElement('span');
+    lbl.className = 'lbl2';
+    lbl.textContent = label;
+    cell.append(num, lbl);
+    clients.append(cell);
+  }
+
+  const addr = $('st-addr');
+  addr.textContent = '';
+  const joinUrl = lastState?.joinUrl ?? '';
+  for (const url of status.addresses) {
+    const row = document.createElement('div');
+    row.className = 'st-addr-row';
+    const text = document.createElement('span');
+    text.className = 'st-url';
+    text.textContent = url;
+    row.append(text);
+    if (url === joinUrl) {
+      const chip = document.createElement('span');
+      chip.className = 'chip chip--accent';
+      chip.textContent = 'QR';
+      row.append(chip);
+    } else {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn--quiet btn--sm';
+      btn.textContent = 'Als QR';
+      btn.addEventListener('click', () => send({ type: 'setJoinUrl', url }));
+      row.append(btn);
+    }
+    addr.append(row);
+  }
+  if (!status.addresses.length) addr.textContent = 'Kein Netzwerk gefunden';
+
+  $('st-backup').textContent = status.lastBackup ? clock(status.lastBackup.at) : 'Noch keine';
+  $('st-uptime').textContent = `${clock(status.startedAt)} · ${since(status.startedAt)}`;
+}
+
+setInterval(loadStatus, STATUS_MS);
+document.addEventListener('visibilitychange', loadStatus);
 
 $('join-save').addEventListener('click', () => {
   send({ type: 'setJoinUrl', url: $('join-url').value });
