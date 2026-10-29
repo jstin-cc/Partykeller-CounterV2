@@ -71,6 +71,13 @@ export function createDb(dbPath) {
       value TEXT NOT NULL
     );
 
+    -- Schon gezählte Tipps vom Handy (D-120): ein nachgereichter Tipp, dessen
+    -- Quittung unterwegs verloren ging, zählt so nicht doppelt.
+    CREATE TABLE IF NOT EXISTS taps (
+      id TEXT PRIMARY KEY,
+      ts INTEGER NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS facts (
       id         INTEGER PRIMARY KEY AUTOINCREMENT,
       title      TEXT NOT NULL,
@@ -116,6 +123,9 @@ export function createDb(dbPath) {
     `);
   }
 
+  // Tipp-Kennungen braucht es nur, solange ein Handy nachreichen kann
+  db.prepare('DELETE FROM taps WHERE ts < ?').run(Date.now() - 7 * 24 * 3600 * 1000);
+
   const stmts = {
     insertPlayer: db.prepare(
       'INSERT INTO players (id, name, pin_hash) VALUES (?, ?, ?)'
@@ -132,6 +142,7 @@ export function createDb(dbPath) {
     setPinHash: db.prepare('UPDATE players SET pin_hash = ? WHERE id = ?'),
     deletePlayer: db.prepare('DELETE FROM players WHERE id = ?'),
     insertLog: db.prepare('INSERT INTO drink_log (player_id, drink, ts) VALUES (?, ?, ?)'),
+    insertTap: db.prepare('INSERT OR IGNORE INTO taps (id, ts) VALUES (?, ?)'),
     // Heute-Abfragen mit GROUP BY player_id: Index auf ts erzwingen (D-066).
     // Sonst nimmt SQLite wegen des GROUP BY idx_drink_log_player_ts und liest
     // bei jedem Getränk das komplette Log aller Abende.
@@ -400,7 +411,9 @@ export function createDb(dbPath) {
 
   // Echtes Getränk eines Spielers: Zähler +1 und Log-Eintrag in EINER
   // Transaktion (D-046). false, wenn es den Spieler nicht gibt.
-  const logDrink = db.transaction((id, drink, ts = Date.now()) => {
+  // Mit tapId (D-120): null, wenn dieser Tipp schon gezählt wurde.
+  const logDrink = db.transaction((id, drink, ts = Date.now(), tapId = null) => {
+    if (tapId && stmts.insertTap.run(tapId, Date.now()).changes === 0) return null;
     if (!incrementDrink(id, drink, 1)) return false;
     addLogEntry(id, drink, ts);
     return true;

@@ -316,6 +316,12 @@ Die App ist als **PWA installierbar**: Seite am Handy öffnen → „Zum
 Startbildschirm hinzufügen" — dann liegt der Counter als App-Icon auf dem
 Home-Screen (funktioniert komplett offline im WLAN, es wird nichts gecacht).
 
+Fällt das WLAN am Handy kurz aus, **geht kein Getränk verloren**: Die Zahl
+zählt sofort mit, der Tipp wartet auf dem Handy und wird nach dem
+Wiederverbinden zu seiner Tippzeit nachgetragen, auch wenn die Seite
+zwischendurch neu geladen wurde. Doppelt ankommende Tipps zählt der Server
+nur einmal (D-120).
+
 ## Design
 
 Seit D-078 folgt die App der Designsprache von

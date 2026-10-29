@@ -58,6 +58,11 @@ CREATE TABLE drink_log (
 );
 CREATE INDEX idx_drink_log_player_ts ON drink_log(player_id, ts);
 
+CREATE TABLE taps (                        -- Kennungen gezählter Tipps (D-120)
+  id TEXT PRIMARY KEY,                     -- tapId vom Handy, 32 Hex-Zeichen
+  ts INTEGER NOT NULL                      -- Eingang, Unix-Millis; nach 7 Tagen gelöscht
+);
+
 CREATE TABLE facts (                       -- eigene Fun-Facts/Meldungen (D-015)
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   title      TEXT NOT NULL,                -- kurzer Titel (z. B. „Ansage")
@@ -147,7 +152,7 @@ Spieler gedrosselt (Token-Bucket ~1/s, Burst 5), Admins ungedrosselt.
 
 | Nachricht | Wer | Regel |
 |---|---|---|
-| `increment(playerId, drink, delta)` | Nutzer | nur eigene `playerId`, nur `delta = +1` (Design hat bewusst keinen Minus-Button, schreibt zusätzlich ins `drink_log`). Admins korrigieren seit D-104 nur im Getränke-Protokoll (`editLog`/`deleteLog`/`addLog`). |
+| `increment(playerId, drink, delta, tapId?, ago?)` | Nutzer | nur eigene `playerId`, nur `delta = +1` (Design hat bewusst keinen Minus-Button, schreibt zusätzlich ins `drink_log`). Admins korrigieren seit D-104 nur im Getränke-Protokoll (`editLog`/`deleteLog`/`addLog`). `tapId` zählt jeden Tipp nur einmal, `ago` (ms, höchstens 12 h) datiert nachgereichte Tipps zurück (D-120). |
 | `addPlayer(name, pin)` | Admin | Nutzer legen sich selbst per REST an |
 | `renamePlayer(id, name)` | Admin | Name bleibt unique |
 | `setPin(id, pin)` | Admin | PIN-Reset für Nutzer, die sie vergessen |

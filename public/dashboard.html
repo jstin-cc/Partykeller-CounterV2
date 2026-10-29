@@ -994,6 +994,7 @@ try {
 import { AREA } from './js/area.js';
 import { getSession, clearSession, rememberName } from './js/api.js';
 import { connectState } from './js/ws-client.js';
+import { createTapQueue } from './js/taps.js';
 import { onSeason, setSeasonEnabled, newYear, mmss, now as seasonNow } from './js/season.js';
 import { initLando, drawScribble, reducedMotion, leave, enter, replay, go } from './js/lando.js';
 import { buildCurve } from './js/curve.js';
@@ -2032,7 +2033,51 @@ if (!token || !playerId) {
   let lastLogSum = null; // Getränke-Summe des Abends aller Spieler (für „Erster Trinker")
   let statsTimer = null;
 
+  // Zahlen der Zählen-Seite: Stand vom Server plus die eigenen Tipps, die
+  // noch in der Warteschlange stehen (D-120) — ohne WLAN zählt es sofort mit.
+  let lastMe = null;
+  function renderCounts() {
+    if (!lastMe) return;
+    const me = lastMe;
+    const p = taps.pending(playerId);
+    const today = me.beersToday + me.shotsToday + me.mixesToday + p.beer + p.shot + p.mix;
+    bump('today-total', today);
+    todayCount = today;
+    renderPace();
+    bump('beers-today', me.beersToday + p.beer);
+    bump('beers-total', me.beers + p.beer);
+    bump('shots-today', me.shotsToday + p.shot);
+    bump('shots-total', me.shots + p.shot);
+    bump('mixes-today', me.mixesToday + p.mix);
+    bump('mixes-total', me.mixes + p.mix);
+    const total = me.total + p.beer + p.shot + p.mix;
+    if (total !== meTotal) { meTotal = total; renderStack(); }
+  }
+
+  // Quittung und neuer Stand (D-120): Der Server quittiert vor dem Stand.
+  // Kam seit dem Senden noch kein Stand, wartet die Anzeige auf ihn (sonst
+  // fiele die Zahl kurz um eins zurück); bleibt er aus, weil der Tipp schon
+  // gezählt war, zieht sie nach kurzer Zeit selbst nach.
+  let stateSeq = 0;
+  const sentSeq = new Map();
+  const taps = createTapQueue({
+    send(msg) { sentSeq.set(msg.ref, stateSeq); ws.send(msg); },
+    isOpen: () => ws.isOpen(),
+  });
+
   const ws = connectState({
+    onOpen() { taps.flush(); },
+    onClose() { taps.disconnected(); },
+    onAck(ref) {
+      const seq = sentSeq.get(ref);
+      sentSeq.delete(ref);
+      if (!taps.ack(ref)) return;
+      if (seq !== undefined && stateSeq > seq) renderCounts();
+      else {
+        const waitingFor = stateSeq;
+        setTimeout(() => { if (stateSeq === waitingFor) renderCounts(); }, 400);
+      }
+    },
     onState({ players, seasonal, paceCompare }) {
       setSeasonEnabled(seasonal);   // Saison-Akzente (D-071), im Admin abschaltbar
       paceOn = paceCompare !== false;   // Schnitt-Vergleich (D-075), ebenso
@@ -2050,16 +2095,9 @@ if (!token || !playerId) {
       const joined = /^\d{4}-\d{2}-\d{2}/.exec(me.createdAt ?? '');
       const joinedDay = joined ? fmtDay(joined[0]) : null;
       if (joinedDay !== joinedAt) { joinedAt = joinedDay; renderSince(); }
-      bump('today-total', me.beersToday + me.shotsToday + me.mixesToday);
-      todayCount = me.beersToday + me.shotsToday + me.mixesToday;
-      renderPace();
-      bump('beers-today', me.beersToday);
-      bump('beers-total', me.beers);
-      bump('shots-today', me.shotsToday);
-      bump('shots-total', me.shots);
-      bump('mixes-today', me.mixesToday);
-      bump('mixes-total', me.mixes);
-      if (me.total !== meTotal) { meTotal = me.total; renderStack(); }
+      stateSeq += 1;
+      lastMe = me;
+      renderCounts();
       updateDistribution(me);
       updateShare(players, me);
       updateProfile(players, me);
@@ -2081,13 +2119,19 @@ if (!token || !playerId) {
         else statsTimer = setTimeout(loadStats, 800 + Math.random() * 1200);
       }
     },
-    onError(message, { code } = {}) {
+    onError(message, { code, ref } = {}) {
+      if (ref) {
+        sentSeq.delete(ref);
+        const silent = taps.fail(ref, code, playerId);
+        renderCounts();
+        if (silent) return;
+      }
       if (code === 'auth') signedOut();
       else showError(message);
     },
   });
 
-  const send = (drink) => ws.send({ type: 'increment', token, playerId, drink, delta: 1 });
+  const send = (drink) => { taps.tap(drink, token, playerId); renderCounts(); };
   $('add-beer').addEventListener('click', () => send('beer'));
   $('add-shot').addEventListener('click', () => send('shot'));
   $('add-mix').addEventListener('click', () => send('mix'));
