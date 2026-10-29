@@ -33,6 +33,7 @@ function createHandlers(area) {
       const counted = db.logDrink(playerId, drink, Date.now() - age, tapId ?? null);
       if (counted === null) return false;   // schon gezählt, nur quittieren
       if (!counted) throw new Error('Nutzer nicht gefunden');
+      area.autoBackup();
     },
 
     addPlayer(auth, { name, pin }) {
@@ -253,7 +254,7 @@ function createIncrementThrottle() {
 // Ein WebSocketServer pro Bereich: /partykeller/ws
 // (Alt-Pfad /ws bleibt für den Partykeller erhalten). Broadcasts gehen nur an
 // die Clients des eigenen Bereichs; area.broadcast wird hier gesetzt.
-export function setupWs(server, areas) {
+export function setupWs(server, areas, { build } = {}) {
   for (const area of areas) {
     // maxPayload: die größte legitime Nachricht (Fact-Text) ist unter 1 KB;
     // Standard wären 100 MB, die ein Client dem Server aufdrücken könnte.
@@ -377,6 +378,7 @@ export function setupWs(server, areas) {
       ws.isAlive = true;
       ws.on('pong', () => { ws.isAlive = true; });
 
+      ws.send(JSON.stringify({ type: 'build', id: build }));
       ws.send(JSON.stringify({ type: 'state', ...area.db.getState() }));
       ws.send(factMessage());
 

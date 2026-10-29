@@ -35,10 +35,13 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
   D-110)
 - **Betrieb:** auf einem Laptop oder Raspberry Pi im Keller, als systemd-Dienst
   (`deploy/`), TV im Chromium-Kiosk auf `/tv`. Updates per `git pull` und
-  Neustart. `package.json` erlaubt die Build-Skripte von better-sqlite3
+  Neustart; der TV lädt danach von selbst neu, sobald sich der Stand von
+  `public/` geändert hat (Prüfsumme, nach jedem Verbinden als
+  `{ type: 'build' }` geschickt). `package.json` erlaubt die Build-Skripte von better-sqlite3
   (`allowScripts`); bei „compiled against a different Node.js version“ hilft
   die Anleitung im README. Die Instanz im Partykeller kam per
-  `git remote set-url` + `git reset --hard` aus dem alten Repo. (D-109)
+  `git remote set-url` + `git reset --hard` aus dem alten Repo. (D-109,
+  D-122)
 - **PWA:** je Bereich ein Manifest (`/<bereich>/manifest.webmanifest`) mit
   eigenem Start-Pfad, Icons aus dem Logo. Der Service Worker ist bewusst ohne
   Cache, und Statics bekommen kein `Cache-Control: max-age` (ETag reicht):
@@ -110,6 +113,11 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
   ersetzt alles in einer Transaktion nach voller Prüfung, braucht das
   Lösch-Passwort und nimmt keine Sicherung des anderen Bereichs. Die `.env`
   gehört getrennt gesichert. (D-034)
+- **Automatische Sicherung:** Das erste Getränk eines Party-Tags legt je
+  Bereich eine Vollsicherung im selben Format nach `backups/` neben der
+  Datenbank (`data/backups/<bereich>-auto-<tag>.json`, gitignored); die drei
+  jüngsten bleiben. Geschrieben wird nach der Antwort ans Handy, erst in eine
+  `.tmp`, dann umbenannt. (D-121)
 - **CSV-Export** im Abend-Archiv, nur für Admins: ein Abend oder alle, Langformat
   `Tag;Datum;Wochentag;Name;Bier;Shots;Mischen;Gesamt`, Semikolon, CRLF,
   UTF-8-BOM, Formel-Zeichen entschärft, keine Summenzeile. Geladen per `fetch`
@@ -495,3 +503,5 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-118 | 2026-10-27 | Weniger Kringel |
 | D-119 | 2026-10-27 | SV-Logo auch auf dem Youngstars-TV |
 | D-120 | 2026-10-29 | Tipps ohne WLAN puffern und nachreichen |
+| D-121 | 2026-10-29 | Automatische Sicherung beim ersten Getränk, drei rollierend |
+| D-122 | 2026-10-29 | TV lädt nach einem Update selbst neu |

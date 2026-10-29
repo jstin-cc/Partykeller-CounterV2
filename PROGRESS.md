@@ -32,6 +32,13 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-10-29 (D-121, D-122): **Automatische Sicherung und TV-Neuladen**
+— das erste Getränk eines Abends legt je Bereich eine Sicherung nach
+`data/backups/` (drei rollierend, gitignored); der TV lädt nach einem Update
+selbst neu, wenn sich `public/` geändert hat. In der Demo-Instanz geprüft:
+eine Sicherung beim ersten Getränk, keine beim zweiten, nach vier älteren
+bleiben drei; Neustart ohne Änderung lässt den TV stehen, mit geänderter
+Datei lädt er neu.
 Seit 2026-10-29 (D-120): **Tipps ohne WLAN puffern** — das Dashboard
 zählt bei Verbindungsabriss sofort weiter und reicht die Tipps nach dem
 Wiederverbinden (auch nach Neuladen) zur Tippzeit nach; der Server erkennt
