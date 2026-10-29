@@ -151,6 +151,10 @@ beim Update erhalten. Meldet `git pull` „local changes" und du hast am Code
 nichts geändert, hilft `git reset --hard origin/main` — das lässt `data/` und
 `.env` unangetastet.
 
+Der Fernseher muss nach dem Update nicht angefasst werden: Hat sich am
+Frontend etwas geändert, lädt `/tv` nach dem Wiederverbinden von selbst neu
+(D-122).
+
 Beschwert sich PowerShell hier über `npm`, siehe
 [Windows: `npm` wird von PowerShell blockiert](#windows-npm-wird-von-powershell-blockiert).
 
@@ -265,6 +269,13 @@ Im Admin-Bereich unter **Einrichtung → Sicherung** (auf dem Handy im Reiter *M
   kompletten Bestand des Bereichs, deshalb ist wie beim Komplett-Reset das
   **Lösch-Passwort** nötig. Geht beim Einspielen etwas schief (kaputte Datei,
   Sicherung des anderen Bereichs), bleibt der alte Stand unangetastet.
+
+Zusätzlich sichert der Server **automatisch**: Beim ersten Getränk eines
+Abends legt er je Bereich eine Sicherung nach `data/backups/` (z. B.
+`partykeller-auto-2026-10-29.json`), immer die drei jüngsten bleiben liegen.
+Die Dateien sind gitignored und lassen sich genauso über **⬆ Backup
+einspielen** zurückholen. Sie liegen auf demselben Rechner — gegen eine
+kaputte Platte hilft weiterhin nur die Kopie auf dem USB-Stick (D-121).
 
 Alte Youngstars-Sicherungen lassen sich nicht einspielen.
 

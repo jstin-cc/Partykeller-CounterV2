@@ -5,9 +5,10 @@ import { AREA } from './area.js';
 // Effekt-Demo aus dem Admin (D-099). Trägt eine gesendete Nachricht ein
 // `ref`, kommt dazu genau eine Antwort: onAck(ref) bei Erfolg oder
 // onError(text, { code, ref }) — code 'auth' heißt neu anmelden (D-101).
-// onOpen/onClose melden Verbindung und Abriss (Tipp-Warteschlange, D-120).
+// onOpen/onClose melden Verbindung und Abriss (Tipp-Warteschlange, D-120),
+// onBuild nach jedem Verbinden den Stand des Frontends (D-122).
 // Verbindet sich mit dem WS-Endpunkt des eigenen Bereichs (D-019).
-export function connectState({ onState, onFact, onDemo, onError, onAck, onOpen, onClose } = {}) {
+export function connectState({ onState, onFact, onDemo, onError, onAck, onOpen, onClose, onBuild } = {}) {
   let ws = null;
   let retryMs = 500;
   let closed = false;
@@ -21,6 +22,7 @@ export function connectState({ onState, onFact, onDemo, onError, onAck, onOpen, 
     ws.onmessage = (event) => {
       let msg;
       try { msg = JSON.parse(event.data); } catch { return; }
+      if (msg.type === 'build') onBuild?.(msg.id);
       if (msg.type === 'state') onState?.(msg);
       if (msg.type === 'fact') onFact?.(msg);
       if (msg.type === 'demo') onDemo?.(msg);

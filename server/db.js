@@ -30,7 +30,7 @@ export function validDayString(day) {
 }
 
 // Aktueller Party-Tag als 'YYYY-MM-DD' (Datum des 06:00-Starts)
-function partyDayString(now = Date.now()) {
+export function partyDayString(now = Date.now()) {
   const d = new Date(partyDayStartMs(now));
   const p = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;

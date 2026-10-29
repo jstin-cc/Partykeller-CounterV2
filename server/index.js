@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { config } from './config.js';
@@ -342,4 +343,19 @@ const server = app.listen(config.port, () => {
   console.log(`Partykeller-Counter läuft auf http://0.0.0.0:${config.port}`);
 });
 
-setupWs(server, areas);
+// Stand des Frontends (D-122): Prüfsumme über alle Dateien in public/. Ändert
+// sie sich nach einem Update, lädt der TV beim Wiederverbinden selbst neu.
+function buildId(dir) {
+  const hash = crypto.createHash('sha1');
+  const walk = (d) => {
+    for (const entry of fs.readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const p = path.join(d, entry.name);
+      if (entry.isDirectory()) walk(p);
+      else hash.update(path.relative(dir, p)).update(fs.readFileSync(p));
+    }
+  };
+  walk(dir);
+  return hash.digest('hex').slice(0, 12);
+}
+
+setupWs(server, areas, { build: buildId(publicDir) });
