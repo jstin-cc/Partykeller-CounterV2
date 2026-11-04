@@ -26,11 +26,20 @@ Hall of Fame, CSV-Export und Story-Bild.
   - [docs/INSPIRATION-DESIGN.md](docs/INSPIRATION-DESIGN.md): D1, D2, D4–D9
   - [docs/IDEEN.md](docs/IDEEN.md) und [docs/BIERPONG.md](docs/BIERPONG.md):
     Duell-Modus, Abend-Tipprunde, Bierpong
+  - Anmeldeseite, kleine Details ohne Platz: O1–O5 in
+    [docs/inspiration/anmeldung-details.html](docs/inspiration/anmeldung-details.html)
 
 ## Verlauf
 
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
+
+Seit 2026-11-04: **Entwurf kleine Details für die Anmeldeseite** —
+`docs/inspiration/anmeldung-details.html`: O1 Kringel unter „Anmeldung“,
+O2 Kontozahl als orange Serif-Hochzahl, O3 Umriss-Zahl hinter der Titelzeile
+(Idee D6), O4 „Heute da“-Punkt am Namenskreis (bräuchte ein Feld mehr in
+`/api/players`), O5 Auftakt (Titel wischt herein, Linie zeichnet sich).
+Vorschlag: O1 + O2 + O4 + O5. Noch nichts entschieden.
 
 Seit 2026-11-04: **Anmeldeseite mit schlichtem Kopf** (D-126, Entwurf N1 ohne
 „Neu hier“) — das Logo steht oben rechts in der Kopfleiste wie im Dashboard,

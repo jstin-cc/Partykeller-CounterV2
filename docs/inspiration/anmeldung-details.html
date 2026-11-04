@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anmeldung Details</title>
+<link rel="stylesheet" href="../../public/css/theme.css">
+<style>
+  body { padding: 48px clamp(16px, 4vw, 56px) 80px; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 40px; }
+  .stage { display: flex; flex-wrap: wrap; gap: 40px 32px; align-items: flex-start; }
+  .variant { display: flex; flex-direction: column; gap: 14px; }
+  .variant-head { display: flex; flex-direction: column; gap: 6px; width: 375px; }
+  .variant-head .t-h3 { font-size: 18px; }
+  .variant-head .eyebrow { color: var(--ink-muted); line-height: 1.4; }
+  .variant-head .eyebrow.ok { color: var(--accent-text); }
+
+  /* Ein Rahmen = obere Hälfte eines Handys (375 × 520) */
+  .phone {
+    position: relative; width: 375px; height: 520px; flex: none; overflow: hidden;
+    border-radius: 28px; border: 1px solid var(--line-strong); background: var(--bg);
+  }
+  .phone > .topo { z-index: 0; }
+  .screen { position: absolute; inset: 0; z-index: 1; overflow: hidden; padding: 14px 20px 0; display: flex; flex-direction: column; }
+
+  /* ---------- wie die echte Seite (public/index.html, D-126) ---------- */
+  .bar { display: flex; justify-content: space-between; align-items: center; min-height: 48px; flex: none; position: relative; z-index: 2; }
+  .bar .wordmark { font-size: 21px; }
+  .bar-r { display: flex; align-items: center; gap: 12px; }
+  .pk-logo {
+    display: block; flex: none; width: 52px; aspect-ratio: 1181 / 1000; background: var(--ink);
+    -webkit-mask: url('../../public/assets/logo.png') center / contain no-repeat;
+    mask: url('../../public/assets/logo.png') center / contain no-repeat;
+  }
+  .head { position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 22px 0 16px; flex: none; }
+  .login-title { position: relative; z-index: 1; font-size: 34px; line-height: 0.86; }
+
+  .user-list { position: relative; z-index: 1; border-top: 1px solid var(--line); }
+  .user-item { position: relative; border-bottom: 1px solid var(--line); }
+  .user-row { position: relative; display: flex; align-items: center; gap: 14px; width: 100%; min-height: 74px; padding: 12px 8px; background: none; border: 0; color: var(--ink); text-align: left; font: inherit; }
+  .user-name { flex: 1; min-width: 0; font-weight: 800; font-size: 27.75px; line-height: 0.92; letter-spacing: -0.035em; text-transform: uppercase; }
+  .user-go { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-strong); display: grid; place-items: center; }
+  .user-go .i-arrow { width: 12px; height: 12px; }
+  .avatar-wrap { position: relative; flex: none; }
+
+  /* =====================================================================
+     O1 · Kringel unter „Anmeldung“
+     ===================================================================== */
+  .o1 .login-title .scribbled > .scribble--underline { bottom: -0.32em; height: 0.36em; --scribble-width: 2.6; --draw-dur: 0.9s; }
+
+  /* =====================================================================
+     O2 · Kontozahl als Serif-Hochzahl
+     ===================================================================== */
+  .sup-count {
+    font-family: var(--font-serif); font-weight: 400; text-transform: none; letter-spacing: 0;
+    font-size: 0.52em; color: var(--accent-text); vertical-align: 0.78em; margin-left: 0.12em;
+    -webkit-text-stroke: 0;
+  }
+
+  /* =====================================================================
+     O3 · Umriss-Zahl im Hintergrund (Idee D6)
+     ===================================================================== */
+  .ghost-num {
+    position: absolute; right: -14px; bottom: -6px; z-index: 0; pointer-events: none;
+    font-family: var(--font-sans); font-weight: 800; font-size: 118px; line-height: 0.8; letter-spacing: -0.06em;
+    color: transparent; -webkit-text-stroke: 1.2px var(--line-strong);
+  }
+
+  /* =====================================================================
+     O4 · „Heute da“-Punkt am Namenskreis
+     ===================================================================== */
+  .here-dot {
+    position: absolute; right: -1px; bottom: 1px; width: 11px; height: 11px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 0 2.5px var(--bg);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .here-dot::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--accent); animation: here-pulse 2.4s ease-out infinite; }
+  }
+  @keyframes here-pulse { from { opacity: 0.55; transform: scale(1); } to { opacity: 0; transform: scale(2.6); } }
+
+  /* =====================================================================
+     O5 · Auftakt: Titel wischt herein, Linie zeichnet sich
+     ===================================================================== */
+  .o5 .user-list { border-top-color: transparent; }
+  .o5 .user-list::before {
+    content: ''; position: absolute; left: 0; right: 0; top: -1px; height: 1px; background: var(--accent);
+    transform-origin: left; transform: scaleX(0);
+  }
+  .o5.play .user-list::before { animation: line-draw 0.9s var(--ease) 0.25s forwards, line-cool 1.4s ease 1.3s forwards; }
+  @keyframes line-draw { to { transform: scaleX(1); } }
+  @keyframes line-cool { to { background: var(--line); } }
+  .o5 .login-title .w { position: relative; display: inline-block; }
+  .o5 .login-title .w::after { content: ''; position: absolute; inset: -0.04em -0.06em; background: var(--accent); transform: scaleX(0); pointer-events: none; }
+  .o5.play .login-title .w { animation: wipe-text 1.1s linear both; }
+  .o5.play .login-title .w::after { animation: wipe-block 1.1s var(--ease) both; }
+  .o5.play .user-item { animation: row-in 0.8s var(--ease) both; animation-delay: calc(var(--i) * 45ms + 350ms); }
+  @keyframes row-in { from { opacity: 0; transform: translateY(22px); } }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Entwurf · Anmeldeseite</p>
+    <h1 class="t-title">Kleine <span class="t-serif t-accent">Details</span></h1>
+  </div>
+  <button id="replay" class="btn btn--ghost btn--sm" type="button">Bewegung abspielen <span class="i-arrow"></span></button>
+</header>
+
+<div class="stage" id="stage"></div>
+
+<template id="phone-tpl">
+  <div class="phone">
+    <div class="topo topo--abs" aria-hidden="true"></div>
+    <div class="screen">
+      <div class="bar">
+        <span class="wordmark"><span class="wm-top">Party</span><span class="wm-bottom">Keller</span></span>
+        <div class="bar-r"><span class="pk-logo"></span><span class="btn btn--ghost btn--icon"><span class="i-menu"></span></span></div>
+      </div>
+      <div class="head"><h2 class="t-title login-title"></h2></div>
+      <div class="user-list"></div>
+    </div>
+  </div>
+</template>
+
+<script type="module">
+  import { scribble, drawScribble } from '../../public/js/lando.js';
+
+  const VARIANTS = [
+    { key: 'now', title: 'Jetzt', note: 'Stand nach D-126', opts: [] },
+    { key: 'o1', title: 'O1 · Kringel', note: 'Handgezeichneter Strich unter „Anmeldung“, zeichnet sich beim Öffnen. Kein Platz', opts: ['o1'] },
+    { key: 'o2', title: 'O2 · Kontozahl als Hochzahl', note: 'Zahl der Konten in der Serif, orange, oben am Titel. Kein Platz', opts: ['o2'] },
+    { key: 'o3', title: 'O3 · Umriss-Zahl', note: 'Kontozahl riesig als blasse Kontur hinter der Titelzeile, rechts angeschnitten (Idee D6). Kein Platz', opts: ['o3'] },
+    { key: 'o4', title: 'O4 · Heute da', note: 'Oranger Punkt am Namenskreis, wer heute schon getrunken hat; pulsiert leise. Braucht ein Feld mehr in /api/players', opts: ['o4'] },
+    { key: 'o5', title: 'O5 · Auftakt', note: 'Titel wischt herein, die Linie über der Liste zeichnet sich orange und kühlt ab, Zeilen folgen. Nur Bewegung', opts: ['o5'] },
+    { key: 'kombi', title: 'Kombi · O1 + O2 + O4 + O5', note: 'Mein Vorschlag', opts: ['o1', 'o2', 'o4', 'o5'], ok: true },
+  ];
+  const PLAYERS = [['Basti', 1], ['Jule', 1], ['Flo', 0], ['Pauli', 0], ['Tom', 1], ['Nina', 1], ['Mira', 0], ['Kathi', 0]];
+  const COUNT = 15;
+
+  const stage = document.getElementById('stage');
+  const tpl = document.getElementById('phone-tpl');
+  for (const v of VARIANTS) {
+    const sec = document.createElement('section');
+    sec.className = 'variant';
+    sec.innerHTML = `<div class="variant-head"><span class="t-h3">${v.title}</span><span class="eyebrow${v.ok ? ' ok' : ''}">${v.note}</span></div>`;
+    const phone = tpl.content.firstElementChild.cloneNode(true);
+    v.opts.forEach((o) => phone.classList.add(o));
+    const has = (o) => v.opts.includes(o);
+
+    // Titel
+    const t = phone.querySelector('.login-title');
+    let word = has('o5') ? '<span class="w">Anmeldung</span>' : 'Anmeldung';
+    if (has('o1')) word = `<span class="scribbled">${word}${scribble('underline')}</span>`;
+    t.innerHTML = word + (has('o2') ? `<span class="sup-count num">${COUNT}</span>` : '');
+    if (has('o3')) phone.querySelector('.head').insertAdjacentHTML('afterbegin', `<span class="ghost-num" aria-hidden="true">${COUNT}</span>`);
+
+    // Liste
+    const list = phone.querySelector('.user-list');
+    PLAYERS.forEach(([n, here], i) => {
+      const item = document.createElement('div');
+      item.className = 'user-item';
+      item.style.setProperty('--i', i);
+      const dot = has('o4') && here ? '<span class="here-dot" aria-label="heute da"></span>' : '';
+      item.innerHTML = `<div class="user-row"><span class="avatar-wrap"><span class="avatar">${n[0]}</span>${dot}</span><div class="user-name">${n}</div><span class="user-go"><span class="i-arrow"></span></span></div>`;
+      list.append(item);
+    });
+    sec.append(phone);
+    stage.append(sec);
+  }
+
+  function play() {
+    document.querySelectorAll('.phone').forEach((ph) => {
+      ph.querySelectorAll('.scribble').forEach((s) => drawScribble(s, { restart: true, delay: 500 }));
+      if (ph.classList.contains('o5')) { ph.classList.remove('play'); void ph.offsetWidth; ph.classList.add('play'); }
+    });
+  }
+  document.getElementById('replay').addEventListener('click', play);
+  addEventListener('load', () => setTimeout(play, 200));
+</script>
+</body>
+</html>
