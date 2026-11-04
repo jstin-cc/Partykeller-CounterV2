@@ -601,6 +601,30 @@ try {
   .board-empty { padding: 26px 0; text-align: center; color: var(--ink-muted); font-size: 14px; }
 
   /* ==========================================================================
+     Handy: Zählseite passt ohne Scrollen (Entwurf A, docs/inspiration/
+     zaehlen-kompakt.html) — kleinerer Kopf, flachere Umschalter, kleinere
+     Tageszahl, niedrigere Getränkekarten
+     ========================================================================== */
+  @media (max-width: 959px) {
+    .dash .screen-inner { gap: 14px; }
+    .ident { column-gap: 14px; padding-top: 0; }
+    .ident-emblem { width: 48px; height: 48px; }
+    .ident .avatar { width: 44px; height: 44px; font-size: 24px; }
+    .ident-emblem.won { margin: 0 4px 0 9px; }
+    .ident-emblem.won::before { inset: -10px; }
+    .ident-meta { margin-bottom: 6px; }
+    .ident-name { font-size: clamp(30px, calc(100cqi / (var(--chars, 7) * 0.7)), 44px); }
+    #main-tabs .tab-btn { min-height: 34px; padding: 6px 10px; }
+    #tab-count { gap: 10px; }
+    .today { margin-bottom: 0; }
+    #today-total { font-size: clamp(64px, 20vw, 84px); margin-top: 8px; }
+    .drink { min-height: 94px; padding: 12px 14px 10px 16px; gap: 4px; }
+    .drink-name { font-size: 21px; }
+    .drink-plus { width: 36px; height: 36px; }
+    .drink-count .num { font-size: 46px; }
+  }
+
+  /* ==========================================================================
      Desktop: zwei Spalten — links die Zahl (klebt), rechts die Karten
      ========================================================================== */
   @media (min-width: 960px) {
