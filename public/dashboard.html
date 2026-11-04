@@ -464,6 +464,7 @@ try {
     padding: 11px 0; border-top: 1px solid var(--line);
   }
   .rival .icon { font-size: 11px; color: var(--accent); text-align: center; line-height: 1; }
+  .rival .icon .crown { display: block; width: 16px; height: auto; margin: 0 auto; fill: currentColor; }
   .rival .who {
     font-weight: 750; font-size: 14px; text-transform: uppercase; letter-spacing: -0.01em;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1757,12 +1758,20 @@ if (!token || !playerId) {
   // --- Profil: Platz heute/all-time und wer direkt vor bzw. hinter mir liegt ---
   const todayTotal = (p) => p.beersToday + p.shotsToday + p.mixesToday;
 
+  // Krone für Platz 1: flach gezeichnet in Akzentfarbe statt Emoji, damit sie
+  // zu ▲/▼ der Nachbarzeilen passt
+  const CROWN_SVG = '<svg class="crown" viewBox="0 0 20 16" aria-hidden="true">'
+    + '<path d="M2.2 5.2 6.4 9.4 10 2.8l3.6 6.6 4.2-4.2-1.5 6.9H3.7Z"/>'
+    + '<circle cx="2.2" cy="4.3" r="1.5"/><circle cx="10" cy="1.9" r="1.6"/><circle cx="17.8" cy="4.3" r="1.5"/>'
+    + '<rect x="3.7" y="13" width="12.6" height="2.2" rx="0.6"/></svg>';
+
   function rivalRow(icon, label, gapText) {
     const row = document.createElement('div');
     row.className = 'rival';
     const ic = document.createElement('span');
     ic.className = 'icon';
-    ic.textContent = icon;
+    if (icon === 'crown') ic.innerHTML = CROWN_SVG;
+    else ic.textContent = icon;
     const who = document.createElement('span');
     who.className = 'who';
     who.textContent = label;
@@ -1794,7 +1803,7 @@ if (!token || !playerId) {
     const gapDown = (n) => (n === 0 ? 'gleichauf' : `${fmtDrinks(n)} Rückstand`);
     if (!ahead) {
       const lead = behind ? me.total - behind.total : null;
-      box.appendChild(rivalRow('👑', 'Du führst!',
+      box.appendChild(rivalRow('crown', 'Du führst!',
         lead === null ? '' : lead === 0 ? `gleichauf mit ${behind.name}` : `${fmtDrinks(lead)} Vorsprung`));
     } else {
       box.appendChild(rivalRow('▲', `Vor dir: ${ahead.name}`, gapUp(ahead.total - me.total)));
