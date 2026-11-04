@@ -26,11 +26,22 @@ Hall of Fame, CSV-Export und Story-Bild.
   - [docs/INSPIRATION-DESIGN.md](docs/INSPIRATION-DESIGN.md): D1, D2, D4–D9
   - [docs/IDEEN.md](docs/IDEEN.md) und [docs/BIERPONG.md](docs/BIERPONG.md):
     Duell-Modus, Abend-Tipprunde, Bierpong
+  - [docs/inspiration/anmeldung-neu.html](docs/inspiration/anmeldung-neu.html):
+    Anmeldeseite mit schmalem Kopf, Liste A/B/C, PIN P1 (Blatt mit
+    Ziffernblock) oder P2 (inline)
 
 ## Verlauf
 
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
+
+Seit 2026-11-04: **Entwurf neue Anmeldeseite** — `docs/inspiration/anmeldung-neu.html`
+(über `ideen-mockups`, Port 3198): Kopf auf eine Zeile „Wer bist du?“
+verkleinert, Logo in die Kopfleiste. Liste A (kompakte Zeilen, „Neues Konto“
+unten angedockt, 8 von 15 Namen sichtbar), B (Raster, letztes Konto als breite
+Kachel, 9 von 15), C (Namensplakat, alle 15). PIN P1 als Blatt mit eigenem
+Ziffernblock (Auto-Absenden nach 4 Ziffern, falsche PIN wackelt) oder P2 als
+aufgeräumte Inline-Karte. Noch nichts entschieden.
 
 Seit 2026-11-04: **Zählseite passt sich der Displayhöhe an** — am Handy
 füllt die Seite genau den Bildschirm: die drei Getränkekarten teilen sich die
