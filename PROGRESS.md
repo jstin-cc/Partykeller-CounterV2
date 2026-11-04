@@ -26,7 +26,9 @@ Hall of Fame, CSV-Export und Story-Bild.
   - [docs/INSPIRATION-DESIGN.md](docs/INSPIRATION-DESIGN.md): D1, D2, D4–D9
   - [docs/IDEEN.md](docs/IDEEN.md) und [docs/BIERPONG.md](docs/BIERPONG.md):
     Duell-Modus, Abend-Tipprunde, Bierpong
-  - Anmeldeseite, Kopf: H1–H5 in
+  - Anmeldeseite, Kopf: H3 (Wochentag) gefällt, Feinschliff H3a–H3e in
+    [docs/inspiration/anmeldung-kopf-3.html](docs/inspiration/anmeldung-kopf-3.html);
+    übrige Ideen H1–H5 in
     [docs/inspiration/anmeldung-kopf-2.html](docs/inspiration/anmeldung-kopf-2.html)
     (O4 umgesetzt; O1–O3, O5 in anmeldung-details.html weiter offen)
 
@@ -34,6 +36,11 @@ Hall of Fame, CSV-Export und Story-Bild.
 
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
+
+Seit 2026-11-04: **Entwurf Wochentag im Kopf** — `docs/inspiration/anmeldung-kopf-3.html`:
+H3a mit Datum darüber, H3b direkt am Titel, H3c schräg mit Kringel, H3d hell
+mit orangem Punkt, H3e riesig und blass im Hintergrund. Der Wochentag folgt
+dem Party-Abend (bis 6 Uhr der Vortag, D-005). Noch nichts entschieden.
 
 Seit 2026-11-04: **Entwurf Kopf, Runde zwei** — `docs/inspiration/anmeldung-kopf-2.html`:
 H1 „● 7 heute da“ rechts in der Titelzeile (Legende zum Punkt), H2 Titel als
