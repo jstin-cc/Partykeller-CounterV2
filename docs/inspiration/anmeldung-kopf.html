@@ -107,6 +107,18 @@
   .k3-title .scribbled > .scribble--circle { left: -14%; top: -12%; width: 128%; height: 122%; }
   .k3-card .notch-tag { border: 0; background: none; font: inherit; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer; z-index: 1; }
 
+  /* =====================================================================
+     N1–N3 · Nur „Anmeldung“
+     ===================================================================== */
+  .group-title { margin: 8px 0 20px; }
+  .stage + .group-title { margin-top: 56px; }
+  .n1-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 22px 0 16px; flex: none; }
+  .n1-title { font-size: 34px; line-height: 0.86; min-width: 0; }
+  .n1-head .btn { flex: none; }
+  .n2-head { display: flex; flex-direction: column; gap: 12px; padding: 20px 0 16px; flex: none; }
+  .n2-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .n2-title { font-size: 53px; line-height: 0.84; letter-spacing: -0.045em; margin-left: -0.03em; }
+
   /* Registrierkarte am Ende (wie heute, nur der Name) */
   .reg { margin-top: 36px; padding: 22px 18px 24px; border-radius: var(--radius-lg); background: var(--surface); display: flex; flex-direction: column; gap: 12px; flex: none; }
   .reg-title { font-size: 46px; line-height: 0.86; }
@@ -123,6 +135,66 @@
   <h1 class="t-title">Liste und <span class="t-serif t-accent">Kopf</span></h1>
 </header>
 
+<h2 class="t-h3 group-title">Nur „Anmeldung“</h2>
+<div class="stage">
+
+  <!-- ============ N1 ============ -->
+  <section class="variant">
+    <div class="variant-head"><span class="t-h3">N1 · Titelzeile</span><span class="eyebrow ok" data-info></span></div>
+    <div class="phone">
+      <div class="topo topo--abs" aria-hidden="true"></div>
+      <div class="screen">
+        <div class="bar">
+          <span class="wordmark"><span class="wm-top">Party</span><span class="wm-bottom">Keller</span></span>
+          <div class="bar-r"><span class="pk-logo"></span><button class="btn btn--ghost btn--icon" type="button"><span class="i-menu"></span></button></div>
+        </div>
+        <div class="n1-head"><h2 class="t-title n1-title">Anmeldung</h2><span class="btn btn--ghost btn--sm">Neu hier <span class="i-arrow" style="rotate:90deg"></span></span></div>
+        <div class="user-list" data-list></div>
+        __REG__
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ N2 ============ -->
+  <section class="variant">
+    <div class="variant-head"><span class="t-h3">N2 · Groß, eine Zeile</span><span class="eyebrow ok" data-info></span></div>
+    <div class="phone">
+      <div class="topo topo--abs" aria-hidden="true"></div>
+      <div class="screen">
+        <div class="bar">
+          <span class="wordmark"><span class="wm-top">Party</span><span class="wm-bottom">Keller</span></span>
+          <div class="bar-r"><span class="pk-logo"></span><button class="btn btn--ghost btn--icon" type="button"><span class="i-menu"></span></button></div>
+        </div>
+        <div class="n2-head">
+          <div class="n2-top"><span class="eyebrow num">15 Konten</span><span class="btn btn--ghost btn--sm">Neu hier <span class="i-arrow" style="rotate:90deg"></span></span></div>
+          <h2 class="t-impact n2-title">Anmeldung</h2>
+        </div>
+        <div class="user-list" data-list></div>
+        __REG__
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ N3 ============ -->
+  <section class="variant">
+    <div class="variant-head"><span class="t-h3">N3 · Abschnittszeile</span><span class="eyebrow ok" data-info></span></div>
+    <div class="phone">
+      <div class="topo topo--abs" aria-hidden="true"></div>
+      <div class="screen">
+        <div class="bar">
+          <span class="wordmark"><span class="wm-top">Party</span><span class="wm-bottom">Keller</span></span>
+          <div class="bar-r"><span class="pk-logo"></span><button class="btn btn--ghost btn--icon" type="button"><span class="i-menu"></span></button></div>
+        </div>
+        <div class="k2-head"><span class="sec-title">Anmeldung</span><span class="line"></span><span class="btn btn--ghost btn--sm">Neu hier <span class="i-arrow" style="rotate:90deg"></span></span></div>
+        <div class="user-list" data-list></div>
+        __REG__
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<h2 class="t-h3 group-title">Zum Vergleich: jetzt und mit „Wer bist du?“</h2>
 <div class="stage">
 
   <!-- ============ Jetzt ============ -->
