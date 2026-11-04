@@ -836,6 +836,7 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 .farewell > :not(.notch-bg):not(.topo):not(.notch-tag):not(.farewell-sign) { position: relative; z-index: 1; }
 .farewell-topo { -webkit-mask-image: url('../assets/topo.svg'); mask-image: url('../assets/topo.svg'); }
 .farewell-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.farewell-top > .eyebrow { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .farewell-title { font-size: clamp(38px, 11.5vw, 64px); line-height: 0.88; }
 /* Die Umlaut-Punkte der Instrument Serif stehen ~0,9 em über der Grundlinie –
    höher als der enge Zeilenabstand. Etwas Luft über der Serif-Zeile, damit

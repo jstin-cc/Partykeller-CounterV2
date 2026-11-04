@@ -1022,6 +1022,8 @@ export function createDb(dbPath) {
       records: getRecords(),
       funStats: getFunStats(),
       houseBestNight,
+      // todayName: vom Admin vergebener Name des laufenden Abends (D-028), sonst ''
+      todayName: getNightName(partyDayString()),
     };
     if (boardMode === 'archive' && validDayString(boardDay)) {
       state.boardDay = boardDay;
