@@ -32,6 +32,8 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-04: **Getränkeknöpfe ohne „Heute“** — die Zahl auf den
+Bier/Shots/Mischen-Karten (Dashboard und Onboarding-Vorschau) steht allein.
 Seit 2026-11-04: **Design angeglichen** — Menüknopf überall 44 px (Archiv
 und Admin waren kleiner, der Morph sprang); die Fußkarte des Dashboards ist
 jetzt Baustein `.farewell` in theme.css und steht so auch im Archiv (statt der
