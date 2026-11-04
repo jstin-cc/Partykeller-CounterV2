@@ -519,7 +519,7 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
   letter-spacing: -0.01em;
 }
 
-/* Abschnittszeile: Versal-Eyebrow, Haarlinie läuft nach rechts aus */
+/* Abschnittszeile: Versal-Eyebrow, Haarlinie läuft nach rechts aus (ohne Quadrat davor) */
 .sec { display: flex; align-items: baseline; gap: 12px; }
 .sec-title {
   font-family: var(--font-sans);
@@ -529,15 +529,6 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
   letter-spacing: 0.07em;
   color: var(--ink);
   white-space: nowrap;
-}
-.sec-title::before {
-  content: '';
-  display: inline-block;
-  width: 6px; height: 6px;
-  margin-right: 8px;
-  background: var(--accent);
-  border-radius: 1px;
-  transform: translateY(-1px);
 }
 .sec::after {
   content: '';

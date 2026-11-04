@@ -37,6 +37,9 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-04: **Abschnittszeile ohne Quadrat** — `.sec-title` hat kein
+oranges Quadrat mehr davor („Rangliste“, „Rückblick“, Onboarding-Vorschau).
+
 Seit 2026-11-04: **Rückblick-Karte mit Abschnittszeile** — „Rückblick“ im
 Profil steht jetzt wie „Rangliste“ als `.sec` (Quadrat + auslaufende Linie),
 auf Orange in Akzent-Tinte.
