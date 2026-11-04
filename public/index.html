@@ -220,7 +220,7 @@ try {
     transition: background-color 0.35s var(--ease), border-color 0.35s var(--ease), color 0.35s var(--ease), rotate 0.55s var(--ease);
   }
   .user-go .i-arrow { width: 12px; height: 12px; }
-  .user-item.is-open .user-go { rotate: 90deg; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .user-item.is-open .user-go { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .user-item.is-open .avatar { border-color: var(--accent); }
   @media (hover: hover) and (pointer: fine) {
     .user-row:hover::before { transform: none; }
@@ -231,14 +231,9 @@ try {
     .user-row:hover .user-go .i-arrow::after { transform: translate(0, 0); }
   }
 
-  /* Erster Aufbau: Zeilen gleiten gestaffelt herein. Die PIN-Zeile klappt
-     auf und wieder zu: Höhe (--h, misst das Skript) und Inhalt gleiten mit,
-     die Zeilen darunter rutschen weich nach statt zu springen. */
+  /* Erster Aufbau: Zeilen gleiten gestaffelt herein */
   @media (prefers-reduced-motion: no-preference) {
     .user-list.is-entering > div { animation: row-in 0.8s var(--ease) both; animation-delay: calc(min(var(--i, 0), 12) * 45ms + 200ms); }
-    .pin-row { animation: pin-open 0.6s var(--ease); }
-    .pin-row.is-leaving { animation: pin-close 0.45s var(--ease) both; }
-    .pin-row > * { animation: pin-content 0.6s var(--ease); }
   }
   @keyframes row-in { from { opacity: 0; transform: translateY(22px); } }
   /* Vom Dashboard zurück (Abmelden): Namenskreis und Name
@@ -247,15 +242,6 @@ try {
   html[data-morph="me"] .user-item.is-last .avatar { view-transition-name: me-avatar; }
   html[data-morph="me"] .user-item.is-last .user-name > span { view-transition-name: me-name; }
   html[data-morph="me"] .user-list.is-entering > .user-item.is-last { animation: none; }
-  @keyframes pin-open {
-    from { height: 0; padding-top: 0; padding-bottom: 0; clip-path: inset(0); }
-    to { height: var(--h); clip-path: inset(0); }
-  }
-  @keyframes pin-close {
-    from { height: var(--h); clip-path: inset(0); }
-    to { height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; clip-path: inset(0); }
-  }
-  @keyframes pin-content { from { opacity: 0; translate: 0 -10px; } }
 
   /* Laden: leise pulsierende Zeile, bis die Konten da sind */
   .user-list.is-loading:empty::before {
@@ -285,16 +271,71 @@ try {
     color: var(--ink-2);
   }
 
-  /* Aufklappende PIN-Zeile */
-  .pin-row {
-    display: flex;
-    gap: 8px;
-    padding: 4px 8px 16px 64px;
-    background: var(--surface);
+  /* PIN-Blatt: Blatt von unten mit Name, vier Punkten und eigenem
+     Ziffernblock statt Handy-Tastatur; nach der vierten Ziffer wird sofort
+     geprüft. Ab 640 px steht es als Karte in der Mitte. */
+  .pin-scrim {
+    position: fixed; inset: 0; z-index: 60;
+    display: flex; align-items: flex-end; justify-content: center;
+    background: var(--scrim);
   }
-  .pin-row .field { flex: 1; min-width: 0; font-size: 18px; letter-spacing: 0.3em; }
-  .pin-row .field::placeholder { letter-spacing: 0.06em; }
-  .pin-row .btn { min-height: 50px; padding: 0 18px; }
+  .pin-scrim[hidden] { display: none; }
+  .pin-sheet { max-width: 420px; padding: 10px 18px calc(22px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; outline: none; }
+  .pin-who { display: flex; align-items: center; gap: 14px; padding: 2px 2px 0; }
+  .pin-who .avatar { width: 48px; height: 48px; font-size: 26px; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .pin-name { flex: 1; min-width: 0; font-size: 34px; line-height: 0.9; overflow-wrap: anywhere; }
+  .pin-name > span { display: inline-block; max-width: 100%; }   /* Übergang me-name */
+  .pin-close {
+    position: relative; flex: none; width: 40px; height: 40px; border-radius: 50%;
+    border: 1px solid var(--line-strong); background: none; color: var(--ink); cursor: pointer;
+  }
+  .pin-close::before, .pin-close::after {
+    content: ''; position: absolute; left: 50%; top: 50%; width: 13px; height: 1.6px; margin: -0.8px 0 0 -6.5px;
+    background: currentColor; transform: rotate(45deg);
+  }
+  .pin-close::after { transform: rotate(-45deg); }
+  .pin-dots { display: flex; justify-content: center; gap: 18px; padding: 30px 0 10px; }
+  .pin-dots i {
+    width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--line-strong);
+    transition: background-color 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.25s var(--ease-spring);
+  }
+  .pin-dots i.on { background: var(--accent); border-color: var(--accent); transform: scale(1.08); }
+  .pin-dots.is-wrong i { border-color: var(--danger); }
+  .pin-dots.is-wrong i.on { background: var(--danger); }
+  .pin-msg { min-height: 18px; margin: 0 0 14px; text-align: center; color: var(--danger); font-size: 13.5px; font-weight: 600; }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .key {
+    min-height: 58px; border: 0; border-radius: var(--radius-lg); cursor: pointer;
+    background: var(--surface); color: var(--ink);
+    font-family: var(--font-sans); font-weight: 800; font-size: 27px; letter-spacing: -0.03em;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    transition: background-color 0.2s var(--ease), color 0.2s var(--ease), transform 0.12s ease;
+  }
+  .key:active { background: var(--accent); color: var(--accent-ink); transform: scale(0.96); }
+  .key-gap { visibility: hidden; }
+  .key-del { position: relative; }
+  .key-del::before {
+    content: ''; position: absolute; inset: 0; margin: auto; width: 24px; height: 18px; background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Cpath d='M8 1h14v16H8L1 9z M12 5.5l7 7 M19 5.5l-7 7' fill='none' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Cpath d='M8 1h14v16H8L1 9z M12 5.5l7 7 M19 5.5l-7 7' fill='none' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .key:hover { background: var(--bg-hi); }
+    .key:active { background: var(--accent); }
+    .pin-close:hover { border-color: var(--ink); }
+  }
+  @media (min-width: 640px) {
+    .pin-scrim { align-items: center; padding: 16px; }
+    .pin-sheet { border-bottom: 1px solid var(--line-strong); border-radius: 22px; padding-bottom: 22px; }
+    .pin-sheet .sheet-grip { display: none; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pin-scrim:not([hidden]) { animation: scrim-in 0.3s ease; }
+    .pin-scrim.is-leaving { animation: leave-fade 0.4s ease 0.08s both; }
+    .pin-dots.shake { animation: pin-shake 0.42s var(--ease-out); }
+  }
+  @keyframes scrim-in { from { opacity: 0; } }
+  @keyframes pin-shake { 20% { translate: -10px 0; } 40% { translate: 9px 0; } 60% { translate: -6px 0; } 80% { translate: 3px 0; } }
 
   /* Leerzustand */
   .list-empty {
@@ -448,6 +489,26 @@ try {
   </footer>
 </div>
 
+<!-- PIN-Blatt: öffnet beim Antippen eines Kontos mit PIN -->
+<div id="pin-scrim" class="pin-scrim" hidden>
+  <div id="pin-sheet" class="sheet pin-sheet" role="dialog" aria-modal="true" aria-labelledby="pin-name" tabindex="-1">
+    <div class="sheet-grip"></div>
+    <div class="pin-who">
+      <div id="pin-avatar" class="avatar"></div>
+      <h2 id="pin-name" class="t-title pin-name"><span></span></h2>
+      <button id="pin-close" class="pin-close" type="button" aria-label="Schließen"></button>
+    </div>
+    <div id="pin-dots" class="pin-dots" role="img" aria-label="PIN, 0 von 4 Ziffern"><i></i><i></i><i></i><i></i></div>
+    <p id="pin-msg" class="pin-msg" role="alert"></p>
+    <div id="keypad" class="keypad">
+      <button class="key" type="button" data-k="1">1</button><button class="key" type="button" data-k="2">2</button><button class="key" type="button" data-k="3">3</button>
+      <button class="key" type="button" data-k="4">4</button><button class="key" type="button" data-k="5">5</button><button class="key" type="button" data-k="6">6</button>
+      <button class="key" type="button" data-k="7">7</button><button class="key" type="button" data-k="8">8</button><button class="key" type="button" data-k="9">9</button>
+      <span class="key key-gap" aria-hidden="true"></span><button class="key" type="button" data-k="0">0</button><button class="key key-del" type="button" data-k="del" aria-label="Löschen"></button>
+    </div>
+  </div>
+</div>
+
 <!-- Vollbild-Menü: gleich auf allen Seiten (js/site-menu.js, D-102) -->
 <nav id="site-menu" class="site-menu" aria-hidden="true" aria-label="Menü"></nav>
 
@@ -455,7 +516,7 @@ try {
 <script type="module">
 import { post, fetchPlayers, setSession, getLastPlayerId } from './js/api.js';
 import { AREA } from './js/area.js';
-import { initLando, leave, enter, go } from './js/lando.js';
+import { initLando, leave, enter, go, reducedMotion } from './js/lando.js';
 import { renderSiteMenu } from './js/site-menu.js';
 
 const $ = (id) => document.getElementById(id);
@@ -476,9 +537,10 @@ function toDashboard(avatar, nameText) {
 // nächsten Tipp doppelte Namen und der Übergang fiele still aus.
 addEventListener('pageshow', (e) => {
   if (!e.persisted) return;
-  document.querySelectorAll('.user-row .avatar, .user-name > span').forEach((el) => { el.style.viewTransitionName = ''; });
+  document.querySelectorAll('.user-row .avatar, .user-name > span, #pin-avatar, #pin-name > span').forEach((el) => { el.style.viewTransitionName = ''; });
   busy = false;
-  document.querySelectorAll('#create-form .btn, .pin-row .btn').forEach((b) => { b.disabled = false; });
+  document.querySelectorAll('#create-form .btn').forEach((b) => { b.disabled = false; });
+  closePin();
 });
 
 function showError(msg) {
@@ -510,6 +572,7 @@ function renderUsers(all) {
   players.forEach((p, i) => {
     const wrap = document.createElement('div');
     wrap.className = 'user-item' + (selectedId === p.id ? ' is-open' : '') + (p.id === lastId ? ' is-last' : '');
+    wrap.dataset.id = p.id;
     wrap.style.setProperty('--i', i);
 
     const row = document.createElement('button');
@@ -552,77 +615,104 @@ function renderUsers(all) {
         }
         return;
       }
-      // Zweiter Tipp klappt wieder zu; eine andere offene PIN-Zeile schließt
-      if (selectedId === p.id) { selectedId = null; closePin(wrap); return; }
-      list.querySelectorAll('.user-item.is-open').forEach(closePin);
-      selectedId = p.id;
-      openPin(wrap, p, avatar, nameText);
+      openPin(p);
     });
-
-    if (selectedId === p.id) openPin(wrap, p, avatar, nameText);
 
     list.appendChild(wrap);
   });
 }
 
-// PIN-Zeile unter dem Konto auf- und zuklappen, ohne die Liste neu zu bauen —
-// so gleiten Fläche, Pfeil und Höhe weich statt umzuspringen.
-function openPin(wrap, p, avatar, nameText) {
-  wrap.classList.add('is-open');
-  const pinRow = document.createElement('form');
-  pinRow.className = 'pin-row';
+// PIN-Blatt: eigener Ziffernblock statt Handy-Tastatur, nach der vierten
+// Ziffer wird sofort geprüft. Die angetippte Zeile bleibt dahinter hinterlegt.
+// Klappt es, gleiten Namenskreis und Name aus dem Blatt ins Dashboard (D-068).
+const scrim = $('pin-scrim');
+const dots = $('pin-dots');
+let pinPlayer = null;
+let code = '';
 
-  const pin = document.createElement('input');
-  pin.type = 'password';
-  pin.inputMode = 'numeric';
-  pin.maxLength = 4;
-  pin.placeholder = 'PIN';
-  pin.autocomplete = 'off';
-  pin.required = true;
-  pin.className = 'field';
-  pin.setAttribute('aria-label', `PIN für ${p.name}`);
+function paintDots() {
+  dots.querySelectorAll('i').forEach((d, i) => d.classList.toggle('on', i < code.length));
+  dots.setAttribute('aria-label', `PIN, ${code.length} von 4 Ziffern`);
+}
 
-  const ok = document.createElement('button');
-  ok.className = 'btn';
-  ok.append('OK ');
-  const okArrow = document.createElement('span');
-  okArrow.className = 'i-arrow';
-  ok.append(okArrow);
-
-  pinRow.append(pin, ok);
-  pinRow.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (busy) return;
-    busy = true;
-    ok.disabled = true;
-    try {
-      const { token, player } = await post('/api/login', { playerId: p.id, pin: pin.value });
-      setSession(token, player.id, player.name);
-      toDashboard(avatar, nameText);
-    } catch (err) {
-      showError(err.message === 'Name oder PIN falsch' ? 'Falsche PIN.' : err.message);
-      // Falsche PIN: Feld leeren, gleich neu tippen
-      pin.value = '';
-      pin.focus({ preventScroll: true });
-      busy = false;
-      ok.disabled = false;
-    }
+function markOpen() {
+  document.querySelectorAll('#user-list .user-item').forEach((w) => {
+    w.classList.toggle('is-open', !!pinPlayer && w.dataset.id === pinPlayer.id);
   });
-  // Zielhöhe fürs Aufklappen ohne laufende Animation messen
-  pinRow.style.animation = 'none';
-  wrap.appendChild(pinRow);
-  pinRow.style.setProperty('--h', `${pinRow.offsetHeight}px`);
-  pinRow.style.animation = '';
-  queueMicrotask(() => pin.focus({ preventScroll: true }));
 }
 
-function closePin(wrap) {
-  wrap.classList.remove('is-open');
-  const pinRow = wrap.querySelector('.pin-row');
-  if (!pinRow) return;
-  pinRow.style.setProperty('--h', `${pinRow.offsetHeight}px`);
-  leave(pinRow, () => pinRow.remove());
+function openPin(p) {
+  pinPlayer = p;
+  selectedId = p.id;
+  code = '';
+  paintDots();
+  dots.classList.remove('is-wrong', 'shake');
+  $('pin-msg').textContent = '';
+  $('pin-avatar').textContent = p.name.charAt(0).toUpperCase();
+  $('pin-name').firstElementChild.textContent = p.name;
+  markOpen();
+  enter(scrim);
+  $('pin-sheet').focus({ preventScroll: true });
 }
+
+function closePin() {
+  if (!pinPlayer) return;
+  pinPlayer = null;
+  selectedId = null;
+  markOpen();
+  leave(scrim);
+}
+
+function wrongPin(msg) {
+  $('pin-msg').textContent = msg;
+  dots.classList.add('is-wrong');
+  dots.classList.remove('shake');
+  void dots.offsetWidth;   // Wackeln neu starten
+  dots.classList.add('shake');
+  navigator.vibrate?.(80);
+  setTimeout(() => { code = ''; paintDots(); }, reducedMotion() ? 0 : 450);
+}
+
+async function submitPin() {
+  const p = pinPlayer;
+  if (!p || busy) return;
+  busy = true;
+  try {
+    const { token, player } = await post('/api/login', { playerId: p.id, pin: code });
+    setSession(token, player.id, player.name);
+    toDashboard($('pin-avatar'), $('pin-name').firstElementChild);
+  } catch (err) {
+    busy = false;
+    if (pinPlayer !== p) return;   // Blatt inzwischen geschlossen
+    wrongPin(err.message === 'Name oder PIN falsch' ? 'Falsche PIN.' : err.message);
+  }
+}
+
+function press(k) {
+  if (!pinPlayer || busy) return;
+  if (k === 'del') code = code.slice(0, -1);
+  else if (code.length < 4) code += k;
+  else return;
+  dots.classList.remove('is-wrong');
+  $('pin-msg').textContent = '';
+  paintDots();
+  // kurz warten, damit der vierte Punkt noch sichtbar aufleuchtet
+  if (code.length === 4) setTimeout(submitPin, 140);
+}
+
+$('keypad').addEventListener('click', (e) => {
+  const key = e.target.closest('[data-k]');
+  if (key) press(key.dataset.k);
+});
+$('pin-close').addEventListener('click', closePin);
+scrim.addEventListener('click', (e) => { if (e.target === scrim) closePin(); });
+// Am Laptop geht es auch mit der echten Tastatur
+document.addEventListener('keydown', (e) => {
+  if (!pinPlayer || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'Escape') { e.preventDefault(); closePin(); }
+  else if (/^[0-9]$/.test(e.key)) { e.preventDefault(); press(e.key); }
+  else if (e.key === 'Backspace') { e.preventDefault(); press('del'); }
+});
 
 $('create-form').addEventListener('submit', async (e) => {
   e.preventDefault();

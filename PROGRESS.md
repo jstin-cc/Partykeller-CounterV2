@@ -26,14 +26,24 @@ Hall of Fame, CSV-Export und Story-Bild.
   - [docs/INSPIRATION-DESIGN.md](docs/INSPIRATION-DESIGN.md): D1, D2, D4–D9
   - [docs/IDEEN.md](docs/IDEEN.md) und [docs/BIERPONG.md](docs/BIERPONG.md):
     Duell-Modus, Abend-Tipprunde, Bierpong
-  - [docs/inspiration/anmeldung-neu.html](docs/inspiration/anmeldung-neu.html):
-    Anmeldeseite mit schmalem Kopf, Liste A/B/C, PIN P1 (Blatt mit
-    Ziffernblock) oder P2 (inline)
+  - Anmeldeseite: Liste und Kopf überarbeiten (Entwürfe A–C in
+    [docs/inspiration/anmeldung-neu.html](docs/inspiration/anmeldung-neu.html)
+    gefallen noch nicht; die Liste soll ähnlich wie jetzt bleiben)
 
 ## Verlauf
 
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
+
+Seit 2026-11-04: **PIN-Eingabe als Blatt mit Ziffernblock** (D-124, Entwurf
+P1) — die aufklappende PIN-Zeile in der Anmeldeliste ist weg. Ein Tipp auf ein
+Konto mit PIN öffnet ein Blatt von unten (ab 640 px als Karte in der Mitte):
+Namenskreis, Name, vier Punkte, eigener Ziffernblock. Nach der vierten Ziffer
+wird sofort angemeldet; eine falsche PIN färbt die Punkte rot, sie wackeln
+und leeren sich. Schließen über ✕, Tipp daneben oder Esc; am Laptop gehen auch
+Zifferntasten und Rücktaste. Beim Anmelden gleiten Namenskreis und Name aus
+dem Blatt in den Dashboard-Kopf. Geprüft in der Demo am Handy (375 px) und am
+Rechner: falsche PIN, Löschen, Esc, richtige PIN bis ins Dashboard.
 
 Seit 2026-11-04: **Entwurf neue Anmeldeseite** — `docs/inspiration/anmeldung-neu.html`
 (über `ideen-mockups`, Port 3198): Kopf auf eine Zeile „Wer bist du?“
