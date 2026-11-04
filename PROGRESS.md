@@ -37,6 +37,14 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-04: **Rückblick-Karte mit Abschnittszeile** — „Rückblick“ im
+Profil steht jetzt wie „Rangliste“ als `.sec` (Quadrat + auslaufende Linie),
+auf Orange in Akzent-Tinte.
+
+Seit 2026-11-04: **Fußkarte zeigt den Abend** — statt „Stand heute Abend“
+steht oben in der Abschiedskarte des Dashboards der Abend-Name (D-028), sonst
+das Datum („Mi, 04.11.“). Der Server liefert dafür `todayName` im State.
+
 Seit 2026-11-04: **Entwurf Wochentag im Kopf** — `docs/inspiration/anmeldung-kopf-3.html`:
 H3a mit Datum darüber, H3b direkt am Titel, H3c schräg mit Kringel, H3d hell
 mit orangem Punkt, H3e riesig und blass im Hintergrund. Der Wochentag folgt
