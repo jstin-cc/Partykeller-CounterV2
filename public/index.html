@@ -302,6 +302,11 @@ try {
   .pin-dots i.on { background: var(--accent); border-color: var(--accent); transform: scale(1.08); }
   .pin-dots.is-wrong i { border-color: var(--danger); }
   .pin-dots.is-wrong i.on { background: var(--danger); }
+  /* Beim Anlegen: „PIN festlegen“ / „PIN wiederholen“ über den Punkten */
+  .pin-step { margin: 28px 0 0; text-align: center; color: var(--ink-2); }
+  .pin-step:not([hidden]) + .pin-dots { padding-top: 16px; }
+  .pin-skip { margin-top: 10px; }
+  .pin-skip[hidden], .pin-step[hidden] { display: none; }
   .pin-msg { min-height: 18px; margin: 0 0 14px; text-align: center; color: var(--danger); font-size: 13.5px; font-weight: 600; }
   .keypad {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
@@ -366,7 +371,6 @@ try {
   .reg-form { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
   .fld { display: flex; flex-direction: column; gap: 7px; }
   .fld .eyebrow { color: var(--ink-2); }
-  .fld .eyebrow em { font-style: normal; color: var(--ink-faint); }
   .reg-card .field { background: var(--bg); }
   .reg-form .btn { margin-top: 6px; }
 
@@ -475,9 +479,6 @@ try {
           <label class="fld"><span class="eyebrow">Name</span>
             <input id="create-name" class="field" type="text" maxlength="24" placeholder="Dein Name" autocomplete="off" required>
           </label>
-          <label class="fld"><span class="eyebrow">PIN <em>– optional</em></span>
-            <input id="create-pin" class="field" type="password" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="4 Ziffern" autocomplete="off">
-          </label>
           <button class="btn btn--block btn--lg" data-magnetic="0.08">Konto anlegen <span class="i-arrow"></span></button>
         </form>
       </section>
@@ -501,6 +502,7 @@ try {
       <h2 id="pin-name" class="t-title pin-name"><span></span></h2>
       <button id="pin-close" class="pin-close" type="button" aria-label="Schließen"></button>
     </div>
+    <p id="pin-step" class="eyebrow pin-step" hidden></p>
     <div id="pin-dots" class="pin-dots" role="img" aria-label="PIN, 0 von 4 Ziffern"><i></i><i></i><i></i><i></i></div>
     <p id="pin-msg" class="pin-msg" role="alert"></p>
     <div id="keypad" class="keypad">
@@ -509,6 +511,7 @@ try {
       <button class="key" type="button" data-k="7">7</button><button class="key" type="button" data-k="8">8</button><button class="key" type="button" data-k="9">9</button>
       <span class="key key-gap" aria-hidden="true"></span><button class="key" type="button" data-k="0">0</button><button class="key key-del" type="button" data-k="del" aria-label="Löschen"></button>
     </div>
+    <button id="pin-skip" class="btn btn--ghost btn--block btn--lg pin-skip" type="button" hidden>Ohne PIN <span class="i-arrow"></span></button>
   </div>
 </div>
 
@@ -524,6 +527,8 @@ import { renderSiteMenu } from './js/site-menu.js';
 
 const $ = (id) => document.getElementById(id);
 let selectedId = null;
+let takenNames = new Set();   // vergebene Namen, klein (auch ausgeblendete)
+const nameKey = (n) => n.trim().toLowerCase();
 let firstRender = true;
 let busy = false;   // Anmeldung/Anlegen läuft gerade (Doppeltipp)
 
@@ -542,7 +547,7 @@ addEventListener('pageshow', (e) => {
   if (!e.persisted) return;
   document.querySelectorAll('.user-row .avatar, .user-name > span, #pin-avatar, #pin-name > span').forEach((el) => { el.style.viewTransitionName = ''; });
   busy = false;
-  document.querySelectorAll('#create-form .btn').forEach((b) => { b.disabled = false; });
+  document.querySelectorAll('#create-form .btn, #pin-skip').forEach((b) => { b.disabled = false; b.style.viewTransitionName = ''; });
   closePin();
 });
 
@@ -559,6 +564,7 @@ function showError(msg) {
 // Kennzeichnung, die Reihenfolge dahinter bleibt die der Rangliste.
 // Zeilen im Lando-Stil (D-078): Namenskreis, Name in Versalien, Pfeil ↗.
 function renderUsers(all) {
+  takenNames = new Set(all.map((p) => nameKey(p.name)));
   const lastId = getLastPlayerId();
   const players = all.filter((p) => !p.hidden);
   const mine = players.findIndex((p) => p.id === lastId);
@@ -625,13 +631,19 @@ function renderUsers(all) {
   });
 }
 
-// PIN-Blatt: eigener Ziffernblock statt Handy-Tastatur, nach der vierten
-// Ziffer wird sofort geprüft. Die angetippte Zeile bleibt dahinter hinterlegt.
-// Klappt es, gleiten Namenskreis und Name aus dem Blatt ins Dashboard (D-068).
+// PIN-Blatt (D-124): eigener Ziffernblock statt Handy-Tastatur, nach der
+// vierten Ziffer geht es sofort weiter. Drei Schritte:
+//   login   – PIN eines Kontos prüfen; Namenskreis und Name gleiten danach aus
+//             dem Blatt ins Dashboard (D-068)
+//   set     – neues Konto: PIN festlegen oder „Ohne PIN“ (D-018)
+//   confirm – neues Konto: PIN wiederholen, erst dann wird angelegt
 const scrim = $('pin-scrim');
 const dots = $('pin-dots');
-let pinPlayer = null;
+let sheet = null;   // { mode, player } beim Anmelden, { mode, name } beim Anlegen
 let code = '';
+let firstPin = '';
+
+const STEP = { set: 'PIN festlegen', confirm: 'PIN wiederholen' };
 
 function paintDots() {
   dots.querySelectorAll('i').forEach((d, i) => d.classList.toggle('on', i < code.length));
@@ -639,28 +651,42 @@ function paintDots() {
 }
 
 function markOpen() {
+  const id = sheet?.player?.id;
   document.querySelectorAll('#user-list .user-item').forEach((w) => {
-    w.classList.toggle('is-open', !!pinPlayer && w.dataset.id === pinPlayer.id);
+    w.classList.toggle('is-open', !!id && w.dataset.id === id);
   });
 }
 
-function openPin(p) {
-  pinPlayer = p;
-  selectedId = p.id;
+function setStep(mode) {
+  sheet.mode = mode;
+  $('pin-step').hidden = !STEP[mode];
+  $('pin-step').textContent = STEP[mode] ?? '';
+  $('pin-skip').hidden = mode !== 'set';
+}
+
+function openSheet(name, state) {
+  sheet = state;
   code = '';
+  firstPin = '';
   paintDots();
   dots.classList.remove('is-wrong', 'shake');
   $('pin-msg').textContent = '';
-  $('pin-avatar').textContent = p.name.charAt(0).toUpperCase();
-  $('pin-name').firstElementChild.textContent = p.name;
+  $('pin-avatar').textContent = name.charAt(0).toUpperCase();
+  $('pin-name').firstElementChild.textContent = name;
+  setStep(state.mode);
   markOpen();
   enter(scrim);
   $('pin-sheet').focus({ preventScroll: true });
 }
 
+function openPin(p) {
+  selectedId = p.id;
+  openSheet(p.name, { mode: 'login', player: p });
+}
+
 function closePin() {
-  if (!pinPlayer) return;
-  pinPlayer = null;
+  if (!sheet) return;
+  sheet = null;
   selectedId = null;
   markOpen();
   leave(scrim);
@@ -683,22 +709,39 @@ function wrongPin(msg) {
 }
 
 async function submitPin() {
-  const p = pinPlayer;
-  if (!p || busy) return;
+  const s = sheet;
+  if (!s || s.mode !== 'login' || busy) return;
   busy = true;
   try {
-    const { token, player } = await post('/api/login', { playerId: p.id, pin: code });
+    const { token, player } = await post('/api/login', { playerId: s.player.id, pin: code });
     setSession(token, player.id, player.name);
     toDashboard($('pin-avatar'), $('pin-name').firstElementChild);
   } catch (err) {
     busy = false;
-    if (pinPlayer !== p) return;   // Blatt inzwischen geschlossen
+    if (sheet !== s) return;   // Blatt inzwischen geschlossen
     wrongPin(err.message === 'Name oder PIN falsch' ? 'Falsche PIN.' : err.message);
   }
 }
 
+// Vier Ziffern beim Anlegen: erst festlegen, dann wiederholen
+function nextStep() {
+  if (!sheet || busy) return;
+  if (sheet.mode === 'set') {
+    firstPin = code;
+    code = '';
+    setStep('confirm');
+    paintDots();
+  } else if (code === firstPin) {
+    createAccount(code);
+  } else {
+    firstPin = '';
+    setStep('set');
+    wrongPin('PINs stimmen nicht überein.');
+  }
+}
+
 function press(k) {
-  if (!pinPlayer || busy) return;
+  if (!sheet || busy) return;
   if (k === 'del') code = code.slice(0, -1);
   else if (code.length < 4) code += k;
   else return;
@@ -707,7 +750,7 @@ function press(k) {
   $('pin-msg').textContent = '';
   paintDots();
   // kurz warten, damit der vierte Punkt noch sichtbar aufleuchtet
-  if (code.length === 4) setTimeout(submitPin, 140);
+  if (code.length === 4) setTimeout(sheet.mode === 'login' ? submitPin : nextStep, 140);
 }
 
 // Tasten reagieren schon beim Aufsetzen des Fingers (pointerdown), nicht erst
@@ -734,32 +777,52 @@ $('pin-close').addEventListener('click', closePin);
 scrim.addEventListener('click', (e) => { if (e.target === scrim) closePin(); });
 // Am Laptop geht es auch mit der echten Tastatur
 document.addEventListener('keydown', (e) => {
-  if (!pinPlayer || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (!sheet || e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.key === 'Escape') { e.preventDefault(); closePin(); }
   else if (/^[0-9]$/.test(e.key)) { e.preventDefault(); press(e.key); }
   else if (e.key === 'Backspace') { e.preventDefault(); press('del'); }
 });
 
-$('create-form').addEventListener('submit', async (e) => {
+// Registrieren: Name eingeben, „Konto anlegen“ öffnet das PIN-Blatt. Ein schon
+// vergebener Name fällt vorher auf (auch ausgeblendete Konten zählen), damit
+// niemand erst eine PIN festlegt und dann abgewiesen wird; der Server prüft
+// trotzdem.
+
+$('create-form').addEventListener('submit', (e) => {
   e.preventDefault();
-  // Doppeltipp: sonst kommt für den zweiten Versuch „Name ist schon vergeben"
   if (busy) return;
-  busy = true;
-  const btn = $('create-form').querySelector('.btn');
-  btn.disabled = true;
-  try {
-    const { token, player } = await post('/api/players', { name: $('create-name').value, pin: $('create-pin').value });
-    setSession(token, player.id, player.name);
-    // Neues Konto: erst die drei Willkommens-Seiten, dann das Dashboard (D-052);
-    // der Knopf gleitet dabei in „Weiter" des Onboardings (D-085)
-    $('create-form').querySelector('.btn').style.viewTransitionName = 'morph-cta';
-    go('onboarding', { morph: 'cta' });
-  } catch (err) {
-    showError(err.message);
-    busy = false;
-    btn.disabled = false;
-  }
+  const name = $('create-name').value.trim();
+  if (!name) return;
+  if (takenNames.has(nameKey(name))) { showError('Name ist schon vergeben'); return; }
+  showError('');
+  $('create-name').blur();   // Handy-Tastatur einklappen
+  openSheet(name, { mode: 'set', name });
 });
+$('pin-skip').addEventListener('click', () => {
+  if (sheet?.mode === 'set') createAccount('', $('pin-skip'));
+});
+
+async function createAccount(pin, morphFrom = null) {
+  const s = sheet;
+  if (!s || busy) return;
+  busy = true;
+  $('pin-skip').disabled = true;
+  try {
+    const { token, player } = await post('/api/players', { name: s.name, pin });
+    setSession(token, player.id, player.name);
+    // Neues Konto: erst die drei Willkommens-Seiten, dann das Dashboard
+    // (D-052); „Ohne PIN“ gleitet dabei in „Weiter“ des Onboardings (D-085)
+    if (morphFrom) {
+      morphFrom.style.viewTransitionName = 'morph-cta';
+      go('onboarding', { morph: 'cta' });
+    } else go('onboarding');
+  } catch (err) {
+    busy = false;
+    $('pin-skip').disabled = false;
+    closePin();
+    showError(err.message);
+  }
+}
 
 // Die Liste kommt sofort aus dem letzten Abruf (pk_/ys_players_cache) und wird
 // nur neu aufgebaut, wenn der frische Abruf abweicht. Kommt ein Morph vom
