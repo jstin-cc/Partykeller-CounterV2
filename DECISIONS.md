@@ -160,6 +160,10 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
   PIN gesetzt), in Ranglisten-Reihenfolge; das zuletzt auf diesem Handy
   benutzte Konto steht ohne Kennzeichnung oben. Wer schon angemeldet ist,
   springt direkt ins Dashboard. (D-041, D-047, D-101)
+- **Anmeldeseite ist funktional:** Logo in der Kopfleiste (wie im Dashboard),
+  darunter nur die Titelzeile „Anmeldung“, dann gleich die Kontenliste; keine
+  Riesen-Headline, kein „Neu hier“-Sprung, keine Kontozahl. Am Rechner stehen
+  Liste und Registrierkarte nebeneinander, die Karte klebt mit. (D-126)
 - **PIN-Eingabe** als Blatt von unten (am Rechner als Karte in der Mitte) mit
   eigenem Ziffernblock statt Handy-Tastatur: vier Punkte, nach der vierten
   Ziffer wird sofort geprüft, kein OK-Knopf. Eine falsche PIN färbt die Punkte
@@ -525,3 +529,4 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-123 | 2026-10-29 | Server-Status im Admin |
 | D-124 | 2026-11-04 | PIN-Eingabe als Blatt mit Ziffernblock |
 | D-125 | 2026-11-04 | Registrieren: PIN im Blatt festlegen und wiederholen |
+| D-126 | 2026-11-04 | Anmeldeseite: schlichter Kopf „Anmeldung“ |
