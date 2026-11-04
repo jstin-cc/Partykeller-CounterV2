@@ -34,6 +34,13 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-04: **„Heute da“-Punkt in der Anmeldeliste** (D-127, Entwurf O4
+ohne Puls) — wer am laufenden Abend schon etwas gezählt hat, bekommt einen
+orangen Punkt unten rechts am Namenskreis. `GET /api/players` liefert dafür
+`today` (nur ja/nein). Der Punkt sitzt neben dem Kreis, nicht darin, damit er
+beim Anmelden nicht mit in den Dashboard-Kopf gleitet. Geprüft in der Demo
+(neues Konto ohne Getränk ohne Punkt, Anmelden bis ins Dashboard).
+
 Seit 2026-11-04: **Entwurf kleine Details für die Anmeldeseite** —
 `docs/inspiration/anmeldung-details.html`: O1 Kringel unter „Anmeldung“,
 O2 Kontozahl als orange Serif-Hochzahl, O3 Umriss-Zahl hinter der Titelzeile

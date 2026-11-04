@@ -68,9 +68,16 @@ function createApiRouter(area) {
   });
 
   // Nur die Konten für die Anmeldeliste (D-047): id, Name, ausgeblendet, PIN
-  // gesetzt — in Ranglisten-Reihenfolge, ohne den Rest des States.
+  // gesetzt, heute schon getrunken (D-127, nur ja/nein, keine Zahlen) — in
+  // Ranglisten-Reihenfolge, ohne den Rest des States.
   router.get('/players', (_req, res) => res.json({
-    players: db.rankedPlayers().map((p) => ({ id: p.id, name: p.name, hidden: p.hidden, hasPin: p.hasPin })),
+    players: db.rankedPlayers().map((p) => ({
+      id: p.id,
+      name: p.name,
+      hidden: p.hidden,
+      hasPin: p.hasPin,
+      today: p.beersToday + p.shotsToday + p.mixesToday > 0,
+    })),
   }));
 
   // Abend-Archiv: alle Party-Tage mit Sieger, Teilnehmern und Gesamtmengen
