@@ -165,6 +165,11 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
   Ziffer wird sofort geprüft, kein OK-Knopf. Eine falsche PIN färbt die Punkte
   rot, lässt sie wackeln und leert sie. Am Laptop gehen Ziffern, Rücktaste
   und Esc. Namenskreis und Name gleiten aus dem Blatt ins Dashboard. (D-124)
+- **Registrieren:** Die Karte fragt nur den Namen; „Konto anlegen“ öffnet
+  dasselbe Blatt. Dort wird die PIN festgelegt und einmal wiederholt (passen
+  sie nicht, beginnt es von vorn), oder „Ohne PIN“ legt das Konto ohne an.
+  Ein schon vergebener Name (auch ausgeblendet) fällt vor dem Blatt auf; der
+  Server prüft trotzdem. (D-125)
 - **Ausblenden** (Admin): das Konto fehlt in der All-Time-Rangliste (TV,
   Dashboard) und in der Anmeldeliste, zählt aber weiter und erscheint in
   „Heute“. Es ist keine Sperre. (D-013, D-015, D-037, D-102)
@@ -519,3 +524,4 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-122 | 2026-10-29 | TV lädt nach einem Update selbst neu |
 | D-123 | 2026-10-29 | Server-Status im Admin |
 | D-124 | 2026-11-04 | PIN-Eingabe als Blatt mit Ziffernblock |
+| D-125 | 2026-11-04 | Registrieren: PIN im Blatt festlegen und wiederholen |

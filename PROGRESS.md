@@ -35,6 +35,14 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-04: **Registrieren mit dem PIN-Blatt** (D-125) — „Neu hier?“
+fragt nur noch den Namen. „Konto anlegen“ öffnet das Blatt mit Ziffernblock:
+„PIN festlegen“, dann „PIN wiederholen“ (passen sie nicht: Punkte wackeln rot,
+zurück zu „festlegen“), oder „Ohne PIN“ (gleitet in „Weiter“ des
+Onboardings). Ein vergebener Name meldet sich schon vor dem Blatt. Geprüft in
+der Demo: vergebener Name, falsche Wiederholung, Anlegen mit PIN (Konto
+verlangt danach die PIN) und ohne PIN, jeweils bis ins Onboarding.
+
 Seit 2026-11-04: **PIN-Ziffernblock reagiert auch bei schnellem Tippen** —
 die Tasten lösen schon beim Aufsetzen des Fingers aus (`pointerdown` statt
 `click`); vorher verschluckte der Browser Klicks, wenn sich zwei Berührungen
