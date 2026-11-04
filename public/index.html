@@ -66,9 +66,9 @@ try {
 <link rel="stylesheet" href="css/theme.css">
 <style>
   /* Anmeldung im Lando-Stil (D-078): dunkler Bereichsgrund mit Höhenlinien,
-     riesige Frage als Headline, die Konten als Versal-Zeilen wie die Links im
-     Lando-Menü, darunter „Neu hier?" als Kerben-Karte. Ab 960 px zweispaltig:
-     links klebt die Headline, rechts stehen Liste und Registrierung. */
+     schlichte Titelzeile „Anmeldung“ (D-126), die Konten als Versal-Zeilen
+     wie die Links im Lando-Menü, darunter „Neu hier?" als Kerben-Karte. Ab
+     960 px stehen Liste und Registrierung nebeneinander. */
   .login {
     position: relative;
     z-index: 1;
@@ -81,45 +81,28 @@ try {
     flex-direction: column;
   }
   .login-top .wordmark { font-size: 21px; }
-  .login-grid { flex: 1; display: flex; flex-direction: column; gap: 44px; padding-top: 26px; }
+  .login-top .topbar-actions { gap: 12px; }
+  .login-grid { flex: 1; display: flex; flex-direction: column; gap: 16px; padding-top: 22px; }
 
-  /* --- Hero: Embleme, Eyebrow, Frage --- */
-  .hero { display: flex; flex-direction: column; gap: 18px; }
-  .hero-emblems { display: flex; align-items: center; gap: 14px; }
-  /* Partykeller-Logo als Maske (nimmt die Schriftfarbe an); gleitet per
-     View Transition in den Dashboard-Kopf (D-068) */
+  /* Partykeller-Logo als Maske (nimmt die Schriftfarbe an), wie im
+     Dashboard-Kopf; gleitet per View Transition an seine Stelle dort (D-068).
+     Youngstars zeigt kein Logo (theme.css, D-110). */
   .pk-logo {
     display: block;
     flex: none;
-    width: 86px;
+    width: 52px;
     aspect-ratio: 1181 / 1000;
     background: var(--ink);
     -webkit-mask: url('assets/logo.png') center / contain no-repeat;
     mask: url('assets/logo.png') center / contain no-repeat;
   }
-  /* Youngstars (D-110): ohne Logo steht die Zeile allein, dann ganz weg */
-  html[data-area="youngstars"] .hero-emblems { display: none; }
 
-  .hero-eyebrow { margin: 6px 0 0; display: flex; align-items: center; gap: 10px; }
-  .hero-eyebrow::before { content: ''; width: 22px; height: 1px; background: var(--accent); }
-  .hero-title { font-size: clamp(58px, 17vw, 150px); line-height: 0.84; }
-  .hero-title .t-serif { font-size: 1.12em; line-height: 0.8; }
-  /* „du?" steht immer in einer eigenen Zeile, mit etwas Luft darüber, damit
-     der Kringel unter der Grundlinie von „Wer bist" beginnt statt durch
-     deren Fuß zu laufen (eigener Block, weil die Wort-Masken oben
-     ausgerichtet sind – ein Rand in derselben Zeile verschöbe das Wort) */
-  .hero-title .scribbled { display: block; width: fit-content; margin-top: 0.24em; }
-  .hero-title .scribbled > .scribble--circle {
-    --scribble-width: 3.5;
-    --draw-dur: 1.15s;
-    left: -20%; top: -17%; width: 142%; height: 132%;
-  }
-  .hero-jump { align-self: flex-start; }
+  .login-title { font-size: clamp(34px, 9vw, 44px); line-height: 0.86; }
   /* „Anmeldung" aus dem Menü einer anderen Seite gleitet in diese Zeile
      (D-103); sie steht dafür sofort da, statt einzublenden */
   .morph-login { display: inline-block; }
   html[data-morph="login"] .morph-login { view-transition-name: morph-login; }
-  html[data-morph="login"] .hero-eyebrow[data-reveal] { opacity: 1; transform: none; transition: none; }
+  html[data-morph="login"] .login-title[data-reveal] { opacity: 1; transform: none; transition: none; }
 
   /* --- rechte Spalte: Fehler, Konten, Registrierung --- */
   .side { display: flex; flex-direction: column; gap: 44px; min-width: 0; }
@@ -159,8 +142,6 @@ try {
   }
   @keyframes err-in { from { opacity: 0; transform: translateY(-10px); } }
 
-  .acc-head { margin-bottom: 6px; }
-  .acc-count { order: 1; color: var(--ink-muted); }
 
   /* Kontenliste: Versal-Zeilen mit Haarlinien (D-044). Jedes Konto ist ein
      div-Wrapper (Zeile + ggf. PIN-Form) als direktes Kind von #user-list. */
@@ -381,21 +362,20 @@ try {
     border-top: 1px solid var(--line);
   }
 
-  /* --- Desktop: zweispaltig, Headline klebt links --- */
+  /* --- Desktop: Liste links, Registrierung rechts (klebt mit) --- */
   @media (min-width: 960px) {
     .login { padding-left: clamp(28px, 3vw, 48px); padding-right: clamp(28px, 3vw, 48px); }
-    .login-grid {
+    .login-grid { gap: 28px; padding-top: 40px; }
+    .login-title { font-size: clamp(56px, 5vw, 84px); }
+    .side {
       display: grid;
       grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
       gap: 0 clamp(48px, 6vw, 120px);
       align-items: start;
-      padding-top: 48px;
     }
-    .hero { position: sticky; top: 40px; gap: 22px; }
-    .pk-logo { width: 104px; }
-    .hero-title { font-size: clamp(90px, 8.6vw, 150px); }
-    .side { padding-top: 8px; }
-    .reg-card { padding: 30px 30px 64px; }
+    .error-banner { grid-column: 1 / -1; margin-bottom: 20px; }
+    .accounts { grid-column: 1; }
+    .reg-card { grid-column: 2; position: sticky; top: 40px; padding: 30px 30px 64px; }
     .reg-title { font-size: clamp(56px, 5vw, 84px); }
   }
 </style>
@@ -410,25 +390,18 @@ try {
       <span class="wm-top">Party</span><span class="wm-bottom">Keller</span>
     </a>
     <div class="topbar-actions">
+      <span class="pk-logo" role="img" aria-label="SV Partykeller" style="view-transition-name:area-logo"></span>
       <button class="btn btn--ghost btn--icon" type="button" data-menu-toggle data-magnetic="0.2" aria-controls="site-menu" aria-expanded="false" aria-label="Menü"><span class="i-menu"></span></button>
     </div>
   </header>
 
   <div class="login-grid">
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-emblems">
-        <span class="pk-logo" role="img" aria-label="SV Partykeller" style="view-transition-name:area-logo"></span>
-      </div>
-      <p class="eyebrow hero-eyebrow" data-reveal="up"><span class="morph-login">Anmeldung</span></p>
-      <h1 id="hero-title" class="t-impact hero-title" data-reveal="words">Wer bist <span class="scribbled"><span class="t-serif t-accent">du?</span><svg class="scribble scribble--circle" data-draw="750" viewBox="0 0 260 130" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M176 14C128 1 58 6 24 34-4 58 12 104 88 118c64 12 150 0 164-40 11-32-26-64-92-72-40-5-80 1-104 12" pathLength="1"/></svg></span></h1>
-      <a class="btn btn--ghost btn--sm hero-jump" href="#register" data-reveal="up" data-delay="420">Neu hier <span class="i-arrow" style="rotate:90deg"></span></a>
-    </section>
+    <h1 class="t-title login-title" data-reveal="up"><span class="morph-login">Anmeldung</span></h1>
 
     <div class="side">
       <div id="error-banner" class="error-banner" role="alert" hidden></div>
 
-      <section class="accounts" aria-labelledby="acc-title">
-        <div class="sec acc-head"><span id="acc-title" class="sec-title">Dein Konto</span><span id="user-count" class="eyebrow num acc-count"></span></div>
+      <section class="accounts" aria-label="Konten">
         <div id="user-list" class="user-list is-loading"></div>
         <script>
           // Rückweg vom Dashboard (D-085): die Liste schon fürs erste Bild aus
@@ -462,7 +435,6 @@ try {
               wrap.append(row);
               list.append(wrap);
             }
-            document.getElementById('user-count').textContent = `${players.length} ${players.length === 1 ? 'Konto' : 'Konten'}`;
           })();
         </script>
         <div id="list-empty" class="list-empty" hidden>
@@ -573,7 +545,6 @@ function renderUsers(all) {
   list.textContent = '';
   list.hidden = players.length === 0;   // leere Liste wäre nur eine Linie
   $('list-empty').hidden = players.length > 0;
-  $('user-count').textContent = players.length ? `${players.length} ${players.length === 1 ? 'Konto' : 'Konten'}` : '';
   // Nur der erste Aufbau gleitet herein, nicht das Neu-Rendern beim PIN-Öffnen
   list.classList.toggle('is-entering', firstRender);
   firstRender = false;

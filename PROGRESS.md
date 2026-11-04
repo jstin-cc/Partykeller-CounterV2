@@ -26,14 +26,20 @@ Hall of Fame, CSV-Export und Story-Bild.
   - [docs/INSPIRATION-DESIGN.md](docs/INSPIRATION-DESIGN.md): D1, D2, D4–D9
   - [docs/IDEEN.md](docs/IDEEN.md) und [docs/BIERPONG.md](docs/BIERPONG.md):
     Duell-Modus, Abend-Tipprunde, Bierpong
-  - Anmeldeseite, Kopf über der Liste: N1–N3 (nur „Anmeldung“) und K1–K3 in
-    [docs/inspiration/anmeldung-kopf.html](docs/inspiration/anmeldung-kopf.html)
-    (Liste bleibt wie jetzt; A–C aus anmeldung-neu.html sind verworfen)
 
 ## Verlauf
 
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
+
+Seit 2026-11-04: **Anmeldeseite mit schlichtem Kopf** (D-126, Entwurf N1 ohne
+„Neu hier“) — das Logo steht oben rechts in der Kopfleiste wie im Dashboard,
+darunter nur „Anmeldung“ als Titelzeile, dann die Liste (unverändert). Weg
+sind „Wer bist du?“ mit Kringel, der „Neu hier“-Sprung und die Zeile „Dein
+Konto · 15 Konten“. Am Handy (375 × 667) steht der erste Name bei 126 statt
+444 px, sieben Namen sind ohne Scrollen zu sehen. Am Rechner Liste links,
+Registrierkarte rechts (klebt beim Scrollen). „Anmeldung“ aus dem Menü
+gleitet weiter in die Überschrift.
 
 Seit 2026-11-04: **Entwurf Kopf der Anmeldeseite** —
 `docs/inspiration/anmeldung-kopf.html`: die Liste bleibt unverändert, nur der
