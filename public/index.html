@@ -303,7 +303,10 @@ try {
   .pin-dots.is-wrong i { border-color: var(--danger); }
   .pin-dots.is-wrong i.on { background: var(--danger); }
   .pin-msg { min-height: 18px; margin: 0 0 14px; text-align: center; color: var(--danger); font-size: 13.5px; font-weight: 600; }
-  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .keypad {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
   .key {
     min-height: 58px; border: 0; border-radius: var(--radius-lg); cursor: pointer;
     background: var(--surface); color: var(--ink);
@@ -311,7 +314,7 @@ try {
     -webkit-tap-highlight-color: transparent; touch-action: manipulation;
     transition: background-color 0.2s var(--ease), color 0.2s var(--ease), transform 0.12s ease;
   }
-  .key:active { background: var(--accent); color: var(--accent-ink); transform: scale(0.96); }
+  .key.is-pressed { background: var(--accent); color: var(--accent-ink); transform: scale(0.96); transition-duration: 0s; }
   .key-gap { visibility: hidden; }
   .key-del { position: relative; }
   .key-del::before {
@@ -321,7 +324,7 @@ try {
   }
   @media (hover: hover) and (pointer: fine) {
     .key:hover { background: var(--bg-hi); }
-    .key:active { background: var(--accent); }
+    .key.is-pressed { background: var(--accent); }
     .pin-close:hover { border-color: var(--ink); }
   }
   @media (min-width: 640px) {
@@ -663,14 +666,20 @@ function closePin() {
   leave(scrim);
 }
 
+// Falsche PIN: die Eingabe ist sofort wieder frei (wer gleich neu tippt,
+// verliert keine Ziffer); die roten Punkte bleiben nur stehen, bis sie
+// ausgewackelt haben oder die nächste Ziffer kommt.
+let wrongTimer = 0;
 function wrongPin(msg) {
+  code = '';
   $('pin-msg').textContent = msg;
   dots.classList.add('is-wrong');
   dots.classList.remove('shake');
   void dots.offsetWidth;   // Wackeln neu starten
   dots.classList.add('shake');
   navigator.vibrate?.(80);
-  setTimeout(() => { code = ''; paintDots(); }, reducedMotion() ? 0 : 450);
+  clearTimeout(wrongTimer);
+  wrongTimer = setTimeout(() => { if (!code) paintDots(); }, reducedMotion() ? 0 : 450);
 }
 
 async function submitPin() {
@@ -693,16 +702,33 @@ function press(k) {
   if (k === 'del') code = code.slice(0, -1);
   else if (code.length < 4) code += k;
   else return;
-  dots.classList.remove('is-wrong');
+  clearTimeout(wrongTimer);
+  dots.classList.remove('is-wrong', 'shake');
   $('pin-msg').textContent = '';
   paintDots();
   // kurz warten, damit der vierte Punkt noch sichtbar aufleuchtet
   if (code.length === 4) setTimeout(submitPin, 140);
 }
 
+// Tasten reagieren schon beim Aufsetzen des Fingers (pointerdown), nicht erst
+// auf „click“: Beim schnellen Tippen mit zwei Daumen überlappen sich die
+// Berührungen, und der Browser verschluckt dann Klicks; auch ein Finger, der
+// beim Loslassen leicht verrutscht, löst so noch aus. Die Taste leuchtet über
+// eine Klasse auf, weil :active nach preventDefault nicht verlässlich greift.
+// „click“ bleibt nur für die Bedienung per Tastatur (Enter/Leertaste, detail 0).
+$('keypad').addEventListener('pointerdown', (e) => {
+  const key = e.target.closest('[data-k]');
+  if (!key || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  e.preventDefault();
+  key.classList.remove('is-pressed');
+  void key.offsetWidth;
+  key.classList.add('is-pressed');
+  setTimeout(() => key.classList.remove('is-pressed'), 140);
+  press(key.dataset.k);
+});
 $('keypad').addEventListener('click', (e) => {
   const key = e.target.closest('[data-k]');
-  if (key) press(key.dataset.k);
+  if (key && e.detail === 0) press(key.dataset.k);
 });
 $('pin-close').addEventListener('click', closePin);
 scrim.addEventListener('click', (e) => { if (e.target === scrim) closePin(); });

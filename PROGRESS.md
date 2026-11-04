@@ -35,6 +35,14 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-04: **PIN-Ziffernblock reagiert auch bei schnellem Tippen** —
+die Tasten lösen schon beim Aufsetzen des Fingers aus (`pointerdown` statt
+`click`); vorher verschluckte der Browser Klicks, wenn sich zwei Berührungen
+überlappten oder der Finger beim Loslassen verrutschte. Nach einer falschen
+PIN ist die Eingabe sofort wieder frei (vorher gingen Ziffern in den ersten
+0,45 s verloren). Tastatur (Enter/Leertaste auf einer Taste, Ziffern,
+Rücktaste, Esc) geht weiter.
+
 Seit 2026-11-04: **PIN-Eingabe als Blatt mit Ziffernblock** (D-124, Entwurf
 P1) — die aufklappende PIN-Zeile in der Anmeldeliste ist weg. Ein Tipp auf ein
 Konto mit PIN öffnet ein Blatt von unten (ab 640 px als Karte in der Mitte):
