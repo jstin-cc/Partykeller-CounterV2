@@ -26,13 +26,20 @@ Hall of Fame, CSV-Export und Story-Bild.
   - [docs/INSPIRATION-DESIGN.md](docs/INSPIRATION-DESIGN.md): D1, D2, D4–D9
   - [docs/IDEEN.md](docs/IDEEN.md) und [docs/BIERPONG.md](docs/BIERPONG.md):
     Duell-Modus, Abend-Tipprunde, Bierpong
-  - Anmeldeseite, kleine Details ohne Platz: O1–O5 in
-    [docs/inspiration/anmeldung-details.html](docs/inspiration/anmeldung-details.html)
+  - Anmeldeseite, Kopf: H1–H5 in
+    [docs/inspiration/anmeldung-kopf-2.html](docs/inspiration/anmeldung-kopf-2.html)
+    (O4 umgesetzt; O1–O3, O5 in anmeldung-details.html weiter offen)
 
 ## Verlauf
 
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
+
+Seit 2026-11-04: **Entwurf Kopf, Runde zwei** — `docs/inspiration/anmeldung-kopf-2.html`:
+H1 „● 7 heute da“ rechts in der Titelzeile (Legende zum Punkt), H2 Titel als
+Laufband, H3 Wochentag in der orangen Serif, H4 Karteireiter (die Linie über
+der Liste hebt sich um den Titel), H5 Umriss füllt sich (Idee D5).
+Vorschlag: H4 + H1. Noch nichts entschieden.
 
 Seit 2026-11-04: **„Heute da“-Punkt in der Anmeldeliste** (D-127, Entwurf O4
 ohne Puls) — wer am laufenden Abend schon etwas gezählt hat, bekommt einen
