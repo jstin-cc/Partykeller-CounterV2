@@ -341,7 +341,11 @@ try {
     color: var(--accent-ink); --notch-fill: var(--accent); --notch-tag-ink: var(--ink);
     font: inherit;
   }
-  .review-card .eyebrow { color: var(--accent-ink); }
+  /* Abschnittszeile wie „Rangliste“, auf Orange in Akzent-Tinte */
+  .review-card .sec { align-self: stretch; }
+  .review-card .sec-title { color: var(--accent-ink); }
+  .review-card .sec-title::before, .review-card .sec::after { background: var(--accent-ink); }
+  .review-card .sec::after { opacity: 0.25; }
   .review-card-title { font-size: clamp(38px, 11vw, 56px); }
   .review-card-title .t-serif { -webkit-text-stroke: 0.022em currentColor; }
   /* Titelwörter als Blöcke: Kachel und erste Story-Seite haben dieselben
@@ -806,7 +810,7 @@ try {
 
         <!-- Jahresrückblick (L23, D-095): Story-Seiten zum Durchtippen -->
         <button id="review-open" class="review-card" type="button" hidden data-notch="tabW:150;tabH:40;r:14;slant:20" data-reveal="up">
-          <span class="eyebrow">Rückblick</span>
+          <span class="sec"><span class="sec-title">Rückblick</span></span>
           <span class="t-title review-card-title"><span>Dein</span> <span>Jahr</span> <span class="t-serif" id="review-year"></span></span>
           <span class="notch-tag">Ansehen <span class="i-arrow"></span></span>
         </button>
