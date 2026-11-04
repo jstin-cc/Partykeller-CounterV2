@@ -160,6 +160,11 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
   PIN gesetzt), in Ranglisten-Reihenfolge; das zuletzt auf diesem Handy
   benutzte Konto steht ohne Kennzeichnung oben. Wer schon angemeldet ist,
   springt direkt ins Dashboard. (D-041, D-047, D-101)
+- **PIN-Eingabe** als Blatt von unten (am Rechner als Karte in der Mitte) mit
+  eigenem Ziffernblock statt Handy-Tastatur: vier Punkte, nach der vierten
+  Ziffer wird sofort geprüft, kein OK-Knopf. Eine falsche PIN färbt die Punkte
+  rot, lässt sie wackeln und leert sie. Am Laptop gehen Ziffern, Rücktaste
+  und Esc. Namenskreis und Name gleiten aus dem Blatt ins Dashboard. (D-124)
 - **Ausblenden** (Admin): das Konto fehlt in der All-Time-Rangliste (TV,
   Dashboard) und in der Anmeldeliste, zählt aber weiter und erscheint in
   „Heute“. Es ist keine Sperre. (D-013, D-015, D-037, D-102)
@@ -513,3 +518,4 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-121 | 2026-10-29 | Automatische Sicherung beim ersten Getränk, drei rollierend |
 | D-122 | 2026-10-29 | TV lädt nach einem Update selbst neu |
 | D-123 | 2026-10-29 | Server-Status im Admin |
+| D-124 | 2026-11-04 | PIN-Eingabe als Blatt mit Ziffernblock |
