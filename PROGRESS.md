@@ -32,6 +32,11 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-04: **Zählseite passt sich der Displayhöhe an** — am Handy
+füllt die Seite genau den Bildschirm: die drei Getränkekarten teilen sich die
+freie Höhe bis „Abmelden“ (94–220 px), Name, Plus und Zahl wachsen mit der
+Kartenhöhe (Container-Einheiten), die Tageszahl mit der Displayhöhe. Geprüft
+auf 375 × 667 (unverändert kompakt), 390 × 844, 430 × 932 und 532 × 1100.
 Seit 2026-11-04: **Zählseite passt aufs Handy** — Entwurf A aus
 [docs/inspiration/zaehlen-kompakt.html](docs/inspiration/zaehlen-kompakt.html)
 umgesetzt (nur unter 960 px): kleinerer Kopf, flachere Umschalter, Tageszahl

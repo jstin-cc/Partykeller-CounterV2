@@ -617,11 +617,23 @@ try {
     #main-tabs .tab-btn { min-height: 34px; padding: 6px 10px; }
     #tab-count { gap: 10px; }
     .today { margin-bottom: 0; }
-    #today-total { font-size: clamp(64px, 20vw, 84px); margin-top: 8px; }
+    /* Tageszahl wächst mit der Höhe des Displays */
+    #today-total { font-size: clamp(64px, min(24vw, 11svh), 120px); margin-top: 8px; }
     .drink { min-height: 94px; padding: 12px 14px 10px 16px; gap: 4px; }
     .drink-name { font-size: 21px; }
     .drink-plus { width: 36px; height: 36px; }
     .drink-count .num { font-size: 46px; }
+
+    /* Dynamisch: die Seite füllt genau den Bildschirm, die drei Karten
+       teilen sich die freie Höhe bis zur Fußzeile (Kette ab .screen mit
+       100dvh). Auf kleinen Handys bleiben sie bei 94 px, auf hohen wachsen
+       sie bis 220 px; Name und Zahl wachsen mit der Kartenhöhe (cqh). */
+    #user-view { flex: 1; }
+    #tab-count { flex: 1; }
+    #tab-count > .drink { flex: 1 1 0; max-height: 220px; container-type: size; }
+    #tab-count > .drink .drink-name { font-size: clamp(21px, 15cqh, 30px); }
+    #tab-count > .drink .drink-plus { width: clamp(36px, 23cqh, 50px); height: clamp(36px, 23cqh, 50px); }
+    #tab-count > .drink .drink-count .num { font-size: clamp(46px, 55cqh, 120px); }
   }
 
   /* ==========================================================================
