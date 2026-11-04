@@ -157,9 +157,11 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
 - **Bewusst offen:** `/api/state` ist öffentlich (TV), Klartext-HTTP im WLAN,
   4-stellige PINs. (D-017)
 - **Anmeldeliste** kommt aus `GET /api/players` (nur id, Name, ausgeblendet,
-  PIN gesetzt), in Ranglisten-Reihenfolge; das zuletzt auf diesem Handy
-  benutzte Konto steht ohne Kennzeichnung oben. Wer schon angemeldet ist,
-  springt direkt ins Dashboard. (D-041, D-047, D-101)
+  PIN gesetzt, heute schon getrunken als ja/nein), in Ranglisten-Reihenfolge;
+  das zuletzt auf diesem Handy benutzte Konto steht ohne Kennzeichnung oben.
+  Wer heute schon etwas gezählt hat, bekommt einen orangen Punkt am
+  Namenskreis (ohne Puls). Wer schon angemeldet ist, springt direkt ins
+  Dashboard. (D-041, D-047, D-101, D-127)
 - **Anmeldeseite ist funktional:** Logo in der Kopfleiste (wie im Dashboard),
   darunter nur die Titelzeile „Anmeldung“, dann gleich die Kontenliste; keine
   Riesen-Headline, kein „Neu hier“-Sprung, keine Kontozahl. Am Rechner stehen
@@ -530,3 +532,4 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-124 | 2026-11-04 | PIN-Eingabe als Blatt mit Ziffernblock |
 | D-125 | 2026-11-04 | Registrieren: PIN im Blatt festlegen und wiederholen |
 | D-126 | 2026-11-04 | Anmeldeseite: schlichter Kopf „Anmeldung“ |
+| D-127 | 2026-11-04 | „Heute da“-Punkt in der Anmeldeliste |

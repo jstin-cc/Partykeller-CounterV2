@@ -176,6 +176,17 @@ try {
   }
   .user-row:active::before { transform: none; }
   .user-item.is-open > .user-row::before { transform: none; }
+  /* Heute schon da (D-127): oranger Punkt unten rechts am Namenskreis; der
+     Ring in Grundfarbe trennt ihn vom Kreis und zieht mit der Zeilenfläche mit */
+  .avatar-wrap { position: relative; flex: none; display: flex; }
+  .here-dot {
+    position: absolute; right: -1px; bottom: 1px;
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 2.5px var(--bg);
+    transition: box-shadow 0.35s var(--ease);
+  }
+  .user-row:active .here-dot, .user-item.is-open .here-dot { box-shadow: 0 0 0 2.5px var(--surface); }
   .user-row .avatar { transition: background-color 0.35s var(--ease), color 0.35s var(--ease), border-color 0.35s var(--ease); }
   .user-name {
     flex: 1;
@@ -206,6 +217,7 @@ try {
   @media (hover: hover) and (pointer: fine) {
     .user-row:hover::before { transform: none; }
     .user-row:hover .user-name { transform: translateX(10px); color: var(--accent-text); }
+    .user-row:hover .here-dot { box-shadow: 0 0 0 2.5px var(--surface); }
     .user-row:hover .avatar { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
     .user-row:hover .user-go { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
     .user-row:hover .user-go .i-arrow::before { transform: translate(120%, -120%); }
@@ -431,7 +443,10 @@ try {
               name.append(el('span', '', p.name));
               const go = el('span', 'user-go');
               go.append(el('span', 'i-arrow'));
-              row.append(el('div', 'avatar', p.name.charAt(0).toUpperCase()), name, go);
+              const av = el('span', 'avatar-wrap');
+              av.append(el('div', 'avatar', p.name.charAt(0).toUpperCase()));
+              if (p.today) { const dot = el('span', 'here-dot'); dot.setAttribute('role', 'img'); dot.setAttribute('aria-label', 'heute da'); av.append(dot); }
+              row.append(av, name, go);
               wrap.append(row);
               list.append(wrap);
             }
@@ -576,7 +591,20 @@ function renderUsers(all) {
     arrow.className = 'i-arrow';
     go.append(arrow);
 
-    row.append(avatar, name, go);
+    // Namenskreis in einer Hülle, damit der Heute-Punkt nicht mit ins
+    // Dashboard gleitet (dort trägt nur der Kreis den Übergangsnamen)
+    const avatarWrap = document.createElement('span');
+    avatarWrap.className = 'avatar-wrap';
+    avatarWrap.append(avatar);
+    if (p.today) {
+      const dot = document.createElement('span');
+      dot.className = 'here-dot';
+      dot.setAttribute('role', 'img');
+      dot.setAttribute('aria-label', 'heute da');
+      avatarWrap.append(dot);
+    }
+
+    row.append(avatarWrap, name, go);
     wrap.appendChild(row);
 
     row.addEventListener('click', async () => {
@@ -801,7 +829,7 @@ async function createAccount(pin, morphFrom = null) {
 // fürs erste Bild gesetzt — dann erst nach dem Übergang übernehmen, sonst
 // verschwände die Zeile, in die Namenskreis und Name gerade gleiten.
 const CACHE_KEY = `${AREA.keyPrefix}_players_cache`;
-const slim = (players) => JSON.stringify(players.map(({ id, name, hasPin, hidden }) => ({ id, name, hasPin, hidden })));
+const slim = (players) => JSON.stringify(players.map(({ id, name, hasPin, hidden, today }) => ({ id, name, hasPin, hidden, today: !!today })));
 const prerendered = $('user-list').childElementCount > 0;
 if (prerendered) firstRender = false;
 const ready = prerendered ? (document.documentElement.pkMorphDone ?? Promise.resolve()) : Promise.resolve();
