@@ -900,7 +900,7 @@ try {
         <aside class="farewell surface-black" data-notch="tabW:172;tabH:40;r:14;slant:22" data-reveal="up">
           <span class="topo topo--abs notch-clip farewell-topo" aria-hidden="true"></span>
           <div class="farewell-top">
-            <span class="eyebrow">Stand heute Abend</span>
+            <span id="farewell-night" class="eyebrow"></span>
             <span class="eyebrow">SV Partykeller</span>
           </div>
           <p class="t-title farewell-title" data-reveal="words">Prost,<br>bis zum<br><span class="t-serif t-accent">nächsten Mal.</span></p>
@@ -1081,12 +1081,16 @@ function setName(name) {
   if (meLine) meLine.hidden = false;
 }
 
+let nightName = '';
 // „Di 29.09." neben „Getränke heute" (ein Abend zählt bis 6 Uhr zum Vortag)
 function renderDate() {
   const d = seasonNow();
   if (d.getHours() < 6) d.setDate(d.getDate() - 1);
   const wd = d.toLocaleDateString('de-DE', { weekday: 'short' }).replace('.', '');
-  $('today-date').textContent = `${wd} ${d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`;
+  const date = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+  $('today-date').textContent = `${wd} ${date}`;
+  // Fußkarte: Name des Abends, falls der Admin einen vergeben hat, sonst das Datum
+  $('farewell-night').textContent = nightName || `${wd}, ${date}`;
 }
 renderDate();
 
@@ -2066,7 +2070,8 @@ if (!token || !playerId) {
         setTimeout(() => { if (stateSeq === waitingFor) renderCounts(); }, 400);
       }
     },
-    onState({ players, seasonal, paceCompare }) {
+    onState({ players, seasonal, paceCompare, todayName }) {
+      if ((todayName ?? '') !== nightName) { nightName = todayName ?? ''; renderDate(); }
       setSeasonEnabled(seasonal);   // Saison-Akzente (D-071), im Admin abschaltbar
       paceOn = paceCompare !== false;   // Schnitt-Vergleich (D-075), ebenso
       const me = players.find((p) => p.id === playerId);
