@@ -216,7 +216,6 @@ try {
   .drink-demo:active .drink-plus { transform: rotate(90deg); background: var(--on); color: var(--fill); }
   .drink-today { display: flex; align-items: baseline; gap: 8px; padding-right: calc(var(--notch-w, 124px) + 8px); }
   .drink-count { font-size: 64px; line-height: 0.78; letter-spacing: -0.05em; }
-  .drink-unit { font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.7; }
   .drink-demo .notch-tag { font-size: 10.5px; font-weight: 700; gap: 7px; padding-right: 6px; }
   .drink-demo .notch-tag .hl { color: var(--fill); font-size: 17px; letter-spacing: -0.02em; }
   @media (hover: hover) and (pointer: fine) {
@@ -401,19 +400,19 @@ try {
           <button type="button" id="demo-beer" class="drink-demo" style="--fill:var(--beer);--on:var(--beer-ink);" data-notch="tabW:124;tabH:36;r:14;slant:18">
             <span class="topo topo--abs notch-clip drink-topo" aria-hidden="true"></span>
             <span class="drink-head"><span class="drink-name">Bier</span><span class="drink-plus" aria-hidden="true"></span></span>
-            <span class="drink-today"><span class="num drink-count">3</span><span class="drink-unit">Heute</span></span>
+            <span class="drink-today"><span class="num drink-count">3</span></span>
             <span class="notch-tag">Gesamt <span class="hl num drink-total">128</span></span>
           </button>
           <button type="button" class="drink-demo" style="--fill:var(--shot);--on:var(--shot-ink);" data-notch="tabW:124;tabH:36;r:14;slant:18">
             <span class="topo topo--abs notch-clip drink-topo" aria-hidden="true"></span>
             <span class="drink-head"><span class="drink-name">Shots</span><span class="drink-plus" aria-hidden="true"></span></span>
-            <span class="drink-today"><span class="num drink-count">1</span><span class="drink-unit">Heute</span></span>
+            <span class="drink-today"><span class="num drink-count">1</span></span>
             <span class="notch-tag">Gesamt <span class="hl num drink-total">44</span></span>
           </button>
           <button type="button" id="demo-mix" class="drink-demo" style="--fill:var(--mixc);--on:var(--mixc-ink);" data-notch="tabW:124;tabH:36;r:14;slant:18">
             <span class="topo topo--abs notch-clip drink-topo" aria-hidden="true"></span>
             <span class="drink-head"><span class="drink-name">Mischen</span><span class="drink-plus" aria-hidden="true"></span></span>
-            <span class="drink-today"><span class="num drink-count">0</span><span class="drink-unit">Heute</span></span>
+            <span class="drink-today"><span class="num drink-count">0</span></span>
             <span class="notch-tag">Gesamt <span class="hl num drink-total">12</span></span>
           </button>
         </div>
