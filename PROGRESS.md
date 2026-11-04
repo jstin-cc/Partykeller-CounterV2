@@ -37,6 +37,9 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-04: **Krone gezeichnet** — „Du führst!“ in der Ranglisten-Karte
+zeigt statt des 👑-Emojis eine flache SVG-Krone in Akzentfarbe, passend zu ▲/▼.
+
 Seit 2026-11-04: **Abschnittszeile ohne Quadrat** — `.sec-title` hat kein
 oranges Quadrat mehr davor („Rangliste“, „Rückblick“, Onboarding-Vorschau).
 
