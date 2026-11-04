@@ -26,14 +26,21 @@ Hall of Fame, CSV-Export und Story-Bild.
   - [docs/INSPIRATION-DESIGN.md](docs/INSPIRATION-DESIGN.md): D1, D2, D4–D9
   - [docs/IDEEN.md](docs/IDEEN.md) und [docs/BIERPONG.md](docs/BIERPONG.md):
     Duell-Modus, Abend-Tipprunde, Bierpong
-  - Anmeldeseite: Liste und Kopf überarbeiten (Entwürfe A–C in
-    [docs/inspiration/anmeldung-neu.html](docs/inspiration/anmeldung-neu.html)
-    gefallen noch nicht; die Liste soll ähnlich wie jetzt bleiben)
+  - Anmeldeseite, Kopf über der Liste: K1–K3 in
+    [docs/inspiration/anmeldung-kopf.html](docs/inspiration/anmeldung-kopf.html)
+    (Liste bleibt wie jetzt; A–C aus anmeldung-neu.html sind verworfen)
 
 ## Verlauf
 
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
+
+Seit 2026-11-04: **Entwurf Kopf der Anmeldeseite** —
+`docs/inspiration/anmeldung-kopf.html`: die Liste bleibt unverändert, nur der
+Kopf wird kleiner, das Logo wandert (außer in K3) in die Kopfleiste. K1 eine
+Titelzeile „Wer bist du?“ mit Kringel (erster Name bei 182 statt 444 px),
+K2 nur eine Abschnittszeile (118 px), K3 eine kleine Kerbenkarte mit „Neu
+hier“ in der Kerbe (256 px). Noch nichts entschieden.
 
 Seit 2026-11-04: **Registrieren mit dem PIN-Blatt** (D-125) — „Neu hier?“
 fragt nur noch den Namen. „Konto anlegen“ öffnet das Blatt mit Ziffernblock:
