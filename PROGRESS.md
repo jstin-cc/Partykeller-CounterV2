@@ -24,6 +24,8 @@ Hall of Fame, CSV-Export und Story-Bild.
   - [docs/INSPIRATION-3.md](docs/INSPIRATION-3.md): L22, L25–L29
   - [docs/INSPIRATION-4.md](docs/INSPIRATION-4.md): L30–L32, L35–L38
   - [docs/INSPIRATION-DESIGN.md](docs/INSPIRATION-DESIGN.md): D1, D2, D4–D9
+  - [docs/inspiration/zaehlen-kompakt.html](docs/inspiration/zaehlen-kompakt.html):
+    Zählseite ohne Scrollen am Handy, Varianten A–C
   - [docs/IDEEN.md](docs/IDEEN.md) und [docs/BIERPONG.md](docs/BIERPONG.md):
     Duell-Modus, Abend-Tipprunde, Bierpong
 
