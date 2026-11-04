@@ -32,6 +32,13 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-04: **Design angeglichen** — Menüknopf überall 44 px (Archiv
+und Admin waren kleiner, der Morph sprang); die Fußkarte des Dashboards ist
+jetzt Baustein `.farewell` in theme.css und steht so auch im Archiv (statt der
+eigenen Karte mit Schimmer; Etikett „Nach oben“ auf Creme dunkel, ohne
+Hex-Wert); Blatt von unten nur noch als `.sheet` aus theme.css (Rangliste im
+Dashboard, Protokoll-Blatt im Admin; gemeinsame Höhe, Kante und Abgang). In
+der Demo-Instanz am Handy und Rechner geprüft.
 Seit 2026-10-29 (D-123): **Server-Status im Admin** — verbundene Geräte
 nach TV/Handys/Admin, Adresse im WLAN mit „Als QR“, letzte automatische
 Sicherung, Laufzeit; alle 10 s neu. In der Demo-Instanz geprüft (Zählung je

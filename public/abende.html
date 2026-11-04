@@ -546,97 +546,16 @@ try {
   .chron-empty .t-title { font-size: clamp(38px, 7vw, 80px); }
   .chron-empty p { margin: 0; max-width: 36ch; }
 
-  /* ---------------- Fuß: Lando-Fußkarte ---------------- */
-  .foot-zone { position: relative; overflow-x: clip; padding: 8px 0 max(24px, env(safe-area-inset-bottom)); }
-  .foot-card {
-    position: relative;
-    isolation: isolate;
-    color: var(--ink);
-    padding: 70px clamp(20px, 4vw, 52px) clamp(22px, 4vw, 40px);
-    --notch-fill: var(--bg);
-    --notch-tag-ink: var(--ink-muted);
+  /* ---------------- Fuß: Lando-Fußkarte (.farewell, theme.css) ----------------
+     Die Karte bleibt dunkel (area-pk), auch wenn der Grund schon Creme ist;
+     das Etikett steht auf dem Grund und nimmt dessen Schriftfarbe. */
+  .foot-zone {
+    position: relative; overflow-x: clip;
+    padding: 8px 0 max(24px, env(safe-area-inset-bottom));
+    --farewell-tag-ink: var(--ink);
   }
-  /* Die Kerbe sitzt oben links: die Hintergrundfläche wird einfach um 180°
-     gedreht, das Etikett wandert nach oben. */
-  .foot-card > .notch-bg { transform: rotate(180deg); }
-  .foot-card > .notch-tag {
-    top: 0; left: 0; right: auto; bottom: auto;
-    justify-content: flex-start; padding: 0 18px 0 4px;
-    color: var(--ink-2);
-  }
-  html[data-surface="light"] .foot-card > .notch-tag { color: #0f131c; }
-  .foot-card > .notch-tag .laurel-mini { width: 20px; height: 20px; background: currentColor; -webkit-mask: url('assets/laurel.svg') center / contain no-repeat; mask: url('assets/laurel.svg') center / contain no-repeat; }
-  /* Die Linien bekommen dieselbe (gedrehte) Form wie die Fläche */
-  .foot-card > .topo--abs { z-index: -1; opacity: 0.9; transform: rotate(180deg); }
-  /* Akzent-Schimmer außen herum: ein weicher Kegelverlauf hinter der Karte.
-     Bewusst OHNE filter: blur und ohne mask – die Weichheit kommt aus
-     breiten Verlaufsstopps und einem statischen Innenschatten in der
-     Seitenfarbe (::after), der den Rand nach außen ausblendet. Gedreht wird
-     nur die Kind-Ebene (transform) – und nur EINMAL beim Erscheinen der
-     Karte, keine Endlos-Animation. */
-  .foot-zone { --halo-fade: var(--bg); }
-  .foot-halo {
-    position: absolute;
-    inset: -22px;
-    z-index: -2;
-    border-radius: 40px;
-    overflow: hidden;
-    opacity: 0.6;
-    pointer-events: none;
-  }
-  .foot-halo::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    box-shadow: inset 0 0 16px 9px var(--halo-fade);
-    /* folgt dem Hintergrundwechsel der Seite im selben Tempo */
-    transition: box-shadow var(--dur) var(--ease);
-  }
-  .foot-halo > span {
-    position: absolute;
-    left: 50%; top: 50%;
-    width: max(150%, 900px);
-    aspect-ratio: 1;
-    translate: -50% -50%;
-    rotate: -140deg;
-    background: conic-gradient(from 0deg,
-      transparent 0 6%,
-      color-mix(in srgb, var(--accent) 45%, transparent) 14%,
-      var(--accent) 22%,
-      color-mix(in srgb, var(--accent) 45%, transparent) 30%,
-      transparent 40% 56%,
-      color-mix(in srgb, var(--accent) 45%, transparent) 62%,
-      var(--accent) 70%,
-      color-mix(in srgb, var(--accent) 45%, transparent) 78%,
-      transparent 88% 100%);
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    html.js-motion .foot-halo > span { animation: halo-spin 3.2s var(--ease) 1 both; animation-play-state: paused; }
-    html.js-motion .foot-card.is-live .foot-halo > span { animation-play-state: running; }
-  }
-  @keyframes halo-spin { from { rotate: -140deg; } to { rotate: 0deg; } }
-
-  .foot-grid { display: grid; gap: 34px; }
-  @media (min-width: 900px) { .foot-grid { grid-template-columns: 1fr auto; align-items: end; } }
-  /* „Prost auf den" soll immer in eine Zeile passen: Größe an der Spalte
-     (Container-Einheit), nicht am Fenster messen */
-  .foot-main { container-type: inline-size; min-width: 0; }
-  .foot-title { font-size: clamp(34px, 12.4cqi, 124px); line-height: 0.94; }
-  .foot-title .t-serif { font-size: 1.06em; }
-  .foot-sign { width: 170px; height: 89px; margin-top: 18px; --scribble-color: var(--accent-text); --scribble-width: 2.4; --draw-dur: 2.2s; }
-  .foot-links { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); min-width: min(100%, 300px); }
-  .foot-links li { border-bottom: 1px solid var(--line); }
-  .foot-links button {
-    display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%;
-    padding: 14px 2px;
-    background: none; border: 0; color: var(--ink);
-    font: 700 13px/1 var(--font-sans); letter-spacing: 0.03em; text-transform: uppercase;
-    text-decoration: none; text-align: left;
-    transition: color 0.3s var(--ease), padding 0.5s var(--ease);
-  }
-  @media (hover: hover) and (pointer: fine) { .foot-links button:hover { color: var(--accent-text); padding-left: 10px; } }
-  .foot-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; margin-top: 40px; }
+  .foot-zone .wrap { display: flex; flex-direction: column; gap: 18px; }
+  .foot-copy { color: var(--ink-faint); }
 
   /* ---------------- Toast und Dialog ---------------- */
   .toast {
@@ -709,7 +628,7 @@ try {
         </a>
         <div class="topbar-actions">
           <a id="back" class="btn btn--ghost btn--sm" href="./"><span class="i-arrow i-arrow--back"></span><span class="back-label">Zur Anmeldung</span></a>
-          <button class="btn btn--ghost btn--icon btn--sm" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="Menü"><span class="i-menu"></span></button>
+          <button class="btn btn--ghost btn--icon" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="Menü"><span class="i-menu"></span></button>
         </div>
       </header>
 
@@ -791,27 +710,20 @@ try {
     </div>
   </section>
 
-  <!-- 4) Fuß: dunkle Karte mit Kerbe oben und Akzent-Schimmer -->
+  <!-- 4) Fuß: Lando-Fußkarte wie im Dashboard -->
   <div class="foot-zone" data-surface="light">
     <div class="wrap">
-      <footer class="foot-card area-pk" id="foot-card" data-notch="tabW:190;tabH:42;r:18;slant:24">
-        <span class="foot-halo" aria-hidden="true"><span></span></span>
-        <span class="topo topo--abs notch-clip" aria-hidden="true"></span>
-        <div class="foot-grid">
-          <div class="foot-main">
-            <p class="eyebrow" style="margin:0 0 14px">Bis zum nächsten Abend</p>
-            <h2 class="t-impact foot-title" data-reveal="words">Prost auf den<br><span class="scribbled"><span class="t-serif t-accent">nächsten</span></span>.</h2>
-            <svg class="scribble scribble--signature foot-sign" data-draw="1100" viewBox="0 0 268 141" fill="none" aria-hidden="true"><path d="M 33.3 80.9 C 38.1 91.8 58.4 82.1 58.9 68.3 C 59.3 57.7 39.8 64.2 47.2 46.1 C 53 32.1 69 25.5 74.1 32.7 C 70.4 50.1 68.3 65.4 66.4 80 C 76.8 58.9 88.6 37 102.8 17.1 C 89.2 53 72.5 97 57.4 136.9 C 71.5 96.5 89.3 50.5 104.1 18.7 C 141.6 -4.7 149.1 23.2 118.2 42.9 C 108.1 49.1 101.2 46.6 99 39.2 C 102.6 46.3 106.9 52.3 107.3 55.9 C 105.1 53.8 99 62.7 99.7 69.8 C 99.9 73.2 103.3 69.1 107 57.2 C 106.6 63.7 103.1 71.4 107.5 69.7 C 108.4 65.4 110.5 57.9 112.4 55.7 C 112.3 58.9 114.5 56.8 116.4 54.3 C 115.2 60.5 114.2 65.6 115.9 67.9 C 116.7 63 122.7 47.5 128.1 31.9 C 123.2 48.5 118 63.3 120.4 66.7 C 121.9 64.7 122.9 57.2 125.6 53.8 C 122.4 62.3 123.6 65.8 125.6 63.8 C 127.7 60.9 129.7 54.9 131 51.3 C 125.8 69.3 122.7 81.9 118.7 82.9 C 116 86.2 119.3 77 124.6 71.4 C 126.5 69.8 129.1 66 130.4 64.9 C 135.4 53.9 140.1 38.1 146 19.3 C 140.5 38.4 134.9 55 131.4 65.8 C 135.9 55.6 140.5 48.9 141.1 51.3 C 141.2 56.2 136.7 58.8 135 57.1 C 136.5 60.6 137.5 65.2 139.9 65.1 C 142.2 62.3 146.3 54.7 145.7 50.7 C 146.9 46.8 141.7 53.5 141.5 57.6 C 139.7 65.9 142.4 64.9 146.3 60.9 C 149.7 52.2 154.7 37.6 157.2 28.6 C 157.2 24.2 155.5 24.6 152.1 38.8 C 147.7 52.2 145.5 64.1 148 63.4 C 153.5 52.6 157.5 41 160.2 32.4 C 160 27.4 157.5 29 154.5 40.4 C 150.9 53.2 150.4 63.3 151.8 62.6 C 154.8 60 158.3 54.4 157.9 50.9 C 158.7 48.3 154.7 54.6 154.2 56.6 C 153.5 63.3 156.1 61 158.3 57.2 C 159.5 55.2 161.3 51.1 161.3 50.6 C 162.1 52.1 163.9 50.7 166.8 46.8 C 163.9 51.5 164.5 56.5 165.4 55.2 C 197.5 50.7 231.7 29.1 252.8 11.1 C 260.2 4.9 258.7 1.4 251.7 6.4 C 204 38.4 116.6 88.6 12.2 126.2 C 1.5 130 1.2 135.6 11.5 131.3 C 70.3 112.9 152.6 82.8 210.6 58.3 C 236.3 47.6 252.6 39.7 264 33.4 M 120.8 48.7 C 128.7 44.8 137.8 40.7 149.5 33.1" pathLength="1"/></svg>
-          </div>
-          <ul class="foot-links">
-            <li><button type="button" id="to-top">Nach oben <span class="i-arrow i-arrow--up"></span></button></li>
-          </ul>
+      <aside class="farewell area-pk surface-black" data-notch="tabW:172;tabH:40;r:14;slant:22" data-reveal="up">
+        <span class="topo topo--abs notch-clip farewell-topo" aria-hidden="true"></span>
+        <div class="farewell-top">
+          <span class="eyebrow">Bis zum nächsten Abend</span>
+          <span class="eyebrow">SV Partykeller</span>
         </div>
-        <div class="foot-bottom">
-          <span class="eyebrow">© SV Partykeller</span>
-        </div>
-        <span class="notch-tag"><span class="laurel-mini" aria-hidden="true"></span>Abend-Archiv</span>
-      </footer>
+        <p class="t-title farewell-title" data-reveal="words">Prost,<br>bis zum<br><span class="t-serif t-accent">nächsten Mal.</span></p>
+        <svg class="scribble scribble--signature farewell-sign" data-draw="500" viewBox="0 0 268 141" fill="none" aria-hidden="true"><path d="M 33.3 80.9 C 38.1 91.8 58.4 82.1 58.9 68.3 C 59.3 57.7 39.8 64.2 47.2 46.1 C 53 32.1 69 25.5 74.1 32.7 C 70.4 50.1 68.3 65.4 66.4 80 C 76.8 58.9 88.6 37 102.8 17.1 C 89.2 53 72.5 97 57.4 136.9 C 71.5 96.5 89.3 50.5 104.1 18.7 C 141.6 -4.7 149.1 23.2 118.2 42.9 C 108.1 49.1 101.2 46.6 99 39.2 C 102.6 46.3 106.9 52.3 107.3 55.9 C 105.1 53.8 99 62.7 99.7 69.8 C 99.9 73.2 103.3 69.1 107 57.2 C 106.6 63.7 103.1 71.4 107.5 69.7 C 108.4 65.4 110.5 57.9 112.4 55.7 C 112.3 58.9 114.5 56.8 116.4 54.3 C 115.2 60.5 114.2 65.6 115.9 67.9 C 116.7 63 122.7 47.5 128.1 31.9 C 123.2 48.5 118 63.3 120.4 66.7 C 121.9 64.7 122.9 57.2 125.6 53.8 C 122.4 62.3 123.6 65.8 125.6 63.8 C 127.7 60.9 129.7 54.9 131 51.3 C 125.8 69.3 122.7 81.9 118.7 82.9 C 116 86.2 119.3 77 124.6 71.4 C 126.5 69.8 129.1 66 130.4 64.9 C 135.4 53.9 140.1 38.1 146 19.3 C 140.5 38.4 134.9 55 131.4 65.8 C 135.9 55.6 140.5 48.9 141.1 51.3 C 141.2 56.2 136.7 58.8 135 57.1 C 136.5 60.6 137.5 65.2 139.9 65.1 C 142.2 62.3 146.3 54.7 145.7 50.7 C 146.9 46.8 141.7 53.5 141.5 57.6 C 139.7 65.9 142.4 64.9 146.3 60.9 C 149.7 52.2 154.7 37.6 157.2 28.6 C 157.2 24.2 155.5 24.6 152.1 38.8 C 147.7 52.2 145.5 64.1 148 63.4 C 153.5 52.6 157.5 41 160.2 32.4 C 160 27.4 157.5 29 154.5 40.4 C 150.9 53.2 150.4 63.3 151.8 62.6 C 154.8 60 158.3 54.4 157.9 50.9 C 158.7 48.3 154.7 54.6 154.2 56.6 C 153.5 63.3 156.1 61 158.3 57.2 C 159.5 55.2 161.3 51.1 161.3 50.6 C 162.1 52.1 163.9 50.7 166.8 46.8 C 163.9 51.5 164.5 56.5 165.4 55.2 C 197.5 50.7 231.7 29.1 252.8 11.1 C 260.2 4.9 258.7 1.4 251.7 6.4 C 204 38.4 116.6 88.6 12.2 126.2 C 1.5 130 1.2 135.6 11.5 131.3 C 70.3 112.9 152.6 82.8 210.6 58.3 C 236.3 47.6 252.6 39.7 264 33.4 M 120.8 48.7 C 128.7 44.8 137.8 40.7 149.5 33.1" pathLength="1"/></svg>
+        <button class="notch-tag farewell-tag" type="button" id="to-top">Nach oben <span class="i-arrow i-arrow--up"></span></button>
+      </aside>
+      <span class="eyebrow foot-copy">© SV Partykeller</span>
     </div>
   </div>
 </main>
@@ -1547,12 +1459,6 @@ $('tv-live').addEventListener('click', () => send({ type: 'setBoardMode', mode: 
 // Kringel, Kerben, Menü, Hintergrundwechsel
 renderSiteMenu('archive');
 initLando();
-
-// Der Schimmer um die Fußkarte dreht sich nur, solange sie im Bild ist
-if ('IntersectionObserver' in window) {
-  new IntersectionObserver(([en]) => $('foot-card').classList.toggle('is-live', en.isIntersecting))
-    .observe($('foot-card'));
-}
 
 // Admin: über den State-Broadcast bleiben TV-Status und Abend-Namen aktuell
 if (adminToken) {
