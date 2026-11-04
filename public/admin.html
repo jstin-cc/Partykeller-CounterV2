@@ -336,8 +336,9 @@ try {
   .p-gone-text { flex: 1; min-width: 0; font-size: 13.5px; color: var(--ink-muted); }
   .p-gone-text s { color: var(--ink-2); font-weight: 600; text-transform: uppercase; font-size: 12.5px; }
   /* Bearbeiten: am Rechner klappt die Zeile auf, am Handy kommt ein Blatt von unten */
-  .p-edit {
-    display: flex; flex-direction: column; gap: 12px; margin: 6px 0; padding: 16px;
+  .p-edit { display: flex; flex-direction: column; gap: 12px; }
+  .p-edit:not(.sheet) {
+    margin: 6px 0; padding: 16px;
     background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-lg);
   }
   .p-edit-fields { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
@@ -513,15 +514,10 @@ try {
 
   /* Blatt von unten (Handy-Protokoll) */
   .modal-backdrop.p-sheet { align-items: flex-end; padding: 0; }
-  .modal-backdrop.p-sheet .p-edit {
-    width: 100%; max-width: 560px; max-height: 92dvh; overflow: auto; margin: 0; gap: 16px;
-    border: none; border-top: 1px solid var(--line-strong); border-radius: 22px 22px 0 0;
-    padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
-    background: var(--bg-deep); animation: sheet-up 0.55s var(--ease);
-  }
-  @keyframes sheet-up { from { transform: translateY(100%); } }
+  /* Grundform aus theme.css (.sheet); die aufgeklappte Zeile (.p-edit) gilt hier nicht */
+  .p-edit.sheet { margin: 0; gap: 16px; }
   .p-sheet .p-sheet-head { display: flex; flex-direction: column; gap: 12px; }
-  .p-sheet .grip { align-self: center; width: 42px; height: 4px; border-radius: 4px; background: var(--line-strong); }
+  .p-sheet .sheet-grip { margin: 0 auto; }
   .p-sheet .p-sheet-title { display: flex; align-items: flex-start; gap: 12px; }
   .p-sheet .p-sheet-title h2 { margin: 0; font-weight: 750; font-size: 24px; line-height: 0.95; letter-spacing: -0.02em; text-transform: uppercase; }
   .p-sheet .p-sheet-title .sub { font-size: 13px; color: var(--ink-muted); font-variant-numeric: proportional-nums; margin-top: 6px; }
@@ -584,7 +580,6 @@ try {
   @media (prefers-reduced-motion: no-preference) {
     .modal-backdrop.is-leaving { animation: leave-fade 0.4s ease 0.08s both; }
     .modal-backdrop.is-leaving .dialog { animation: leave-drop 0.42s var(--ease) both; }
-    .modal-backdrop.p-sheet.is-leaving .p-edit { animation: leave-down 0.5s var(--ease) both; }
     .toast.is-leaving { animation: leave-sink 0.4s var(--ease) both; }
   }
 
@@ -675,7 +670,7 @@ try {
       </a>
       <div class="topbar-actions">
         <span class="chip chip--line adm-chip">Admin</span>
-        <button class="btn btn--ghost btn--icon btn--sm" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="Menü"><span class="i-menu"></span></button>
+        <button class="btn btn--ghost btn--icon" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="Menü"><span class="i-menu"></span></button>
       </div>
     </header>
 
@@ -713,7 +708,7 @@ try {
       </div>
       <div class="topbar-actions">
         <button id="logout" type="button" class="btn btn--ghost btn--sm">Admin abmelden</button>
-        <button class="btn btn--ghost btn--icon btn--sm" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="Menü"><span class="i-menu"></span></button>
+        <button class="btn btn--ghost btn--icon" type="button" data-menu-toggle aria-controls="site-menu" aria-expanded="false" aria-label="Menü"><span class="i-menu"></span></button>
       </div>
     </header>
 
@@ -2233,7 +2228,9 @@ function showEditor() {
   if (isSheet()) {
     const sheet = $('p-sheet');
     sheet.textContent = '';
-    sheet.appendChild(buildEditor());
+    const editor = buildEditor();
+    editor.classList.add('sheet');
+    sheet.appendChild(editor);
     enter(sheet);
     renderProto();
   } else {
@@ -2259,7 +2256,7 @@ function buildEditor() {
   // Kopf nur im Blatt am Handy
   const head = document.createElement('div');
   head.className = 'p-sheet-head';
-  head.innerHTML = '<div class="grip"></div><div class="p-sheet-title"><div><h2></h2><div class="sub"></div></div><button type="button" class="btn btn--ghost btn--sm quiet">Abbrechen</button></div>';
+  head.innerHTML = '<div class="sheet-grip"></div><div class="p-sheet-title"><div><h2></h2><div class="sub"></div></div><button type="button" class="btn btn--ghost btn--sm quiet">Abbrechen</button></div>';
   head.querySelector('h2').textContent = ed.orig ? 'Eintrag bearbeiten' : 'Getränk nachtragen';
   if (ed.orig) {
     const d = new Date(ed.orig.ts);

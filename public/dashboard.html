@@ -510,37 +510,7 @@ try {
   #share-note { font-size: 12.5px; color: var(--ink-muted); }
 
 
-  /* --- Lando-Fußkarte: dunkle Kerben-Karte mit Unterschrift --- */
-  .farewell {
-    position: relative;
-    display: flex; flex-direction: column; gap: 22px;
-    padding: 22px 20px 112px;
-    border-radius: var(--radius-lg);
-    background: var(--notch-fill);
-    --notch-tag-ink: var(--ink);
-    overflow: visible;
-  }
-  .farewell > :not(.notch-bg):not(.topo):not(.notch-tag):not(.farewell-sign) { position: relative; z-index: 1; }
-  .farewell-topo { -webkit-mask-image: url('assets/topo.svg'); mask-image: url('assets/topo.svg'); }
-  .farewell-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-  .farewell-title { font-size: clamp(38px, 11.5vw, 64px); line-height: 0.88; }
-  /* Die Umlaut-Punkte der Instrument Serif stehen ~0,9 em über der Grundlinie –
-     höher als der enge Zeilenabstand. Etwas Luft über der Serif-Zeile, damit
-     die Ä-Punkte nicht in „BIS ZUM" ragen. */
-  .farewell-title .t-serif { display: inline-block; font-size: 1.06em; margin-top: 0.2em; }
-  .farewell-sign {
-    position: absolute; left: 12px; bottom: 6px; z-index: 1;
-    width: 200px; height: 105px;
-    --scribble-color: var(--accent-text);
-    --scribble-width: 2.4;
-    --draw-dur: 2.2s;
-  }
-  .farewell-tag {
-    border: 0; background: none; cursor: pointer;
-    font-family: inherit; font-size: 11px; font-weight: 700;
-    transition: color 0.3s ease;
-  }
-  @media (hover: hover) and (pointer: fine) { .farewell-tag:hover { color: var(--accent-text); } }
+  /* Lando-Fußkarte (.farewell): Baustein aus theme.css */
 
   /* --- Fußzeile der Seite: nur Abmelden (Archiv steht im Menü, D-090) --- */
   .dash-foot {
@@ -584,23 +554,11 @@ try {
     animation: scrim-in 0.35s ease both;
   }
   @keyframes scrim-in { from { opacity: 0; } }
-  .board-sheet {
-    position: relative;
-    width: 100%; max-width: 560px;
-    max-height: 86vh; max-height: 86dvh;
-    display: flex; flex-direction: column; gap: 14px;
-    padding: 10px 18px calc(18px + env(safe-area-inset-bottom));
-    background: var(--bg-deep);
-    border: 1px solid var(--line); border-bottom: 0;
-    border-radius: 22px 22px 0 0;
-    overflow: hidden;
-    animation: sheet-up 0.65s var(--ease) both;
-  }
-  @keyframes sheet-up { from { transform: translateY(100%); } }
-  /* Schließen: Blatt fährt nach unten weg, die Abdunklung blendet aus */
+  /* Grundform aus theme.css (.sheet); die Liste scrollt innen */
+  .board-sheet { display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+  /* Schließen: Blatt fährt nach unten weg (theme.css), die Abdunklung blendet aus */
   @media (prefers-reduced-motion: no-preference) {
     .board-modal.is-leaving { animation: leave-fade 0.45s ease 0.1s both; }
-    .board-modal.is-leaving .board-sheet { animation: leave-down 0.5s var(--ease) both; }
     #ws-error.is-leaving { animation: leave-sink 0.4s var(--ease) both; }
   }
   .board-sheet > .topo { opacity: 0.8; }
@@ -671,11 +629,6 @@ try {
     #tab-profile > .rank-card { grid-column: 1; grid-row: 1 / span 2; }
     #tab-profile > .stats, #tab-profile > .badges-block { grid-column: 2; }
     #tab-profile > .farewell { grid-column: 1 / -1; }
-    .farewell { padding: 36px 36px 80px; }
-    .farewell { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
-    .farewell-top { grid-column: 2; grid-row: 1; flex-direction: column; align-items: flex-end; gap: 18px; }
-    .farewell-title { grid-column: 1; grid-row: 1; font-size: clamp(56px, 6.4vw, 96px); }
-    .farewell-sign { left: auto; right: 250px; bottom: 16px; width: 240px; height: 126px; }
     .dash-foot { flex-direction: row; align-items: center; justify-content: space-between; }
     .foot-links a { flex: none; }
   }
@@ -909,7 +862,7 @@ try {
         </section>
 
         <!-- Lando-Fußkarte (rein dekorativ): Gruß mit Unterschrift -->
-        <aside class="farewell surface-black" data-notch="tabW:172;tabH:40;r:14;slant:22" style="--notch-fill:var(--bg);" data-reveal="up">
+        <aside class="farewell surface-black" data-notch="tabW:172;tabH:40;r:14;slant:22" data-reveal="up">
           <span class="topo topo--abs notch-clip farewell-topo" aria-hidden="true"></span>
           <div class="farewell-top">
             <span class="eyebrow">Stand heute Abend</span>
@@ -971,7 +924,7 @@ try {
 </div>
 
 <div id="board-modal" class="board-modal" hidden>
-  <div class="board-sheet" role="dialog" aria-modal="true" aria-labelledby="board-title">
+  <div class="sheet board-sheet" role="dialog" aria-modal="true" aria-labelledby="board-title">
     <div class="topo topo--abs" aria-hidden="true"></div>
     <div class="sheet-grip"></div>
     <div class="board-head">

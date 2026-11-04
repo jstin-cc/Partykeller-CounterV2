@@ -790,15 +790,76 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 /* ==========================================================================
    Blatt von unten (Sheet) und Dialog — gemeinsame Grundform
    ========================================================================== */
+/* Das Blatt steht in einer Abdunklung, die es unten mittig ausrichtet
+   (display: flex; align-items: flex-end; justify-content: center). Öffnen
+   mit enter(), schließen mit leave() auf der Abdunklung. */
 .sheet {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 81;
-  max-height: 88vh; overflow: auto;
+  position: relative;
+  width: 100%; max-width: 560px;
+  max-height: 88vh; max-height: 88dvh; overflow: auto;
   background: var(--bg-deep);
-  border-top: 1px solid var(--line);
+  border: 1px solid var(--line-strong); border-bottom: 0;
   border-radius: 22px 22px 0 0;
   padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
+  animation: sheet-up 0.6s var(--ease) both;
 }
-.sheet-grip { width: 42px; height: 4px; border-radius: 4px; background: var(--line-strong); margin: 4px auto 14px; }
+.sheet-grip { flex-shrink: 0; width: 42px; height: 4px; border-radius: 4px; background: var(--line-strong); margin: 4px auto 14px; }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+@media (prefers-reduced-motion: no-preference) {
+  .is-leaving > .sheet { animation: leave-down 0.5s var(--ease) both; }
+}
+
+/* ==========================================================================
+   Lando-Fußkarte (Dashboard, Archiv): schwarze Kerbenkarte mit Gruß,
+   Unterschrift und einer Aktion im Etikett. Markup:
+   <aside class="farewell surface-black" data-notch="tabW:172;tabH:40;r:14;slant:22">
+     <span class="topo topo--abs notch-clip farewell-topo"></span>
+     <div class="farewell-top"><span class="eyebrow">…</span><span class="eyebrow">…</span></div>
+     <p class="t-title farewell-title">…</p>
+     <svg class="scribble scribble--signature farewell-sign" …></svg>
+     <button class="notch-tag farewell-tag">… <span class="i-arrow"></span></button>
+   </aside>
+   Das Etikett steht auf dem Seitengrund: --farewell-tag-ink setzt dessen
+   Schriftfarbe, falls der Grund hell ist.
+   ========================================================================== */
+.farewell {
+  position: relative;
+  display: flex; flex-direction: column; gap: 22px;
+  padding: 22px 20px 112px;
+  border-radius: var(--radius-lg);
+  --notch-fill: var(--bg);
+  background: var(--notch-fill);
+  color: var(--ink);
+  --notch-tag-ink: var(--farewell-tag-ink, var(--ink));
+  overflow: visible;
+}
+.farewell > :not(.notch-bg):not(.topo):not(.notch-tag):not(.farewell-sign) { position: relative; z-index: 1; }
+.farewell-topo { -webkit-mask-image: url('../assets/topo.svg'); mask-image: url('../assets/topo.svg'); }
+.farewell-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.farewell-title { font-size: clamp(38px, 11.5vw, 64px); line-height: 0.88; }
+/* Die Umlaut-Punkte der Instrument Serif stehen ~0,9 em über der Grundlinie –
+   höher als der enge Zeilenabstand. Etwas Luft über der Serif-Zeile, damit
+   die Ä-Punkte nicht in die Zeile darüber ragen. */
+.farewell-title .t-serif { display: inline-block; font-size: 1.06em; margin-top: 0.2em; }
+.farewell-sign {
+  position: absolute; left: 12px; bottom: 6px; z-index: 1;
+  width: 200px; height: 105px;
+  --scribble-color: var(--accent-text);
+  --scribble-width: 2.4;
+  --draw-dur: 2.2s;
+}
+.farewell-tag {
+  border: 0; background: none; cursor: pointer;
+  font-family: inherit; font-size: 11px; font-weight: 700;
+  transition: color 0.3s ease;
+}
+@media (hover: hover) and (pointer: fine) { .farewell-tag:hover { color: var(--accent-text); } }
+@media (min-width: 960px) {
+  .farewell { padding: 36px 36px 80px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+  .farewell-top { grid-column: 2; grid-row: 1; flex-direction: column; align-items: flex-end; gap: 18px; }
+  .farewell-title { grid-column: 1; grid-row: 1; font-size: clamp(56px, 6.4vw, 96px); }
+  .farewell-sign { left: auto; right: 250px; bottom: 16px; width: 240px; height: 126px; }
+}
 
 /* ==========================================================================
    Lebendigkeit: Pop, Aufleuchten, Seitenwechsel

@@ -141,7 +141,7 @@ Weitere Klassen: `.card` (flache Karte, 14 px Radius, Haarlinie), `.chip`
 (`.chip--accent`, `.chip--line`), `.badge` (Umriss-Kerbenkarte mit `.badge-icon` als Strich-SVG, `.badge-name`, `.notch-tag.badge-count`; Zustände `.is-won`, `.is-today`, D-093),
 `.tabs`/`.tab-btn`/`.tab-indicator` (Lime-Balken, `data-pos`, `--tabs`),
 `.field`, `.sec`/`.sec-title` (Abschnittszeile mit Lime-Quadrat), `.split`/`.cell`,
-`.avatar` (Initiale in der Serif), `.sheet`/`.sheet-grip`,
+`.avatar` (Initiale in der Serif), `.sheet`/`.sheet-grip` (Blatt von unten in einer unten ausgerichteten Abdunklung; Abgang über `leave()` der Abdunklung), `.farewell` (Lando-Fußkarte mit Gruß, Unterschrift und Aktion im Etikett; Dashboard und Archiv),
 `.marquee`, `.emblem`/`.laurel`, `.pk-pop`, `.pk-flash`. Bereichsabhängiges nur über
 `html[data-area="youngstars"]` (z. B. kein `.pk-logo`, D-110).
 
