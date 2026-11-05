@@ -37,6 +37,14 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-05: **Lesbarkeit nach WCAG** (D-130) — keine Schrift mehr
+unter 11 px (vorher bis 8,5 px; Zifferblatt im Rückblick mitskaliert).
+Kontraste auf AA gehoben: `--ink-faint` dunkel und hell, `--ink-muted` und
+`--accent-text` auf Creme; neues Token `--line-control` für Feld- und
+Umriss-Knopf-Rahmen. Im Onboarding ist „Gesamt“ der Mischen-Karte wieder
+lesbar (vorher 1,55:1). Abend-Kennzahlen bei 11 px enger gesperrt, passen
+ab 360 px vierspaltig. Bei 320/360/375 px geprüft, kein Überlauf.
+
 Seit 2026-11-05: **Mobil-Feinschliff** — alle Handy-Seiten (ohne TV) bei
 320, 360 und 375 px durchgeprüft. Onboarding-Titel laufen auf 320 px nicht
 mehr über den Rand (die Seite ließ sich seitlich verschieben). Im Abend-Archiv

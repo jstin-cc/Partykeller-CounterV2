@@ -216,8 +216,10 @@ try {
   .drink-demo:active .drink-plus { transform: rotate(90deg); background: var(--on); color: var(--fill); }
   .drink-today { display: flex; align-items: baseline; gap: 8px; padding-right: calc(var(--notch-w, 124px) + 8px); }
   .drink-count { font-size: 64px; line-height: 0.78; letter-spacing: -0.05em; }
-  .drink-demo .notch-tag { font-size: 10.5px; font-weight: 700; gap: 7px; padding-right: 6px; }
+  .drink-demo .notch-tag { font-size: 11px; font-weight: 700; gap: 7px; padding-right: 6px; }
   .drink-demo .notch-tag .hl { color: var(--fill); font-size: 17px; letter-spacing: -0.02em; }
+  /* Die Mischen-Fläche ist als Schrift auf dem Grund zu dunkel (wie im Dashboard) */
+  #demo-mix .notch-tag .hl { color: var(--mix-text); }
   @media (hover: hover) and (pointer: fine) {
     .drink-demo:hover { translate: 0 -3px; }
     .drink-demo:hover .drink-topo { transform: scale(1.06); }
@@ -269,7 +271,7 @@ try {
      nicht in die Schräge der Kerbe laufen */
   .pod-val { font-size: 30px; line-height: 0.8; }
   .pod-card.p1 .pod-val { font-size: 42px; }
-  .pod-card .notch-tag { font-size: 10px; font-weight: 800; padding: 0 3px 0 6px; }
+  .pod-card .notch-tag { font-size: 11px; font-weight: 800; padding: 0 3px 0 6px; }
   .tv-rows { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid var(--line); }
   .tv-rows li { display: flex; align-items: center; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--line); font-size: 13px; }
   .tv-rows .rank { width: 22px; color: var(--ink-faint); font-size: 12px; }
@@ -280,7 +282,7 @@ try {
     flex: none;
     padding: 4px 7px; border-radius: 4px;
     background: var(--accent); color: var(--accent-ink);
-    font-size: 9.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
   }
   .band .marquee { flex: 1; min-width: 0; }
   .band .marquee-track { gap: 28px; padding-right: 28px; }
@@ -305,7 +307,7 @@ try {
   .rival { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 0 0; border-top: 1px solid var(--line); }
   .rival .icon { font-size: 11px; color: var(--accent); text-align: center; }
   .rival .who { font-weight: 750; font-size: 13px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rival .gap { font-size: 10.5px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); white-space: nowrap; }
+  .rival .gap { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); white-space: nowrap; }
   .rank-card .notch-tag { font-weight: 700; }
   .prof-stats { display: flex; flex-direction: column; gap: 14px; }
   .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }

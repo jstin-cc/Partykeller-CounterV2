@@ -383,6 +383,12 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
   Zahlen, Fehlermeldungen, Leer-Zustände, Warnungen der Danger Zone und das
   Onboarding. Kein Gendern („Teilnehmer“). (D-035, D-038, D-050, D-079)
 - **Hover** nur mit Maus; Handys sehen keine hängenden Hover-Zustände. (D-102)
+- **Lesbarkeit (WCAG AA):** Schrift mindestens 11 px (im Zifferblatt-SVG
+  entsprechend skaliert), auch Eyebrows, Chips und Achsen. Text erreicht
+  4,5:1 auf Grund und Karten, auch `--ink-faint` und `--accent-text` auf
+  Creme; Rahmen von Eingabefeldern und Umriss-Knöpfen nutzen
+  `--line-control` (mind. 3:1). Getränkefarben, die als Schrift zu dunkel
+  sind, haben eigene Schrift-Tokens (`--mix-text`). (D-130)
 
 ## 11. Menü, Übergänge und Bewegung
 
@@ -540,3 +546,4 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-127 | 2026-11-04 | „Heute da“-Punkt in der Anmeldeliste |
 | D-128 | 2026-11-05 | Jahresrückblick mit Farbstimmung und Grafik je Seite |
 | D-129 | 2026-11-05 | Jahresrückblick ohne Farbwechsel (ruhige Fassung) |
+| D-130 | 2026-11-05 | Lesbarkeit: Mindestschrift 11 px, AA-Kontraste, Rahmen-Token |
