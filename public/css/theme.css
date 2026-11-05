@@ -85,11 +85,12 @@
   --surface-2: #232a3a;          /* erhabene Chips, Avatare */
   --line: rgb(244 244 237 / 0.12);          /* Haarlinien */
   --line-strong: rgb(244 244 237 / 0.24);
+  --line-control: rgb(244 244 237 / 0.36);  /* Rahmen von Feldern/Umriss-Knöpfen, mind. 3:1 */
   --topo-line: #1d2433;          /* Höhenlinien */
   --ink: var(--lando-white);
   --ink-2: #dde0e8;
   --ink-muted: #aab0bf;
-  --ink-faint: #6f7689;
+  --ink-faint: #7e8595;                     /* mind. 4,5:1 auf Karten */
   --accent: var(--lando-orange);        /* Flächen, Knöpfe, Balken */
   --accent-ink: #140a02;                /* Schrift auf Akzentfläche */
   --accent-text: #ff8a3d;               /* Akzent als Schrift (Serif-Wörter) */
@@ -113,12 +114,13 @@ html[data-surface="light"] {
   --surface-2: #dde1d2;
   --line: rgb(40 44 32 / 0.14);
   --line-strong: rgb(40 44 32 / 0.3);
+  --line-control: rgb(40 44 32 / 0.54);
   --topo-line: #dcdfd6;
   --ink: #0f131c;
   --ink-2: #3b3c38;
-  --ink-muted: #5f6254;
-  --ink-faint: #8c8f80;
-  --accent-text: #c24f00;
+  --ink-muted: #4e5248;
+  --ink-faint: #686c64;
+  --accent-text: #a64400;
   /* Auf Creme kehrt sich Hell/Dunkel um: Shots dunkles Navy, Mischen Navy-Grau */
   --accent-2: #0f131c;
   --accent-2-ink: var(--lando-white);
@@ -276,7 +278,7 @@ a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offs
 .eyebrow {
   font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 10.5px;
+  font-size: 11px;
   line-height: 1.1;
   color: var(--ink-muted);
   text-transform: uppercase;
@@ -317,7 +319,7 @@ a.wordmark:hover { color: var(--ink); }
   -webkit-mask: url('../assets/laurel.svg') center / contain no-repeat;
   mask: url('../assets/laurel.svg') center / contain no-repeat;
 }
-.emblem .eyebrow { font-size: 8.5px; letter-spacing: 0.08em; }
+.emblem .eyebrow { font-size: 11px; letter-spacing: 0.08em; }
 
 /* ==========================================================================
    Höhenlinien-Hintergrund (statisches SVG als Maske — Farbe über --topo-line)
@@ -413,7 +415,7 @@ button { cursor: pointer; }
 /* Hover-Zustände nur mit Maus: auf dem Handy blieben sie nach dem Tippen
    stehen (z. B. ein angetippter Tab bliebe hell) */
 .btn:disabled, .btn[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
-.btn--ghost { --btn-bg: transparent; --btn-ink: var(--ink); --btn-line: var(--line-strong); }
+.btn--ghost { --btn-bg: transparent; --btn-ink: var(--ink); --btn-line: var(--line-control); }
 @media (hover: hover) and (pointer: fine) { .btn--ghost:hover { --btn-line: var(--ink); } }
 .btn--dark { --btn-bg: var(--ink); --btn-ink: var(--bg); --btn-line: var(--ink); }
 .btn--quiet { --btn-bg: var(--surface-2); --btn-ink: var(--ink); --btn-line: transparent; }
@@ -575,7 +577,7 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 .cell .value { font-size: 34px; line-height: 1; color: var(--ink); }
 .cell .label {
   margin-top: 6px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--ink-muted);
   text-transform: uppercase;
@@ -587,7 +589,7 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 .chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 5px 9px; border-radius: 6px;
-  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
   background: var(--surface-2); color: var(--ink-2);
   white-space: nowrap;
 }
@@ -630,7 +632,7 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 .field {
   width: 100%;
   background: var(--surface-alt);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-control);
   border-radius: var(--radius);
   color: var(--ink);
   font-family: var(--font-sans);
