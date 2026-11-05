@@ -55,6 +55,26 @@
   --ease-spring: cubic-bezier(0.32, 1.15, 0.4, 1);
   --dur: 0.75s;
 
+  /* Schriftskala (D-131): jede feste Schriftgröße ist eine dieser Stufen.
+     Ausnahmen: Eingabefelder 16 px (iOS zoomt sonst), Avatar-Initialen und
+     Deko-Ziffern (an die Form gebunden), fließende clamp()-Titel, SVG-Text. */
+  --fs-11: 11px;   /* Untergrenze: Eyebrows, Labels, Chips, Achsen */
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-15: 15px;   /* Fließtext */
+  --fs-17: 17px;
+  --fs-19: 19px;
+  --fs-21: 21px;
+  --fs-24: 24px;
+  --fs-28: 28px;
+  --fs-32: 32px;
+  --fs-40: 40px;
+  --fs-48: 48px;
+  --fs-64: 64px;
+  --fs-80: 80px;
+  /* Abstände (D-131): 4-px-Raster (2, 4, 6, 8, 12, 16, 20, 24, 28, 32, 40,
+     48, 56, 64 …); 2 und 6 nur für Feinheiten, 1 px für optische Korrekturen. */
+
   /* Radien: Lando ist kantig-weich — Knöpfe 7–8 px, Karten 12–14 px */
   --radius-sm: 7px;
   --radius: 10px;
@@ -203,7 +223,7 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: var(--fs-15);
   line-height: 1.45;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
@@ -247,7 +267,7 @@ a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offs
   text-transform: uppercase;
   line-height: 0.95;
   letter-spacing: -0.02em;
-  font-size: 22px;
+  font-size: var(--fs-21);
   margin: 0;
 }
 /* Akzentwort in der Serif (in Überschriften: gleiche Größe, Versalien) */
@@ -266,19 +286,19 @@ a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offs
 .t-accent { color: var(--accent-text); }
 .t-quote {
   font-family: var(--font-serif);
-  font-size: 22px;
+  font-size: var(--fs-21);
   line-height: 1.08;
   letter-spacing: 0.01em;
   color: var(--ink-2);
 }
 .t-quote b, .t-quote strong { color: var(--ink); font-weight: 400; font-style: italic; }
-.t-small { font-size: 13px; line-height: 1.4; color: var(--ink-muted); }
+.t-small { font-size: var(--fs-13); line-height: 1.4; color: var(--ink-muted); }
 
 /* Winzige Versal-Zeile („NEXT RACE", „QATAR, 2024") */
 .eyebrow {
   font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 11px;
+  font-size: var(--fs-11);
   line-height: 1.1;
   color: var(--ink-muted);
   text-transform: uppercase;
@@ -309,7 +329,7 @@ a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offs
 }
 .wordmark .wm-top { font-family: var(--font-serif); font-size: 1.12em; letter-spacing: -0.01em; }
 .wordmark .wm-bottom { font-family: var(--font-sans); font-weight: 800; letter-spacing: -0.03em; }
-.wordmark { font-size: 21px; }
+.wordmark { font-size: var(--fs-21); }
 a.wordmark:hover { color: var(--ink); }
 
 /* Emblem mit Lorbeer und Mini-Zeile („MCLAREN F1 SINCE 2019") */
@@ -319,7 +339,7 @@ a.wordmark:hover { color: var(--ink); }
   -webkit-mask: url('../assets/laurel.svg') center / contain no-repeat;
   mask: url('../assets/laurel.svg') center / contain no-repeat;
 }
-.emblem .eyebrow { font-size: 11px; letter-spacing: 0.08em; }
+.emblem .eyebrow { font-size: var(--fs-11); letter-spacing: 0.08em; }
 
 /* ==========================================================================
    Höhenlinien-Hintergrund (statisches SVG als Maske — Farbe über --topo-line)
@@ -365,7 +385,7 @@ a.wordmark:hover { color: var(--ink); }
   display: flex;
   flex-direction: column;
   padding: 16px 20px 32px;
-  gap: 18px;
+  gap: 16px;
   position: relative;
   z-index: 1;
 }
@@ -392,16 +412,16 @@ button { cursor: pointer; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   min-height: 44px;
-  padding: 0 18px;
+  padding: 0 16px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--btn-line);
   background: var(--btn-bg);
   color: var(--btn-ink);
   font-family: var(--font-sans);
   font-weight: 700;
-  font-size: 13px;
+  font-size: var(--fs-13);
   letter-spacing: 0.02em;
   text-transform: uppercase;
   text-decoration: none;
@@ -422,8 +442,18 @@ button { cursor: pointer; }
 .btn--danger { --btn-bg: transparent; --btn-ink: var(--danger); --btn-line: color-mix(in srgb, var(--danger) 55%, transparent); }
 @media (hover: hover) and (pointer: fine) { .btn--danger:hover { --btn-bg: var(--danger); --btn-ink: var(--lando-black); } }
 .btn--block { width: 100%; }
-.btn--lg { min-height: 54px; font-size: 14.5px; padding: 0 22px; }
-.btn--sm { min-height: 34px; font-size: 11.5px; padding: 0 12px; gap: 7px; }
+.btn--lg { min-height: 54px; font-size: var(--fs-15); padding: 0 20px; }
+/* Trefferflächen (D-131): auf Touch-Geräten bekommen kleine Bedienelemente
+   eine unsichtbare Fläche von mindestens 44 × 44 px, sichtbar bleibt alles
+   gleich. Seiten-eigene kleine Knöpfe hängen sich mit derselben Formel an. */
+@media (pointer: coarse) {
+  .btn--sm, .wordmark { position: relative; }
+  .btn--sm::after, .tab-btn::after, .wordmark::after {
+    content: ''; position: absolute;
+    top: min(0px, calc(50% - 22px)); bottom: min(0px, calc(50% - 22px)); left: min(0px, calc(50% - 22px)); right: min(0px, calc(50% - 22px));
+  }
+}
+.btn--sm { min-height: 34px; font-size: var(--fs-11); padding: 0 12px; gap: 6px; }
 /* Quadratischer Icon-Knopf (Menü, Schließen) */
 .btn--icon { width: 44px; padding: 0; }
 .btn--icon.btn--sm { width: 34px; }
@@ -445,7 +475,7 @@ button { cursor: pointer; }
 .i-arrow--back { transform: rotate(-135deg); }
 
 /* Menü-Icon wie bei Lando (ein langer, ein kurzer Strich) */
-.i-menu { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 5px; width: 16px; }
+.i-menu { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 4px; width: 16px; }
 .i-menu::before, .i-menu::after { content: ''; height: 1.6px; background: currentColor; border-radius: 1px; transition: transform 0.45s var(--ease), width 0.45s var(--ease); }
 .i-menu::before { width: 100%; }
 .i-menu::after { width: 55%; }
@@ -486,13 +516,13 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
   width: var(--notch-w, 140px);
   height: var(--notch-h, 30px);
   display: flex; align-items: center; justify-content: flex-end; gap: 8px;
-  padding: 0 4px 0 18px;
-  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 0 4px 0 16px;
+  font-size: var(--fs-11); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
   color: var(--notch-tag-ink, var(--ink-2));
   white-space: nowrap;
 }
 .notch-tag .hl { color: var(--accent); font-weight: 800; }
-[data-notch*="side:left"] > .notch-tag { right: auto; left: 0; justify-content: flex-start; padding: 0 18px 0 4px; }
+[data-notch*="side:left"] > .notch-tag { right: auto; left: 0; justify-content: flex-start; padding: 0 16px 0 4px; }
 
 /* Rundes Namenszeichen: Anmeldeliste und Dashboard-Kopf */
 .avatar {
@@ -516,7 +546,7 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 .card-title {
   font-family: var(--font-sans);
   font-weight: 750;
-  font-size: 15px;
+  font-size: var(--fs-15);
   text-transform: uppercase;
   letter-spacing: -0.01em;
 }
@@ -526,7 +556,7 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 .sec-title {
   font-family: var(--font-sans);
   font-weight: 700;
-  font-size: 11px;
+  font-size: var(--fs-11);
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--ink);
@@ -549,9 +579,9 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
   border-radius: var(--radius);
 }
 .tab-btn {
-  flex: 1; min-height: 40px; padding: 8px 10px; border: none; border-radius: var(--radius-sm); cursor: pointer;
+  flex: 1; min-height: 40px; padding: 8px 8px; border: none; border-radius: var(--radius-sm); cursor: pointer;
   background: transparent; color: var(--ink-muted);
-  font-family: var(--font-sans); font-weight: 700; font-size: 12.5px;
+  font-family: var(--font-sans); font-weight: 700; font-size: var(--fs-12);
   text-transform: uppercase; letter-spacing: 0.03em;
   transition: color 0.3s var(--ease);
   position: relative; z-index: 1;
@@ -574,22 +604,22 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 .split { display: flex; }
 .split > .cell { text-align: center; flex: 1; }
 .split > .sep { width: 1px; background: var(--line); }
-.cell .value { font-size: 34px; line-height: 1; color: var(--ink); }
+.cell .value { font-size: var(--fs-32); line-height: 1; color: var(--ink); }
 .cell .label {
   margin-top: 6px;
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: 600;
   color: var(--ink-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
-.cell .label--plain { text-transform: none; letter-spacing: 0; font-size: 12.5px; font-weight: 500; }
+.cell .label--plain { text-transform: none; letter-spacing: 0; font-size: var(--fs-12); font-weight: 500; }
 
 /* Chips / Abzeichen: kantig, Versalien; erreicht = Akzentkontur */
 .chip {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 9px; border-radius: 6px;
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 4px 8px; border-radius: 6px;
+  font-size: var(--fs-11); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
   background: var(--surface-2); color: var(--ink-2);
   white-space: nowrap;
 }
@@ -599,10 +629,10 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 /* Abzeichen als Umriss-Kerbenkarten wie die Helm-Karten (D-093): Strich-Icon,
    Name, Anzahl in der Kerbe. Grau = noch nie, .is-won = schon erreicht
    (Linie und Icon im Akzent), .is-today = heute erreicht (gefüllt). */
-.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 10px; }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 8px; }
 .badge {
-  min-height: 116px; padding: 16px 12px 34px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  min-height: 116px; padding: 16px 12px 32px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
   text-align: center;
   color: var(--ink-faint);
   --notch-fill: transparent;
@@ -614,12 +644,12 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
   fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
 }
 .badge-name {
-  font-size: 11px; font-weight: 800; line-height: 1.2;
+  font-size: var(--fs-11); font-weight: 800; line-height: 1.2;
   text-transform: uppercase; letter-spacing: 0.06em;
 }
 .badge .badge-count {
-  padding: 0 3px 0 10px;
-  font-size: 15px; font-weight: 900; letter-spacing: -0.01em; text-transform: none;
+  padding: 0 2px 0 8px;
+  font-size: var(--fs-15); font-weight: 900; letter-spacing: -0.01em; text-transform: none;
   color: var(--ink-faint);
 }
 .badge.is-won { color: var(--accent); --notch-line: var(--accent); }
@@ -638,13 +668,13 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
   font-family: var(--font-sans);
   font-size: 17px;
   font-weight: 500;
-  padding: 13px 14px;
+  padding: 12px 12px;
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 .field::placeholder { color: var(--ink-faint); }
 .field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
 
-.error-msg { color: var(--danger); font-size: 13.5px; min-height: 1.2em; }
+.error-msg { color: var(--danger); font-size: var(--fs-13); min-height: 1.2em; }
 
 
 /* ==========================================================================
@@ -762,11 +792,11 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 /* Nur der aktuelle Punkt ist durchgestrichen (bei reduzierter Bewegung
    stehen sonst alle Striche fertig da) */
 .menu-link:not(.is-current) .scribble { visibility: hidden; }
-.menu-foot { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; }
+.menu-foot { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
 /* Gemeinsames Menü aller Seiten (js/site-menu.js, D-102): oben die eigenen
    Ziele groß, unter „Mehr" die übrigen eine Stufe kleiner */
 .menu-link--sm { font-size: clamp(26px, 7.4vw, 48px); line-height: 1.02; padding: 8px 0; min-height: 44px; }
-.menu-eyebrow { margin: 14px 0 6px; }
+.menu-eyebrow { margin: 12px 0 6px; }
 .menu-eyebrow:first-child { margin-top: 0; }
 .menu-foot .eyebrow { line-height: 1.4; }
 .menu-me { text-align: right; }
@@ -793,10 +823,10 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
   background: var(--bg-deep);
   border: 1px solid var(--line-strong); border-bottom: 0;
   border-radius: 22px 22px 0 0;
-  padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
+  padding: 8px 20px calc(24px + env(safe-area-inset-bottom));
   animation: sheet-up 0.6s var(--ease) both;
 }
-.sheet-grip { flex-shrink: 0; width: 42px; height: 4px; border-radius: 4px; background: var(--line-strong); margin: 4px auto 14px; }
+.sheet-grip { flex-shrink: 0; width: 42px; height: 4px; border-radius: 4px; background: var(--line-strong); margin: 4px auto 12px; }
 @keyframes sheet-up { from { transform: translateY(100%); } }
 @media (prefers-reduced-motion: no-preference) {
   .is-leaving > .sheet { animation: leave-down 0.5s var(--ease) both; }
@@ -817,8 +847,8 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
    ========================================================================== */
 .farewell {
   position: relative;
-  display: flex; flex-direction: column; gap: 22px;
-  padding: 22px 20px 112px;
+  display: flex; flex-direction: column; gap: 20px;
+  padding: 20px 20px 112px;
   border-radius: var(--radius-lg);
   --notch-fill: var(--bg);
   background: var(--notch-fill);
@@ -844,13 +874,13 @@ button:not(:disabled):active, .btn:active { transform: scale(0.97); }
 }
 .farewell-tag {
   border: 0; background: none; cursor: pointer;
-  font-family: inherit; font-size: 11px; font-weight: 700;
+  font-family: inherit; font-size: var(--fs-11); font-weight: 700;
   transition: color 0.3s ease;
 }
 @media (hover: hover) and (pointer: fine) { .farewell-tag:hover { color: var(--accent-text); } }
 @media (min-width: 960px) {
-  .farewell { padding: 36px 36px 80px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
-  .farewell-top { grid-column: 2; grid-row: 1; flex-direction: column; align-items: flex-end; gap: 18px; }
+  .farewell { padding: 32px 32px 80px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+  .farewell-top { grid-column: 2; grid-row: 1; flex-direction: column; align-items: flex-end; gap: 16px; }
   .farewell-title { grid-column: 1; grid-row: 1; font-size: clamp(56px, 6.4vw, 96px); }
   .farewell-sign { left: auto; right: 250px; bottom: 16px; width: 240px; height: 126px; }
 }
@@ -945,7 +975,7 @@ html[data-flip] body { opacity: 0; }
 /* Oktoberfest: flache blau-weiße Wimpel an dünner Schnur ganz oben; der Kopf
    rückt dafür nach unten (am TV regelt das tv.html über .tv-body) */
 .season-bunting { top: 0; left: 0; right: 0; --season-blue: #2f7fd8; }
-html[data-season="oktoberfest"] [data-deco-top] > .screen-inner { padding-top: 34px; }
+html[data-season="oktoberfest"] [data-deco-top] > .screen-inner { padding-top: 32px; }
 .season-string { fill: none; stroke: var(--ink-muted); stroke-opacity: 0.7; }
 .season-flag-blue { fill: var(--season-blue); }
 .season-flag-white { fill: var(--lando-white); }

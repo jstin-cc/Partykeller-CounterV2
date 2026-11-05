@@ -90,12 +90,18 @@ try {
     border: 0;
     padding: 12px 2px;
     color: var(--ink-muted);
-    font-size: 11px;
+    font-size: var(--fs-11);
     font-weight: 650;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     -webkit-tap-highlight-color: transparent;
     transition: color 0.3s ease;
+  }
+  @media (pointer: coarse) {
+    .skip::before {
+      content: ''; position: absolute;
+      top: min(0px, calc(50% - 22px)); bottom: min(0px, calc(50% - 22px)); left: min(0px, calc(50% - 22px)); right: min(0px, calc(50% - 22px));
+    }
   }
   .skip::after {
     content: '';
@@ -110,10 +116,10 @@ try {
   @media (hover: hover) and (pointer: fine) { .skip:hover::after { transform: scaleX(1); transform-origin: left; } }
 
   /* --- Schritte --- */
-  .ob-stage { flex: 1; display: flex; flex-direction: column; padding: 26px 0 8px; }
+  .ob-stage { flex: 1; display: flex; flex-direction: column; padding: 24px 0 8px; }
   .step { display: flex; flex-direction: column; gap: 28px; }
   .step-text { display: flex; flex-direction: column; gap: 16px; }
-  .step-eyebrow { margin: 0; display: flex; align-items: center; gap: 10px; color: var(--accent-text); }
+  .step-eyebrow { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--accent-text); }
   .step-eyebrow::before { content: ''; width: 22px; height: 1px; background: var(--accent); flex: none; }
   .step-title { font-size: clamp(44px, 15.5vw, 132px); line-height: 0.86; }
   .step-title .t-serif { font-size: 1.1em; line-height: 0.8; }
@@ -128,8 +134,8 @@ try {
      Als eigener Block, weil die Wort-Masken (.rw) oben ausgerichtet sind –
      ein Rand in derselben Zeile würde das Wort nach unten verschieben. */
   .step-title .scribbled { display: block; width: fit-content; margin-top: 0.26em; }
-  .step-lead { margin: 0; max-width: 36ch; font-size: 15.5px; line-height: 1.5; color: var(--ink-2); }
-  .hint { margin: 0; font-size: 13px; line-height: 1.45; color: var(--ink-muted); max-width: 40ch; }
+  .step-lead { margin: 0; max-width: 36ch; font-size: var(--fs-15); line-height: 1.5; color: var(--ink-2); }
+  .hint { margin: 0; font-size: var(--fs-13); line-height: 1.45; color: var(--ink-muted); max-width: 40ch; }
   /* Riesige Schritt-Nummer als Wasserzeichen in der Serif */
   .step-no {
     position: absolute;
@@ -152,7 +158,7 @@ try {
   @keyframes no-in { from { opacity: 0; transform: translateY(18%) rotate(-4deg); } }
 
   /* --- Schritt 1: Getränke-Kerbenkarten wie im Dashboard, zum Ausprobieren --- */
-  .drink-demos { display: flex; flex-direction: column; gap: 10px; }
+  .drink-demos { display: flex; flex-direction: column; gap: 8px; }
   .drink-demo {
     position: relative;
     display: flex;
@@ -161,7 +167,7 @@ try {
     gap: 12px;
     width: 100%;
     min-height: 126px;
-    padding: 14px 16px 12px 18px;
+    padding: 12px 16px 12px 16px;
     border: 0;
     background: none;
     color: var(--on);
@@ -194,7 +200,7 @@ try {
   }
   .drink-head, .drink-today { position: relative; z-index: 1; }
   .drink-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-  .drink-name { padding-top: 4px; font-size: 25px; font-weight: 800; line-height: 0.9; letter-spacing: -0.03em; text-transform: uppercase; }
+  .drink-name { padding-top: 4px; font-size: var(--fs-24); font-weight: 800; line-height: 0.9; letter-spacing: -0.03em; text-transform: uppercase; }
   .drink-plus {
     position: relative;
     flex: none;
@@ -214,10 +220,10 @@ try {
   }
   .drink-plus::after { transform: rotate(90deg); }
   .drink-demo:active .drink-plus { transform: rotate(90deg); background: var(--on); color: var(--fill); }
-  .drink-today { display: flex; align-items: baseline; gap: 8px; padding-right: calc(var(--notch-w, 124px) + 8px); }
-  .drink-count { font-size: 64px; line-height: 0.78; letter-spacing: -0.05em; }
-  .drink-demo .notch-tag { font-size: 11px; font-weight: 700; gap: 7px; padding-right: 6px; }
-  .drink-demo .notch-tag .hl { color: var(--fill); font-size: 17px; letter-spacing: -0.02em; }
+  .drink-today { display: flex; align-items: baseline; gap: 8px; padding-right: calc(var(--notch-w, 128px) + 8px); }
+  .drink-count { font-size: var(--fs-64); line-height: 0.78; letter-spacing: -0.05em; }
+  .drink-demo .notch-tag { font-size: var(--fs-11); font-weight: 700; gap: 6px; padding-right: 6px; }
+  .drink-demo .notch-tag .hl { color: var(--fill); font-size: var(--fs-17); letter-spacing: -0.02em; }
   /* Die Mischen-Fläche ist als Schrift auf dem Grund zu dunkel (wie im Dashboard) */
   #demo-mix .notch-tag .hl { color: var(--mix-text); }
   @media (hover: hover) and (pointer: fine) {
@@ -233,14 +239,14 @@ try {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    padding: 14px 14px 12px;
+    padding: 12px 12px 12px;
     border-radius: var(--radius-lg);
     background: var(--bg-deep);
     border: 1px solid var(--line);
   }
   .tv-demo > .topo { z-index: -1; -webkit-mask-image: url('assets/topo.svg'); mask-image: url('assets/topo.svg'); }
-  .tv-head { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
-  .tv-live { display: inline-flex; align-items: center; gap: 7px; }
+  .tv-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
+  .tv-live { display: inline-flex; align-items: center; gap: 6px; }
   .tv-live::before {
     content: '';
     width: 7px; height: 7px; border-radius: 50%;
@@ -255,7 +261,7 @@ try {
     flex-direction: column;
     justify-content: space-between;
     min-width: 0;
-    padding: 9px 10px 8px;
+    padding: 8px 8px 8px;
     --notch-fill: var(--rank);
     --notch-tag-ink: var(--ink-2);
     color: var(--rank-ink);
@@ -264,34 +270,34 @@ try {
   .pod-card.p2 { height: 110px; }
   .pod-card.p3 { height: 94px; }
   .pod-name {
-    font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.01em;
+    font-size: var(--fs-11); font-weight: 800; text-transform: uppercase; letter-spacing: 0.01em;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   /* Schmale Kerbe (tabW 30) und etwas kleinere Zahlen, damit die Ziffern
      nicht in die Schräge der Kerbe laufen */
-  .pod-val { font-size: 30px; line-height: 0.8; }
-  .pod-card.p1 .pod-val { font-size: 42px; }
-  .pod-card .notch-tag { font-size: 11px; font-weight: 800; padding: 0 3px 0 6px; }
-  .tv-rows { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid var(--line); }
-  .tv-rows li { display: flex; align-items: center; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--line); font-size: 13px; }
-  .tv-rows .rank { width: 22px; color: var(--ink-faint); font-size: 12px; }
+  .pod-val { font-size: var(--fs-28); line-height: 0.8; }
+  .pod-card.p1 .pod-val { font-size: var(--fs-40); }
+  .pod-card .notch-tag { font-size: var(--fs-11); font-weight: 800; padding: 0 2px 0 6px; }
+  .tv-rows { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid var(--line); }
+  .tv-rows li { display: flex; align-items: center; gap: 12px; padding: 8px 2px; border-bottom: 1px solid var(--line); font-size: var(--fs-13); }
+  .tv-rows .rank { width: 22px; color: var(--ink-faint); font-size: var(--fs-12); }
   .tv-rows .who { flex: 1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.01em; }
-  .tv-rows .total { font-size: 17px; }
-  .band { margin-top: 12px; display: flex; align-items: center; gap: 10px; }
+  .tv-rows .total { font-size: var(--fs-17); }
+  .band { margin-top: 12px; display: flex; align-items: center; gap: 8px; }
   .band-tag {
     flex: none;
-    padding: 4px 7px; border-radius: 4px;
+    padding: 4px 6px; border-radius: 4px;
     background: var(--accent); color: var(--accent-ink);
-    font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    font-size: var(--fs-11); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
   }
   .band .marquee { flex: 1; min-width: 0; }
   .band .marquee-track { gap: 28px; padding-right: 28px; }
-  .band .marquee-track > span { font-family: var(--font-serif); font-size: 17px; line-height: 1.2; white-space: nowrap; color: var(--ink-2); }
+  .band .marquee-track > span { font-family: var(--font-serif); font-size: var(--fs-17); line-height: 1.2; white-space: nowrap; color: var(--ink-2); }
   .band .marquee-track > span::before { content: '✦'; margin-right: 28px; font-family: var(--font-sans); font-size: 10px; color: var(--accent-text); vertical-align: 2px; }
 
   /* --- Schritt 3: Profil --- */
   /* Gleiche Bausteine wie das Profil im Dashboard, eine Spur kleiner */
-  .prof { display: flex; flex-direction: column; gap: 22px; }
+  .prof { display: flex; flex-direction: column; gap: 20px; }
   .rank-card {
     position: relative; display: flex; flex-direction: column; gap: 12px;
     padding: 16px 16px 56px; --notch-fill: var(--surface); --notch-tag-ink: var(--ink);
@@ -300,18 +306,18 @@ try {
   .rank-topo { -webkit-mask-image: url('assets/topo.svg'); mask-image: url('assets/topo.svg'); }
   .rank-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
   .rank-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-  .rank-word { font-size: 24px; line-height: 0.9; }
+  .rank-word { font-size: var(--fs-24); line-height: 0.9; }
   .rank-num { font-size: clamp(64px, 20vw, 96px); line-height: 0.78; letter-spacing: -0.055em; }
-  .rank-side { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; padding-left: 16px; border-left: 1px solid var(--line); }
-  .rank-total { font-size: 38px; line-height: 0.82; color: var(--accent-text); }
-  .rival { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 0 0; border-top: 1px solid var(--line); }
-  .rival .icon { font-size: 11px; color: var(--accent); text-align: center; }
-  .rival .who { font-weight: 750; font-size: 13px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rival .gap { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); white-space: nowrap; }
+  .rank-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-left: 16px; border-left: 1px solid var(--line); }
+  .rank-total { font-size: var(--fs-40); line-height: 0.82; color: var(--accent-text); }
+  .rival { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 8px 0 0; border-top: 1px solid var(--line); }
+  .rival .icon { font-size: var(--fs-11); color: var(--accent); text-align: center; }
+  .rival .who { font-weight: 750; font-size: var(--fs-13); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rival .gap { font-size: var(--fs-11); font-weight: 650; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); white-space: nowrap; }
   .rank-card .notch-tag { font-weight: 700; }
-  .prof-stats { display: flex; flex-direction: column; gap: 14px; }
+  .prof-stats { display: flex; flex-direction: column; gap: 12px; }
   .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-  .stat-cell { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; padding: 10px 8px 12px 12px; border-left: 1px solid var(--line); }
+  .stat-cell { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; padding: 8px 8px 12px 12px; border-left: 1px solid var(--line); }
   .stat-cell:first-child { border-left: 0; padding-left: 0; }
   .stat-cell .num { font-size: clamp(32px, 9vw, 44px); line-height: 0.82; }
   .stat-cell .stat-best { color: var(--accent-text); }
@@ -323,7 +329,7 @@ try {
     z-index: 3;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
     margin: 0 -20px;
     padding: 26px 20px max(18px, env(safe-area-inset-bottom));
     background: linear-gradient(to top, var(--bg) 72%, transparent);
@@ -331,7 +337,7 @@ try {
   /* „Konto anlegen" der Anmeldung gleitet in diesen Knopf (D-085) */
   html[data-morph="cta"] #next { view-transition-name: morph-cta; }
   .ob-progress { display: flex; align-items: center; gap: 16px; }
-  .ob-count { font-size: 13px; letter-spacing: 0; color: var(--ink-muted); white-space: nowrap; }
+  .ob-count { font-size: var(--fs-13); letter-spacing: 0; color: var(--ink-muted); white-space: nowrap; }
   .ob-count b { color: var(--ink); font-weight: 800; }
   .dots { flex: 1; display: flex; gap: 6px; }
   .dots i {
@@ -359,7 +365,7 @@ try {
     .ob-stage { justify-content: center; padding: 40px 0 20px; }
     .step { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: clamp(40px, 6vw, 110px); align-items: center; }
     .step-title { font-size: clamp(84px, 8vw, 132px); }
-    .step-lead { font-size: 17px; }
+    .step-lead { font-size: var(--fs-17); }
     .step-no { font-size: 300px; top: -60px; right: 4%; }
     .drink-demo { min-height: 128px; }
     .ob-foot {
