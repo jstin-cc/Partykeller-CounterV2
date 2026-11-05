@@ -478,7 +478,9 @@ try {
   .night-winner .count { font-size: 12.5px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
 
   /* Kennzahlen: Wert groß, darunter Versal-Label mit Farbquadrat */
-  .night-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  /* 1fr statt minmax(0, 1fr): eine Spalte darf für ihr längstes Wort
+     (z. B. „Mischen“) breiter werden, statt in die Nachbarspalte zu laufen */
+  .night-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .night-stats .cell { text-align: left; }
   .night-stats .value { font-size: 27px; line-height: 1; color: var(--ink); }
   .night-stats .cell:last-child .value { color: var(--accent-text); }
@@ -496,7 +498,7 @@ try {
   .night-chart .chart-head .what { font-size: 10px; font-weight: 600; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.06em; }
   .night-chart .chart-head .peak {
     font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-    padding: 4px 8px; border-radius: 5px;
+    padding: 4px 8px; border-radius: 5px; white-space: nowrap;
     background: var(--accent); color: var(--accent-ink);
   }
   .night-chart svg { width: 100%; height: 64px; display: block; overflow: visible; }
@@ -597,6 +599,13 @@ try {
   .name-row .field { flex: 1 1 auto; min-width: 0; font-size: 16px; padding: 10px 12px; }
   .name-row .btn { flex: none; }
   /* Schmal: Feld volle Breite, Knopf darunter ebenfalls volle Breite */
+  /* Sehr schmale Handys (320 px): Kennzahlen 2 × 2, Getränkezahl des
+     Siegers unter den Namen */
+  @media (max-width: 359px) {
+    .night-stats { grid-template-columns: repeat(2, 1fr); row-gap: 14px; }
+    .night-winner { grid-template-columns: auto 1fr; row-gap: 4px; }
+    .night-winner .count { grid-column: 2; }
+  }
   @media (max-width: 559px) {
     .name-row { flex-wrap: wrap; }
     .name-row .field, .name-row .btn { flex: 1 1 100%; }
@@ -745,7 +754,7 @@ try {
       <label for="edit-name-input" class="eyebrow" style="display:block;margin-bottom:8px;">Name des Abends</label>
       <div class="name-row">
         <input id="edit-name-input" class="field" maxlength="40" autocomplete="off"
-               placeholder="z. B. Saisonabschluss">
+               autocapitalize="words" enterkeyhint="done" placeholder="z. B. Saisonabschluss">
         <button id="save-name" class="btn night-btn" type="button">Speichern <span class="i-arrow"></span></button>
       </div>
     </div>
