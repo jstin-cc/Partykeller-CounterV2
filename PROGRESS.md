@@ -37,6 +37,15 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-05: **Admin-Login → Anmeldung ohne harten Schnitt** (D-132) —
+„Zurück zur Nutzeranmeldung“ führte immer zur Anmeldeseite; wer als Gast
+angemeldet war, wurde dort unsichtbar ins Dashboard weitergeleitet (Übergang
+in eine leere Seite, dann Sprung). Jetzt geht der Link für Angemeldete direkt
+ins Dashboard („Zurück“), sonst gleitet „Admin Zugang“ in „Anmeldung“. Der
+Platzhalter „Konten werden geladen …“ blitzt nicht mehr auf (erst nach
+0,6 s). Hinweis: Im Vorschau-Fenster werden seitenübergreifende Übergänge
+übersprungen, der Morph ist dort nur über die Namen geprüft.
+
 Seit 2026-11-05: **PIN-Tastenfeld springt nicht mehr** — beim Anlegen
 verschwand „Ohne PIN“ im Schritt „PIN wiederholen“, das unten hängende Blatt
 wurde niedriger und das Tastenfeld rutschte mitten in der Eingabe nach unten.
