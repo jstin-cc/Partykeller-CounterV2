@@ -360,37 +360,7 @@ try {
     background: var(--bg); color: var(--ink);
     -webkit-user-select: none; user-select: none; touch-action: manipulation;
   }
-  .review > :not(.topo):not(.rv-wash) { position: relative; z-index: 1; }
-  /* Farbstimmung je Seite: dunkel, Orange, Creme, Navy. Die Tokens stehen
-     auf der Seite selbst (ihr Inhalt), auf Kopfzeile/Strichen und auf der
-     Wisch-Fläche, die beim Blättern als Kreis vom Tippunkt aufgeht; erst
-     danach übernimmt die Story selbst die neue Farbe. */
-  [data-tone] { --scribble-color: var(--accent); }
-  [data-tone="dark"] {
-    --bg: #0f131c; --ink: var(--lando-white); --ink-2: #dde0e8; --ink-muted: #aab0bf; --ink-faint: #6f7689;
-    --line: rgb(244 244 237 / 0.12); --line-strong: rgb(244 244 237 / 0.24); --topo-line: #1d2433;
-    --surface-2: #232a3a; --accent-text: #ff8a3d; --rv-hi: var(--accent);
-  }
-  [data-tone="accent"] {
-    --bg: var(--accent); --ink: var(--accent-ink); --ink-2: rgb(20 10 2 / 0.85); --ink-muted: rgb(20 10 2 / 0.72); --ink-faint: rgb(20 10 2 / 0.55);
-    --line: rgb(20 10 2 / 0.16); --line-strong: rgb(20 10 2 / 0.3); --topo-line: #f26600;
-    --surface-2: rgb(20 10 2 / 0.12); --accent-text: var(--lando-white); --rv-hi: var(--accent-ink);
-    --scribble-color: var(--accent-ink);
-  }
-  [data-tone="light"] {
-    --bg: var(--lando-white); --ink: #0f131c; --ink-2: #3b3c38; --ink-muted: #5f6254; --ink-faint: #8c8f80;
-    --line: rgb(40 44 32 / 0.14); --line-strong: rgb(40 44 32 / 0.3); --topo-line: #e2e4da;
-    --surface-2: #dde1d2; --accent-text: #e05a00; --rv-hi: var(--accent);
-  }
-  [data-tone="mix"] {
-    --bg: var(--mixc); --ink: var(--lando-white); --ink-2: #dde0e8; --ink-muted: #b8c0d4; --ink-faint: #8a95b2;
-    --line: rgb(244 244 237 / 0.14); --line-strong: rgb(244 244 237 / 0.28); --topo-line: #34405c;
-    --surface-2: #3b4765; --accent-text: #ff8a3d; --rv-hi: var(--accent);
-  }
-  .review[data-tone] { background: var(--bg); color: var(--ink); }
-  .rv-wash { position: absolute; inset: 0; z-index: 0; background: var(--bg); pointer-events: none; }
-  .rv-slide[data-tone] { color: var(--ink); }
-  .review-segs i, .review-segs i::after, .review-close, #review-kicker { transition: background-color 0.6s var(--ease), color 0.6s var(--ease), border-color 0.6s var(--ease); }
+  .review > :not(.topo) { position: relative; z-index: 1; }
   /* Feines Filmkorn über allem (statisch, ohne Mausereignisse) */
   .review::after {
     content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
@@ -476,7 +446,7 @@ try {
   .rv-dial .ring { fill: none; stroke: var(--line-strong); stroke-width: 1; }
   .rv-dial .tick { stroke: var(--line-strong); stroke-width: 1.2; }
   .rv-dial .tick.major { stroke: var(--ink); stroke-width: 2; }
-  .rv-dial .wedge { fill: var(--rv-hi); }
+  .rv-dial .wedge { fill: var(--accent); }
   .rv-dial text { fill: var(--ink-muted); font-family: var(--font-sans); font-weight: 700; font-size: 10px; letter-spacing: 0.04em; text-anchor: middle; dominant-baseline: central; }
   .rv-dial .hand { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; transform-origin: 100px 100px; transform: rotate(var(--deg)); }
   .rv-dial .hub { fill: var(--ink); }
@@ -502,7 +472,6 @@ try {
     padding: 10px 0; background: var(--accent-ink); color: var(--lando-white);
   }
   .rv-band:first-child { transform: translateY(-50%) rotate(-11deg); background: var(--accent); color: var(--accent-ink); }
-  [data-tone="accent"] .rv-band:first-child { background: var(--accent-ink); color: var(--lando-white); }
   .rv-band:last-child { transform: translateY(-50%) rotate(7deg); background: var(--lando-white); color: var(--accent-ink); }
   .rv-band .marquee-track { animation-duration: 22s; }
   .rv-band:last-child .marquee-track { animation-direction: reverse; }
@@ -530,7 +499,6 @@ try {
   .rv-slide:not([hidden]) .rv-stamp.on { animation: rv-stamp 0.55s var(--ease-spring) both; animation-delay: calc(var(--i) * var(--step) + 350ms); }
   @keyframes rv-stamp { from { opacity: 0; transform: rotate(var(--r)) scale(1.8); } }
   .rv-actions { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
-  [data-tone="accent"] .rv-actions .btn:not(.btn--ghost) { --btn-bg: var(--ink); --btn-ink: var(--bg); --btn-line: var(--ink); }
   .rv-actions .btn { width: 100%; justify-content: center; min-height: 52px; }
   .rv-actions .i-arrow { transform: rotate(135deg); }
   @media (prefers-reduced-motion: reduce) {
@@ -1328,8 +1296,6 @@ if (!token || !playerId) {
   }
 
   const RV_MS = 7000;
-  // Entwurf (D-128): mit ?ruhig bleiben alle Seiten dunkel, ohne Farbwechsel
-  const RV_TONED = !new URLSearchParams(location.search).has('ruhig');
   const DRINK_NAME = { beer: 'Bier', shot: 'Shots', mix: 'Mischen' };
   const WEEKDAY = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
   const el = (tag, cls, text) => {
@@ -1457,15 +1423,12 @@ if (!token || !playerId) {
       const sl = el('section', 'rv-slide');
       children.filter(Boolean).forEach((c, k) => { c.style.setProperty('--k', k); sl.append(c); });
       slides.push(sl);
-      return sl;
     };
-    // Farbstimmung: Getränkeseite in der Farbe des Lieblingsgetränks
-    const TONE_OF = { beer: 'accent', shot: 'light', mix: 'mix' };
     const nights = `an ${r.nights} ${r.nights === 1 ? 'Abend' : 'Abenden'}`;
     // Gleiche Teile wie die Kachel („Dein" „Jahr" | „2026"): der Titel geht beim
     // Öffnen Teil für Teil aus der Kachel hervor (D-103)
     add(rvTitle('Dein Jahr', `|${r.year}|`), bigNum(r.total), el('span', 'eyebrow', `Getränke ${nights}`),
-      el('span', 'rv-ghost', String(r.year))).dataset.tone = 'dark';
+      el('span', 'rv-ghost', String(r.year)));
 
     const fav = Object.keys(r.drinks).sort((a, b) => r.drinks[b] - r.drinks[a])[0];
     const most = r.drinks[fav] || 1;
@@ -1481,13 +1444,13 @@ if (!token || !playerId) {
       bars.append(row);
     });
     add(rvTitle('Dein', 'Getränk:', `|${DRINK_NAME[fav]}.|`),
-      bigNum(Math.round((r.drinks[fav] / r.total) * 100), '%'), bars).dataset.tone = TONE_OF[fav];
+      bigNum(Math.round((r.drinks[fav] / r.total) * 100), '%'), bars);
 
     if (r.best) {
       const [y, m, d] = r.best.day.split('-').map(Number);
       const when = el('div', 'rv-when');
       when.append(el('span', 't-serif', WEEKDAY[new Date(y, m - 1, d).getDay()]), el('span', 'num', `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`));
-      add(rvTitle('Dein', '|bester|', 'Abend'), bigNum(r.best.total), when, rvCurve(r.best.timeline)).dataset.tone = 'dark';
+      add(rvTitle('Dein', '|bester|', 'Abend'), bigNum(r.best.total), when, rvCurve(r.best.timeline));
     }
 
     // Stempelkarte (L34): jeder Party-Abend des Jahres ein Kreis — dabei =
@@ -1506,12 +1469,12 @@ if (!token || !playerId) {
         if (s.on) st.style.setProperty('--i', k++);
         grid.append(st);
       }
-      add(rvTitle('Dein+e', '|Abende|'), bigNum(r.nights, `von ${n}`), grid).dataset.tone = 'light';
+      add(rvTitle('Dein+e', '|Abende|'), bigNum(r.nights, `von ${n}`), grid);
     }
 
     if (r.topHour) {
       add(rvTitle('Dein+e', '|Stunde|'), bigNum(r.topHour.hour, 'Uhr'), rvDial(r.topHour.hour),
-        el('span', 'eyebrow rv-center', `${r.topHour.n} ${r.topHour.n === 1 ? 'Getränk' : 'Getränke'} · ${Math.round((r.topHour.n / r.total) * 100)} % von allen`)).dataset.tone = 'mix';
+        el('span', 'eyebrow rv-center', `${r.topHour.n} ${r.topHour.n === 1 ? 'Getränk' : 'Getränke'} · ${Math.round((r.topHour.n / r.total) * 100)} % von allen`));
     }
 
     if (r.rank) {
@@ -1533,7 +1496,7 @@ if (!token || !playerId) {
         parts.push(vs, tug, el('div', 'eyebrow rv-center', gap));
       }
       parts.push(el('div', 'eyebrow rv-center', `Platz ${r.rank} von ${r.of} im Jahr ${r.year}`));
-      add(...parts).dataset.tone = 'dark';
+      add(...parts);
     }
 
     const cells = el('div', 'rv-cells');
@@ -1564,8 +1527,7 @@ if (!token || !playerId) {
     again.type = 'button';
     again.addEventListener('click', () => showSlide(0));
     actions.append(save, again);
-    add(scribbleWord(rvTitle('Prost auf', `|${r.year + 1}.|`), 'loop'), cells, rvBands(r.year + 1), actions).dataset.tone = 'accent';
-    if (!RV_TONED) slides.forEach((sl) => { sl.dataset.tone = 'dark'; });
+    add(scribbleWord(rvTitle('Prost auf', `|${r.year + 1}.|`), 'loop'), cells, rvBands(r.year + 1), actions);
     return slides;
   }
 
@@ -1575,44 +1537,13 @@ if (!token || !playerId) {
   let rvTimer = null;
   let rvStart = 0;
   let rvLeft = RV_MS;
-  // Farbwechsel: Die neue Farbe geht als Kreis vom Tippunkt auf (ohne Tippen
-  // vom Rand in Blätterrichtung). Erst danach trägt die Story selbst die
-  // Farbe; Kopfzeile und Striche wechseln sofort (mit Übergang).
-  let rvWash = null;
-  function finishWash() {
-    if (!rvWash) return;
-    $('review').dataset.tone = rvWash.tone;
-    rvWash.anim.cancel();
-    rvWash.node.remove();
-    rvWash = null;
-  }
-  function setTone(tone, dir, at) {
-    const review = $('review');
-    for (const n of [$('review-segs'), document.querySelector('.review-top')]) n.dataset.tone = tone;
-    finishWash();
-    if (review.dataset.tone === tone) return;
-    if (reducedMotion()) { review.dataset.tone = tone; return; }
-    const x = at?.x ?? (dir > 0 ? innerWidth : 0);
-    const y = at?.y ?? innerHeight * 0.55;
-    const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-    const node = el('div', 'rv-wash');
-    node.dataset.tone = tone;
-    node.append(el('div', 'topo topo--abs'));
-    review.querySelector('.topo').after(node);
-    const anim = node.animate(
-      [{ clipPath: `circle(0px at ${x}px ${y}px)` }, { clipPath: `circle(${r}px at ${x}px ${y}px)` }],
-      { duration: 850, easing: RV_EASE, fill: 'forwards' });
-    rvWash = { tone, node, anim };
-    anim.finished.then(() => { if (rvWash?.node === node) finishWash(); }, () => {});
-  }
   function drawSlideScribbles(sl) {
     sl.querySelectorAll('.scribble').forEach((s) => drawScribble(s, { restart: true, delay: 750 }));
   }
-  function showSlide(i, at) {
+  function showSlide(i) {
     const prev = rvShown;
     rvIdx = Math.max(0, Math.min(rvSlides.length - 1, i));
     if (prev !== rvIdx) {
-      setTone(rvSlides[rvIdx].dataset.tone || 'dark', rvIdx >= prev ? 1 : -1, at);
       drawSlideScribbles(rvSlides[rvIdx]);
       if (prev >= 0 && !reducedMotion()) swapSlides(rvSlides[prev], rvSlides[rvIdx], rvIdx > prev ? 1 : -1);
       else {
@@ -1777,8 +1708,6 @@ if (!token || !playerId) {
     stopSwap();
     rvSlides = reviewSlides(review);
     $('review-slides').replaceChildren(...rvSlides);
-    finishWash();
-    $('review').dataset.tone = rvSlides[0].dataset.tone;
     $('review-kicker').textContent = `Rückblick · ${reviewName}`;
     const frames = reviewFrames();
     const title = rvSlides[0].querySelector('.rv-title');
@@ -1808,7 +1737,6 @@ if (!token || !playerId) {
     if (reviewClosing || $('review').hidden) return;
     clearTimeout(rvTimer);
     stopSwap();
-    finishWash();
     const done = () => {
       reviewClosing = false;
       $('review').hidden = true;
@@ -1849,7 +1777,7 @@ if (!token || !playerId) {
     const held = Date.now() - rvDown.t;
     rvDown = null;
     $('review').classList.remove('is-paused');
-    if (held < 250) showSlide(e.clientX < innerWidth * 0.3 ? rvIdx - 1 : rvIdx + 1, { x: e.clientX, y: e.clientY });
+    if (held < 250) showSlide(e.clientX < innerWidth * 0.3 ? rvIdx - 1 : rvIdx + 1);
     else runSlide();
   });
   $('review').addEventListener('pointercancel', () => { rvDown = null; $('review').classList.remove('is-paused'); runSlide(); });
