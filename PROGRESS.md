@@ -37,6 +37,11 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-05: **Quellenliste** — [docs/QUELLEN.md](docs/QUELLEN.md)
+listet Fremdcode, Schriften, Pakete (mit Lizenz), Vereinsbilder und die
+Gestaltungs-Vorbilder außer landonorris.com, jeweils mit Link und
+Entscheidung.
+
 Seit 2026-11-05: **Admin-Login → Anmeldung ohne harten Schnitt** (D-132) —
 „Zurück zur Nutzeranmeldung“ führte immer zur Anmeldeseite; wer als Gast
 angemeldet war, wurde dort unsichtbar ins Dashboard weitergeleitet (Übergang
