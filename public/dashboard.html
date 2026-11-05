@@ -360,7 +360,43 @@ try {
     background: var(--bg); color: var(--ink);
     -webkit-user-select: none; user-select: none; touch-action: manipulation;
   }
-  .review > :not(.topo) { position: relative; z-index: 1; }
+  .review > :not(.topo):not(.rv-wash) { position: relative; z-index: 1; }
+  /* Farbstimmung je Seite: dunkel, Orange, Creme, Navy. Die Tokens stehen
+     auf der Seite selbst (ihr Inhalt), auf Kopfzeile/Strichen und auf der
+     Wisch-Fläche, die beim Blättern als Kreis vom Tippunkt aufgeht; erst
+     danach übernimmt die Story selbst die neue Farbe. */
+  [data-tone] { --scribble-color: var(--accent); }
+  [data-tone="dark"] {
+    --bg: #0f131c; --ink: var(--lando-white); --ink-2: #dde0e8; --ink-muted: #aab0bf; --ink-faint: #6f7689;
+    --line: rgb(244 244 237 / 0.12); --line-strong: rgb(244 244 237 / 0.24); --topo-line: #1d2433;
+    --surface-2: #232a3a; --accent-text: #ff8a3d; --rv-hi: var(--accent);
+  }
+  [data-tone="accent"] {
+    --bg: var(--accent); --ink: var(--accent-ink); --ink-2: rgb(20 10 2 / 0.85); --ink-muted: rgb(20 10 2 / 0.72); --ink-faint: rgb(20 10 2 / 0.55);
+    --line: rgb(20 10 2 / 0.16); --line-strong: rgb(20 10 2 / 0.3); --topo-line: #f26600;
+    --surface-2: rgb(20 10 2 / 0.12); --accent-text: var(--lando-white); --rv-hi: var(--accent-ink);
+    --scribble-color: var(--accent-ink);
+  }
+  [data-tone="light"] {
+    --bg: var(--lando-white); --ink: #0f131c; --ink-2: #3b3c38; --ink-muted: #5f6254; --ink-faint: #8c8f80;
+    --line: rgb(40 44 32 / 0.14); --line-strong: rgb(40 44 32 / 0.3); --topo-line: #e2e4da;
+    --surface-2: #dde1d2; --accent-text: #e05a00; --rv-hi: var(--accent);
+  }
+  [data-tone="mix"] {
+    --bg: var(--mixc); --ink: var(--lando-white); --ink-2: #dde0e8; --ink-muted: #b8c0d4; --ink-faint: #8a95b2;
+    --line: rgb(244 244 237 / 0.14); --line-strong: rgb(244 244 237 / 0.28); --topo-line: #34405c;
+    --surface-2: #3b4765; --accent-text: #ff8a3d; --rv-hi: var(--accent);
+  }
+  .review[data-tone] { background: var(--bg); color: var(--ink); }
+  .rv-wash { position: absolute; inset: 0; z-index: 0; background: var(--bg); pointer-events: none; }
+  .rv-slide[data-tone] { color: var(--ink); }
+  .review-segs i, .review-segs i::after, .review-close, #review-kicker { transition: background-color 0.6s var(--ease), color 0.6s var(--ease), border-color 0.6s var(--ease); }
+  /* Feines Filmkorn über allem (statisch, ohne Mausereignisse) */
+  .review::after {
+    content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.16; mix-blend-mode: overlay;
+  }
   .review-segs { display: flex; gap: 4px; }
   .review-segs i { position: relative; flex: 1; height: 3px; border-radius: 2px; overflow: hidden; background: var(--line-strong); }
   .review-segs i::after { content: ''; position: absolute; inset: 0; background: var(--ink); transform-origin: left; transform: scaleX(0); }
@@ -385,18 +421,97 @@ try {
   .rv-sub { display: flex; flex-direction: column; gap: 4px; }
   .rv-sub .t-h3 { font-size: 24px; }
   .rv-sub .num { font-size: 22px; color: var(--ink-faint); }
-  .rv-curve svg { width: 100%; height: 76px; display: block; overflow: visible; }
-  .rv-curve .area { fill: var(--ink); opacity: 0.07; }
-  .rv-curve .line { fill: none; stroke: var(--ink); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
-  .rv-curve .band { fill: var(--accent); opacity: 0.85; }
-  .rv-curve .base { stroke: var(--line-strong); vector-effect: non-scaling-stroke; }
+  /* Verlauf des besten Abends: randlos, die Linie zeichnet sich, an der
+     Spitze ein Punkt mit Wert */
+  .rv-when { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .rv-when .t-serif { font-size: clamp(34px, 10vw, 46px); line-height: 0.9; color: var(--accent-text); }
+  .rv-when .num { font-size: 15px; color: var(--ink-muted); }
+  .rv-curve { position: relative; margin: 6px -20px 0; }
+  .rv-curve svg { width: 100%; height: clamp(96px, 17vh, 150px); display: block; overflow: visible; }
+  .rv-curve .area { fill: url(#rv-grad); }
+  .rv-curve .line { fill: none; stroke: var(--accent); stroke-width: 3; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+  .rv-curve .peak-x { stroke: var(--line-strong); stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+  .rv-slide:not([hidden]) .rv-curve svg { animation: rv-draw 1.4s var(--ease) 0.45s both; }
+  @keyframes rv-draw { from { clip-path: inset(-10px 100% -10px 0); } to { clip-path: inset(-10px 0 -10px 0); } }
+  .rv-peak {
+    position: absolute; left: var(--px); top: var(--py); width: 14px; height: 14px; margin: -7px 0 0 -7px;
+    border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+  .rv-peak b {
+    position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%);
+    padding: 4px 8px; border-radius: 5px; background: var(--ink); color: var(--bg);
+    font-weight: 800; font-size: 12px; letter-spacing: -0.01em; white-space: nowrap;
+  }
+  .rv-slide:not([hidden]) .rv-peak { animation: rv-pop 0.5s var(--ease-spring) 1.6s both; }
+  @keyframes rv-pop { from { opacity: 0; transform: scale(0.2); } }
+  .rv-curve .eyebrow { padding: 8px 20px 0; }
+
+  /* Getränke als Balken, das Lieblingsgetränk voll */
+  .rv-bars { display: flex; flex-direction: column; gap: 12px; padding-top: 6px; }
+  .rv-bar { display: grid; grid-template-columns: 76px minmax(0, 1fr) 40px; align-items: center; gap: 12px; }
+  .rv-bar .eyebrow { color: var(--ink); }
+  .rv-bar .num { font-size: 22px; line-height: 1; text-align: right; }
+  .rv-bar i { display: block; height: 14px; border-radius: 3px; background: var(--line-strong); transform-origin: left; width: var(--w); }
+  .rv-bar.fav i { background: var(--ink); height: 22px; }
+  .rv-slide:not([hidden]) .rv-bar i { animation: rv-grow 1s var(--ease) both; animation-delay: calc(450ms + var(--i) * 110ms); }
+  @keyframes rv-grow { from { transform: scaleX(0); } }
+
+  /* Rivale: Avatare, großes Serif-vs, darunter das Kräftemessen als Balken */
   .rv-vs { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; text-align: center; margin-top: 14px; }
-  .rv-vs .avatar { width: 76px; height: 76px; font-size: 40px; margin: 0 auto 10px; }
+  .rv-vs .avatar { width: 84px; height: 84px; font-size: 44px; margin: 0 auto 12px; }
   .rv-vs .avatar.me { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
   .rv-vs .t-h3 { font-size: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .rv-vs .num { font-size: 44px; }
+  .rv-vs .num { font-size: 52px; line-height: 0.9; letter-spacing: -0.05em; }
   .rv-vs .them .num { color: var(--ink-faint); }
-  .rv-vs .vs { font-family: var(--font-serif); font-size: 36px; color: var(--accent-text); }
+  .rv-vs .vs { font-family: var(--font-serif); font-style: italic; font-size: 64px; line-height: 0.8; color: var(--accent-text); }
+  .rv-tug { position: relative; display: flex; height: 10px; gap: 3px; margin-top: 4px; }
+  .rv-tug i { height: 100%; border-radius: 3px; }
+  .rv-tug .me { width: var(--me); background: var(--accent); }
+  .rv-tug .them { flex: 1; background: var(--line-strong); }
+  .rv-slide:not([hidden]) .rv-tug .me { animation: rv-tug 1.2s var(--ease) 0.5s both; }
+  @keyframes rv-tug { from { width: 50%; } }
+
+  /* Zifferblatt der stärksten Stunde (24 h, 0 Uhr oben) */
+  .rv-dial { position: relative; width: clamp(150px, 30vh, 240px); aspect-ratio: 1; margin: 4px auto 0; }
+  .rv-dial svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .rv-dial .ring { fill: none; stroke: var(--line-strong); stroke-width: 1; }
+  .rv-dial .tick { stroke: var(--line-strong); stroke-width: 1.2; }
+  .rv-dial .tick.major { stroke: var(--ink); stroke-width: 2; }
+  .rv-dial .wedge { fill: var(--rv-hi); }
+  .rv-dial text { fill: var(--ink-muted); font-family: var(--font-sans); font-weight: 700; font-size: 10px; letter-spacing: 0.04em; text-anchor: middle; dominant-baseline: central; }
+  .rv-dial .hand { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; transform-origin: 100px 100px; transform: rotate(var(--deg)); }
+  .rv-dial .hub { fill: var(--ink); }
+  .rv-slide:not([hidden]) .rv-dial .hand { animation: rv-hand 1.6s var(--ease) 0.4s both; }
+  .rv-slide:not([hidden]) .rv-dial .wedge { animation: rv-fade 0.5s ease 1.6s both; }
+  @keyframes rv-hand { from { transform: rotate(0deg); } }
+  @keyframes rv-fade { from { opacity: 0; } }
+
+  /* Jahreszahl als riesiger Umriss, hochkant am rechten Rand angeschnitten */
+  .rv-ghost {
+    position: absolute; right: -0.2em; bottom: -0.08em; z-index: -1;
+    writing-mode: vertical-rl; transform-origin: center;
+    font-weight: 800; font-size: clamp(150px, 34vh, 290px); line-height: 0.8; letter-spacing: -0.04em;
+    color: var(--bg); -webkit-text-stroke: 2px var(--line-strong); paint-order: stroke fill;
+    pointer-events: none;
+  }
+
+  /* Abschluss: zwei gekreuzte Laufbänder quer über die Seite */
+  .rv-bands { position: relative; height: clamp(120px, 22vh, 190px); margin: auto -20px; }
+  .rv-bands + .rv-actions { margin-top: 0; }
+  .rv-band {
+    position: absolute; left: -15%; right: -15%; top: 50%; overflow: hidden;
+    padding: 10px 0; background: var(--accent-ink); color: var(--lando-white);
+  }
+  .rv-band:first-child { transform: translateY(-50%) rotate(-11deg); }
+  .rv-band:last-child { transform: translateY(-50%) rotate(7deg); background: var(--lando-white); color: var(--accent-ink); }
+  .rv-band .marquee-track { animation-duration: 22s; }
+  .rv-band:last-child .marquee-track { animation-direction: reverse; }
+  .rv-run { display: flex; }
+  .rv-title .scribbled > .scribble--loop { position: absolute; left: -8%; bottom: -0.32em; width: 124%; height: 0.42em; }
+  .rv-title .scribbled > .scribble--underline { bottom: -0.12em; }
+  .rv-band span { display: inline-flex; align-items: center; gap: 0.4em; padding-right: 0.4em; font-weight: 800; font-size: 30px; line-height: 1; text-transform: uppercase; letter-spacing: -0.02em; white-space: nowrap; }
+  .rv-band .t-serif { text-transform: none; font-weight: 400; font-size: 1.1em; }
+  .rv-band svg { width: 0.7em; height: 0.7em; fill: currentColor; }
   .rv-center { text-align: center; }
   .rv-cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
   .rv-cells .num { display: block; font-size: 40px; line-height: 0.9; }
@@ -418,7 +533,9 @@ try {
   .rv-actions .btn { width: 100%; justify-content: center; min-height: 52px; }
   .rv-actions .i-arrow { transform: rotate(135deg); }
   @media (prefers-reduced-motion: reduce) {
-    .rv-slide.is-in > *, .rv-slide .rv-stamp.on { animation: none; }
+    .rv-slide.is-in > *, .rv-slide .rv-stamp.on, .rv-slide .rv-bar i, .rv-slide .rv-peak, .rv-slide .rv-curve svg,
+    .rv-slide .rv-tug .me, .rv-slide .rv-dial .hand, .rv-slide .rv-dial .wedge { animation: none !important; }
+    .rv-band .marquee-track { animation: none; }
   }
 
   /* „+1" steigt beim Antippen auf (rein optisch, pointerdown) */
@@ -988,7 +1105,7 @@ import { getSession, clearSession, rememberName } from './js/api.js';
 import { connectState } from './js/ws-client.js';
 import { createTapQueue } from './js/taps.js';
 import { onSeason, setSeasonEnabled, newYear, mmss, now as seasonNow } from './js/season.js';
-import { initLando, drawScribble, reducedMotion, leave, enter, replay, go } from './js/lando.js';
+import { initLando, drawScribble, scribble, reducedMotion, leave, enter, replay, go } from './js/lando.js';
 import { buildCurve } from './js/curve.js';
 import { renderSiteMenu } from './js/site-menu.js';
 
@@ -1244,18 +1361,89 @@ if (!token || !playerId) {
     if (!(tl?.counts?.length > 1)) return null;
     const NS = 'http://www.w3.org/2000/svg';
     const W = 100, H = 40;
-    const { max, peak, xAt, d } = buildCurve(tl.counts, W, H, 4);
+    const { max, peak, xAt, yAt, d } = buildCurve(tl.counts, W, H, 6);
     const svg = document.createElementNS(NS, 'svg');
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.setAttribute('preserveAspectRatio', 'none');
     svg.setAttribute('aria-hidden', 'true');
-    const step = W / (tl.counts.length - 1);
-    const bw = Math.min(W, Math.max(6, step * 0.55));
-    const bx = Math.min(W - bw, Math.max(0, xAt(peak) - bw / 2));
-    svg.innerHTML = `<rect class="band" x="${bx}" y="0" width="${bw}" height="${H}"/>`
-      + `<path class="area" d="${d} L${W} ${H} L0 ${H} Z"/><line class="base" x1="0" y1="${H}" x2="${W}" y2="${H}"/><path class="line" d="${d}"/>`;
+    const px = xAt(peak);
+    svg.innerHTML = '<defs><linearGradient id="rv-grad" x1="0" y1="0" x2="0" y2="1">'
+      + '<stop offset="0" style="stop-color:var(--accent);stop-opacity:0.38"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient></defs>'
+      + `<path class="area" d="${d} L${W} ${H} L0 ${H} Z"/>`
+      + `<line class="peak-x" x1="${px}" y1="${yAt(max)}" x2="${px}" y2="${H}"/>`
+      + `<path class="line" d="${d}"/>`;
+    const dot = el('span', 'rv-peak');
+    dot.style.setProperty('--px', `${(px / W) * 100}%`);
+    dot.style.setProperty('--py', `${(yAt(max) / H) * 100}%`);
+    const tag = el('b', '', `${max} um ${(tl.startHour + peak) % 24} Uhr`);
+    // Am Rand hängt das Schild nach innen statt mittig über den Bildrand
+    if (px / W < 0.2) tag.style.cssText = 'left:-4px;transform:none';
+    else if (px / W > 0.8) tag.style.cssText = 'left:auto;right:-4px;transform:none';
+    dot.append(tag);
     const box = el('div', 'rv-curve');
-    box.append(svg, el('div', 'eyebrow', `Spitze ${(tl.startHour + peak) % 24} Uhr · ${max}`));
+    box.append(svg, dot);
+    return box;
+  }
+
+  // Zifferblatt über 24 Stunden, 0 Uhr oben; die stärkste Stunde als Segment,
+  // der Zeiger dreht sich hin
+  function rvDial(hour) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const C = 100, R = 92;
+    const pt = (deg, r) => {
+      const a = ((deg - 90) * Math.PI) / 180;
+      return [(C + r * Math.cos(a)).toFixed(2), (C + r * Math.sin(a)).toFixed(2)];
+    };
+    let ticks = '';
+    for (let h = 0; h < 24; h++) {
+      const major = h % 6 === 0;
+      const [x1, y1] = pt(h * 15, R);
+      const [x2, y2] = pt(h * 15, major ? R - 14 : R - 7);
+      ticks += `<line class="tick${major ? ' major' : ''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+    }
+    const labels = [0, 6, 12, 18].map((h) => {
+      const [x, y] = pt(h * 15, R - 27);
+      return `<text x="${x}" y="${y}">${h}</text>`;
+    }).join('');
+    // Segment von hour bis hour+1 (eine Stunde = 15°)
+    const [ax, ay] = pt(hour * 15, R);
+    const [bx, by] = pt((hour + 1) * 15, R);
+    const [cx, cy] = pt((hour + 1) * 15, 34);
+    const [dx, dy] = pt(hour * 15, 34);
+    const wedge = `<path class="wedge" d="M${ax} ${ay} A${R} ${R} 0 0 1 ${bx} ${by} L${cx} ${cy} A34 34 0 0 0 ${dx} ${dy} Z"/>`;
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 200 200');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.innerHTML = `<circle class="ring" cx="${C}" cy="${C}" r="${R}"/>${wedge}${ticks}${labels}`
+      + `<line class="hand" x1="${C}" y1="${C}" x2="${C}" y2="${C - R + 18}" style="--deg:${hour * 15 + 7.5}deg"/>`
+      + `<circle class="hub" cx="${C}" cy="${C}" r="5"/>`;
+    const box = el('div', 'rv-dial');
+    box.append(svg);
+    return box;
+  }
+
+  // Wort im Titel mit Kringel (zeichnet sich beim Zeigen der Seite)
+  function scribbleWord(title, name) {
+    const w = [...title.querySelectorAll('.t-serif')].pop();
+    if (!w) return title;
+    w.classList.add('scribbled');
+    w.insertAdjacentHTML('beforeend', scribble(name));
+    return title;
+  }
+
+  // Laufband für die Abschlussseite: Inhalt doppelt, läuft endlos (CSS)
+  const STAR = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0l2.4 7.6L20 10l-7.6 2.4L10 20l-2.4-7.6L0 10l7.6-2.4z"/></svg>';
+  function rvBands(year) {
+    const box = el('div', 'rv-bands');
+    box.setAttribute('aria-hidden', 'true');
+    for (const words of [['Prost', `|${year}|`], [`|${year}|`, 'Prost']]) {
+      const band = el('div', 'rv-band');
+      const track = el('div', 'marquee-track');
+      const unit = words.map((w) => (w.startsWith('|') ? `<span class="t-serif">${w.slice(1, -1)}</span>` : `<span>${w}</span>`)).join(`<span>${STAR}</span>`);
+      track.innerHTML = `<div class="rv-run">${(unit + `<span>${STAR}</span>`).repeat(6)}</div>`.repeat(2);
+      band.append(track);
+      box.append(band);
+    }
     return box;
   }
 
@@ -1265,34 +1453,37 @@ if (!token || !playerId) {
       const sl = el('section', 'rv-slide');
       children.filter(Boolean).forEach((c, k) => { c.style.setProperty('--k', k); sl.append(c); });
       slides.push(sl);
+      return sl;
     };
+    // Farbstimmung: Getränkeseite in der Farbe des Lieblingsgetränks
+    const TONE_OF = { beer: 'accent', shot: 'light', mix: 'mix' };
     const nights = `an ${r.nights} ${r.nights === 1 ? 'Abend' : 'Abenden'}`;
     // Gleiche Teile wie die Kachel („Dein" „Jahr" | „2026"): der Titel geht beim
     // Öffnen Teil für Teil aus der Kachel hervor (D-103)
-    add(rvTitle('Dein Jahr', `|${r.year}|`), bigNum(r.total), el('span', 'eyebrow', `Getränke ${nights}`));
+    add(rvTitle('Dein Jahr', `|${r.year}|`), bigNum(r.total), el('span', 'eyebrow', `Getränke ${nights}`),
+      el('span', 'rv-ghost', String(r.year))).dataset.tone = 'dark';
 
     const fav = Object.keys(r.drinks).sort((a, b) => r.drinks[b] - r.drinks[a])[0];
-    const bar = el('div', 'dist-bar');
-    const legend = el('div', 'dist-legend');
-    for (const [k, col] of [['beer', 'var(--beer)'], ['shot', 'var(--shot)'], ['mix', 'var(--mixc)']]) {
-      const part = el('div');
-      part.style.cssText = `background:${col};width:${(r.drinks[k] / r.total) * 100}%`;
-      bar.append(part);
-      const leg = el('span', 'leg');
-      const lab = el('span', 'eyebrow');
-      const sw = el('i');
-      sw.style.background = col;
-      lab.append(sw, DRINK_NAME[k]);
-      leg.append(lab, el('span', 'num', String(r.drinks[k])));
-      legend.append(leg);
-    }
-    add(rvTitle('Dein', 'Getränk:', `|${DRINK_NAME[fav]}.|`), bigNum(Math.round((r.drinks[fav] / r.total) * 100), '%'), bar, legend);
+    const most = r.drinks[fav] || 1;
+    const bars = el('div', 'rv-bars');
+    ['beer', 'shot', 'mix'].sort((a, b) => r.drinks[b] - r.drinks[a]).forEach((k, i) => {
+      const row = el('div', `rv-bar${k === fav ? ' fav' : ''}`);
+      const fill = el('i');
+      fill.style.setProperty('--w', `${Math.max(2, (r.drinks[k] / most) * 100)}%`);
+      fill.style.setProperty('--i', i);
+      const track = el('span');
+      track.append(fill);
+      row.append(el('span', 'eyebrow', DRINK_NAME[k]), track, el('span', 'num', String(r.drinks[k])));
+      bars.append(row);
+    });
+    add(scribbleWord(rvTitle('Dein', 'Getränk:', `|${DRINK_NAME[fav]}.|`), 'underline'),
+      bigNum(Math.round((r.drinks[fav] / r.total) * 100), '%'), bars).dataset.tone = TONE_OF[fav];
 
     if (r.best) {
       const [y, m, d] = r.best.day.split('-').map(Number);
-      const sub = el('div', 'rv-sub');
-      sub.append(el('span', 't-h3', WEEKDAY[new Date(y, m - 1, d).getDay()]), el('span', 'num', `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`));
-      add(rvTitle('Dein', '|bester|', 'Abend'), bigNum(r.best.total), sub, rvCurve(r.best.timeline));
+      const when = el('div', 'rv-when');
+      when.append(el('span', 't-serif', WEEKDAY[new Date(y, m - 1, d).getDay()]), el('span', 'num', `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`));
+      add(rvTitle('Dein', '|bester|', 'Abend'), bigNum(r.best.total), when, rvCurve(r.best.timeline)).dataset.tone = 'dark';
     }
 
     // Stempelkarte (L34): jeder Party-Abend des Jahres ein Kreis — dabei =
@@ -1311,12 +1502,12 @@ if (!token || !playerId) {
         if (s.on) st.style.setProperty('--i', k++);
         grid.append(st);
       }
-      add(rvTitle('Dein+e', '|Abende|'), bigNum(r.nights, `von ${n}`), grid);
+      add(rvTitle('Dein+e', '|Abende|'), bigNum(r.nights, `von ${n}`), grid).dataset.tone = 'light';
     }
 
     if (r.topHour) {
-      add(rvTitle('Dein+e', '|Stunde|'), bigNum(r.topHour.hour, 'Uhr'),
-        el('span', 'eyebrow', `${r.topHour.n} ${r.topHour.n === 1 ? 'Getränk' : 'Getränke'} · ${Math.round((r.topHour.n / r.total) * 100)} % von allen`));
+      add(rvTitle('Dein+e', '|Stunde|'), bigNum(r.topHour.hour, 'Uhr'), rvDial(r.topHour.hour),
+        el('span', 'eyebrow rv-center', `${r.topHour.n} ${r.topHour.n === 1 ? 'Getränk' : 'Getränke'} · ${Math.round((r.topHour.n / r.total) * 100)} % von allen`)).dataset.tone = 'mix';
     }
 
     if (r.rank) {
@@ -1331,10 +1522,14 @@ if (!token || !playerId) {
         vs.append(side(reviewName, r.total, true), el('span', 'vs', 'vs'), side(r.rival.name, r.rival.total, false));
         const diff = Math.abs(r.rival.total - r.total);
         const gap = diff === 0 ? 'Gleichstand' : `${fmtDrinks(diff)} ${r.rival.ahead ? 'Rückstand' : 'Vorsprung'}`;
-        parts.push(vs, el('div', 'eyebrow rv-center', gap));
+        const tug = el('div', 'rv-tug');
+        const mine = el('i', 'me');
+        mine.style.setProperty('--me', `${(r.total / Math.max(1, r.total + r.rival.total)) * 100}%`);
+        tug.append(mine, el('i', 'them'));
+        parts.push(vs, tug, el('div', 'eyebrow rv-center', gap));
       }
       parts.push(el('div', 'eyebrow rv-center', `Platz ${r.rank} von ${r.of} im Jahr ${r.year}`));
-      add(...parts);
+      add(...parts).dataset.tone = 'dark';
     }
 
     const cells = el('div', 'rv-cells');
@@ -1344,7 +1539,7 @@ if (!token || !playerId) {
       cells.append(c);
     }
     const actions = el('div', 'rv-actions');
-    const save = el('button', 'btn', 'Story speichern ');
+    const save = el('button', 'btn btn--dark', 'Story speichern ');
     save.type = 'button';
     save.append(el('span', 'i-arrow i-arrow--down'));
     save.addEventListener('click', async () => {
@@ -1365,7 +1560,7 @@ if (!token || !playerId) {
     again.type = 'button';
     again.addEventListener('click', () => showSlide(0));
     actions.append(save, again);
-    add(rvTitle('Prost auf', `|${r.year + 1}.|`), cells, actions);
+    add(scribbleWord(rvTitle('Prost auf', `|${r.year + 1}.|`), 'loop'), cells, rvBands(r.year + 1), actions).dataset.tone = 'accent';
     return slides;
   }
 
@@ -1375,10 +1570,45 @@ if (!token || !playerId) {
   let rvTimer = null;
   let rvStart = 0;
   let rvLeft = RV_MS;
-  function showSlide(i) {
+  // Farbwechsel: Die neue Farbe geht als Kreis vom Tippunkt auf (ohne Tippen
+  // vom Rand in Blätterrichtung). Erst danach trägt die Story selbst die
+  // Farbe; Kopfzeile und Striche wechseln sofort (mit Übergang).
+  let rvWash = null;
+  function finishWash() {
+    if (!rvWash) return;
+    $('review').dataset.tone = rvWash.tone;
+    rvWash.anim.cancel();
+    rvWash.node.remove();
+    rvWash = null;
+  }
+  function setTone(tone, dir, at) {
+    const review = $('review');
+    for (const n of [$('review-segs'), document.querySelector('.review-top')]) n.dataset.tone = tone;
+    finishWash();
+    if (review.dataset.tone === tone) return;
+    if (reducedMotion()) { review.dataset.tone = tone; return; }
+    const x = at?.x ?? (dir > 0 ? innerWidth : 0);
+    const y = at?.y ?? innerHeight * 0.55;
+    const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    const node = el('div', 'rv-wash');
+    node.dataset.tone = tone;
+    node.append(el('div', 'topo topo--abs'));
+    review.querySelector('.topo').after(node);
+    const anim = node.animate(
+      [{ clipPath: `circle(0px at ${x}px ${y}px)` }, { clipPath: `circle(${r}px at ${x}px ${y}px)` }],
+      { duration: 850, easing: RV_EASE, fill: 'forwards' });
+    rvWash = { tone, node, anim };
+    anim.finished.then(() => { if (rvWash?.node === node) finishWash(); }, () => {});
+  }
+  function drawSlideScribbles(sl) {
+    sl.querySelectorAll('.scribble').forEach((s) => drawScribble(s, { restart: true, delay: 750 }));
+  }
+  function showSlide(i, at) {
     const prev = rvShown;
     rvIdx = Math.max(0, Math.min(rvSlides.length - 1, i));
     if (prev !== rvIdx) {
+      setTone(rvSlides[rvIdx].dataset.tone || 'dark', rvIdx >= prev ? 1 : -1, at);
+      drawSlideScribbles(rvSlides[rvIdx]);
       if (prev >= 0 && !reducedMotion()) swapSlides(rvSlides[prev], rvSlides[rvIdx], rvIdx > prev ? 1 : -1);
       else {
         stopSwap();
@@ -1542,6 +1772,8 @@ if (!token || !playerId) {
     stopSwap();
     rvSlides = reviewSlides(review);
     $('review-slides').replaceChildren(...rvSlides);
+    finishWash();
+    $('review').dataset.tone = rvSlides[0].dataset.tone;
     $('review-kicker').textContent = `Rückblick · ${reviewName}`;
     const frames = reviewFrames();
     const title = rvSlides[0].querySelector('.rv-title');
@@ -1571,6 +1803,7 @@ if (!token || !playerId) {
     if (reviewClosing || $('review').hidden) return;
     clearTimeout(rvTimer);
     stopSwap();
+    finishWash();
     const done = () => {
       reviewClosing = false;
       $('review').hidden = true;
@@ -1611,7 +1844,7 @@ if (!token || !playerId) {
     const held = Date.now() - rvDown.t;
     rvDown = null;
     $('review').classList.remove('is-paused');
-    if (held < 250) showSlide(e.clientX < innerWidth * 0.3 ? rvIdx - 1 : rvIdx + 1);
+    if (held < 250) showSlide(e.clientX < innerWidth * 0.3 ? rvIdx - 1 : rvIdx + 1, { x: e.clientX, y: e.clientY });
     else runSlide();
   });
   $('review').addEventListener('pointercancel', () => { rvDown = null; $('review').classList.remove('is-paused'); runSlide(); });

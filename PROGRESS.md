@@ -37,6 +37,16 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-05: **Jahresrückblick überarbeitet** (D-128) — jede Story-Seite
+hat ihre Farbstimmung (dunkel, Orange, Creme, Navy; Getränkeseite in der
+Farbe des Lieblingsgetränks), die neue Farbe geht beim Blättern als Kreis vom
+Tippunkt auf. Neue Grafiken: Jahreszahl als Umriss hochkant am Rand,
+Getränkebalken, randlose Abendkurve mit Spitzenpunkt, Stempelkarte auf
+Creme, 24-Stunden-Zifferblatt mit Zeiger, Kräftemessen-Balken beim Rivalen,
+gekreuzte „Prost“-Laufbänder auf der orangen Abschlussseite; Kringel unter
+Serif-Wörtern, feines Filmkorn. Geprüft in der Demo (375×812 und 360×640,
+schnelles Tippen, Schließen auf farbiger Seite, Öffnen aus der Kachel).
+
 Seit 2026-11-04: **Krone gezeichnet** — „Du führst!“ in der Ranglisten-Karte
 zeigt statt des 👑-Emojis eine flache SVG-Krone in Akzentfarbe, passend zu ▲/▼.
 
