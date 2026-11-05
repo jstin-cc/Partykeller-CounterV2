@@ -416,6 +416,11 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
   Chrome/Safari per View Transition, Firefox per Skript (FLIP über
   `sessionStorage`). Paare, die erst ein Klick festlegt, laufen über
   `data-morph`. Kein Vorhang. (D-068, D-085, D-086, D-087, D-103)
+- **Keine Zwischenseiten:** Links führen direkt ans Ziel statt über eine
+  Seite, die gleich weiterleitet (sonst blendet der Übergang in eine leere
+  Seite). Aus dem Admin geht „Zurück“ für angemeldete Gäste ins Dashboard,
+  sonst gleitet „Admin Zugang“ in „Anmeldung“. Der Lade-Platzhalter der
+  Anmeldeliste erscheint erst nach 0,6 s. (D-132)
 - **Innerhalb einer Seite:** was animiert erscheint, verschwindet animiert
   (`leave()`/`enter()`); Ansichtswechsel (`swapView`) per Web Animations.
   (D-083, D-087)
@@ -560,3 +565,4 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-129 | 2026-11-05 | Jahresrückblick ohne Farbwechsel (ruhige Fassung) |
 | D-130 | 2026-11-05 | Lesbarkeit: Mindestschrift 11 px, AA-Kontraste, Rahmen-Token |
 | D-131 | 2026-11-05 | Schriftskala, 4-px-Abstandsraster, 44-px-Trefferflächen auf Touch |
+| D-132 | 2026-11-05 | Weicher Übergang vom Admin-Login zurück zur Anmeldung |

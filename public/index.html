@@ -236,7 +236,9 @@ try {
   html[data-morph="me"] .user-item.is-last .user-name > span { view-transition-name: me-name; }
   html[data-morph="me"] .user-list.is-entering > .user-item.is-last { animation: none; }
 
-  /* Laden: leise pulsierende Zeile, bis die Konten da sind */
+  /* Laden: leise pulsierende Zeile, bis die Konten da sind. Erst nach einer
+     kurzen Weile, sonst blitzt sie bei jedem Seitenwechsel auf, bevor die
+     Zeilen hereingleiten */
   .user-list.is-loading:empty::before {
     content: 'Konten werden geladen …';
     display: block;
@@ -244,10 +246,12 @@ try {
     border-bottom: 1px solid var(--line);
     font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
     color: var(--ink-muted);
-    animation: pulse 1.1s ease-in-out infinite alternate;
+    animation: load-in 0.3s ease 0.6s both, pulse 1.1s ease-in-out 0.9s infinite alternate;
   }
-  .user-list.is-loading:empty { border-top: 1px solid var(--line); }
+  .user-list.is-loading:empty { border-top: 1px solid transparent; animation: load-line 0.3s ease 0.6s both; }
   @keyframes pulse { to { opacity: 0.35; } }
+  @keyframes load-in { from { opacity: 0; } }
+  @keyframes load-line { to { border-top-color: var(--line); } }
   /* Server nicht erreichbar: statt einer nackten Linie ein Hinweis in der Serif */
   .user-list.is-error:empty {
     border-top: 1px solid var(--line);

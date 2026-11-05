@@ -124,6 +124,8 @@ try {
   .morph-proto { display: inline-block; }
   html[data-morph="proto"] .morph-proto { view-transition-name: morph-proto; }
   html[data-morph="proto"] .morph-proto .rw-i { transform: none; transition: none; }
+  /* Zurück zur Nutzeranmeldung: „Admin Zugang" gleitet in „Anmeldung" */
+  html[data-morph="login"] .login-title { view-transition-name: morph-login; }
   .login-title .t-serif { font-size: 1.06em; }
   .login-title .scribbled > .scribble--underline { --scribble-width: 5; --draw-dur: 1.1s; bottom: -0.1em; height: 0.2em; }
   .login-card {
@@ -693,7 +695,7 @@ try {
         <input id="login-pw" class="field" type="password" placeholder="Admin-Passwort" autocomplete="current-password" required>
         <div id="login-error" class="error-banner" hidden></div>
         <button class="btn btn--lg btn--block">Anmelden <span class="i-arrow"></span></button>
-        <a class="back" href="./">Zurück zur Nutzeranmeldung</a>
+        <a id="login-back" class="back" href="./" data-morph="login">Zurück zur Nutzeranmeldung</a>
         <span class="notch-tag">Zugang <span class="hl">Admin</span></span>
       </form>
     </div>
@@ -1165,6 +1167,15 @@ $('logout').addEventListener('click', () => {
 if (getSession().token) {
   $('back').href = 'dashboard';
   $('back').textContent = 'Zurück';   // Pfeil kommt per CSS (.back::before)
+  // Auch vom Admin-Login direkt ins Dashboard: der Umweg über die Anmeldung
+  // leitete unsichtbar weiter, das Dashboard sprang dann hart herein
+  $('login-back').href = 'dashboard';
+  $('login-back').textContent = 'Zurück';
+  delete $('login-back').dataset.morph;
+} else {
+  // Der Titel bekommt vor dem Wechsel den Namen seines Gegenstücks (lando.js
+  // setzt den Schlüssel für die Anmeldeseite)
+  $('login-back').addEventListener('click', () => { document.documentElement.dataset.morph = 'login'; });
 }
 
 // --- Dashboard ---
