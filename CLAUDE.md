@@ -64,6 +64,8 @@ Partykeller zeigt, auf dem TV beide). `/` ist die Auswahlseite
   Zähler mit der Klasse `.num` (Mona Sans, **proportionale** Ziffern — keine
   `tabular-nums`, deren durchgestrichene Null nicht zum Lando-Look passt;
   Spalten über feste Breiten/rechtsbündig ausrichten, D-078).
+- Schriftgrößen nur aus der Skala (`--fs-11` … `--fs-80`, mindestens 11 px),
+  Abstände im 4-px-Raster, Kontraste nach WCAG AA (D-130, D-131).
 
 ## Konventionen
 

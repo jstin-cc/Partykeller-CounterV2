@@ -37,6 +37,15 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-05: **Schriftskala, Abstandsraster, Trefferflächen** (D-131) —
+statt rund 45 Schriftgrößen gibt es 14 Stufen als Token (`--fs-11` …
+`--fs-80`), alle festen Größen in `theme.css` und den Handy-Seiten laufen
+darüber. Abstände (gap, padding, margin) auf das 4-px-Raster gerundet,
+Gleichstand nach unten, damit nichts breiter wird. Kleine Knöpfe, Reiter,
+Wortmarke, Zurück, ⋯ und Überspringen haben auf Touch-Geräten eine
+unsichtbare 44-px-Trefferfläche. Bei 320/360/375 px geprüft (kein Überlauf,
+Trefferflächen greifen), TV in 1600 × 900 unverändert.
+
 Seit 2026-11-05: **Lesbarkeit nach WCAG** (D-130) — keine Schrift mehr
 unter 11 px (vorher bis 8,5 px; Zifferblatt im Rückblick mitskaliert).
 Kontraste auf AA gehoben: `--ink-faint` dunkel und hell, `--ink-muted` und

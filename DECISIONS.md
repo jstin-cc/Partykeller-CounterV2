@@ -389,6 +389,18 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
   Creme; Rahmen von Eingabefeldern und Umriss-Knöpfen nutzen
   `--line-control` (mind. 3:1). Getränkefarben, die als Schrift zu dunkel
   sind, haben eigene Schrift-Tokens (`--mix-text`). (D-130)
+- **Schriftskala:** feste Schriftgrößen nur als Token `--fs-11` bis `--fs-80`
+  (11 · 12 · 13 · 15 · 17 · 19 · 21 · 24 · 28 · 32 · 40 · 48 · 64 · 80).
+  Ausnahmen: Eingabefelder 16 px (sonst zoomt iOS), Avatar-Initialen und
+  Deko-Ziffern (an die Form gebunden), fließende `clamp()`-Titel, SVG-Text.
+  (D-131)
+- **Abstände** im 4-px-Raster (4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64 …);
+  2 und 6 px nur für Feinheiten, 1 px für optische Korrekturen, fließende
+  `clamp()`-Abstände bleiben. (D-131)
+- **Trefferflächen:** Auf Touch-Geräten (`pointer: coarse`) bekommen kleine
+  Bedienelemente (kleine Knöpfe, Reiter, Wortmarke, Zurück, ⋯-Menü,
+  Überspringen) eine unsichtbare Fläche von mindestens 44 × 44 px; optisch
+  bleiben sie gleich. (D-131)
 
 ## 11. Menü, Übergänge und Bewegung
 
@@ -547,3 +559,4 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-128 | 2026-11-05 | Jahresrückblick mit Farbstimmung und Grafik je Seite |
 | D-129 | 2026-11-05 | Jahresrückblick ohne Farbwechsel (ruhige Fassung) |
 | D-130 | 2026-11-05 | Lesbarkeit: Mindestschrift 11 px, AA-Kontraste, Rahmen-Token |
+| D-131 | 2026-11-05 | Schriftskala, 4-px-Abstandsraster, 44-px-Trefferflächen auf Touch |
