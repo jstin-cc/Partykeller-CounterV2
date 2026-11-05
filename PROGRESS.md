@@ -37,6 +37,15 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-05: **Mobil-Feinschliff** — alle Handy-Seiten (ohne TV) bei
+320, 360 und 375 px durchgeprüft. Onboarding-Titel laufen auf 320 px nicht
+mehr über den Rand (die Seite ließ sich seitlich verschieben). Im Abend-Archiv
+stoßen die Kennzahl-Beschriftungen („Mischen“/„Gesamt“) nicht mehr aneinander;
+unter 360 px stehen sie 2 × 2, die Getränkezahl des Siegers unter dem Namen,
+das Spitzen-Etikett bricht nicht mehr um. Admin: lange Effekt-Namen brechen
+um statt abgeschnitten zu werden. Namensfelder starten mit großem
+Anfangsbuchstaben, das QR-Adressfeld zeigt die URL-Tastatur.
+
 Seit 2026-11-05: **Rückblick bleibt dunkel** (D-129) — die ruhige Fassung
 ist jetzt die einzige: kein Farbwechsel zwischen den Seiten, keine
 Wisch-Fläche, der Schalter `?ruhig` ist entfernt.

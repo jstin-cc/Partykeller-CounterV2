@@ -471,6 +471,7 @@ try {
      beide Spalten; kurz orange, wenn der Effekt rausgegangen ist */
   .demo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .demo-grid > .btn:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .demo-grid > .btn { white-space: normal; text-align: center; line-height: 1.15; padding-block: 6px; }
   .btn[data-demo].is-sent { --btn-bg: var(--accent); --btn-ink: var(--accent-ink); --btn-line: var(--accent); }
 
   /* Danger Zone: Kerben-Karte mit roter Kontur und feiner Schraffur */
@@ -919,7 +920,7 @@ try {
               <div class="set-row">
                 <div class="lbl">QR-Adresse für den TV</div>
                 <div class="join-line">
-                  <input id="join-url" class="field field--sm" type="text" placeholder="z. B. http://192.168.1.50:3000/" autocomplete="off">
+                  <input id="join-url" class="field field--sm" type="text" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="z. B. http://192.168.1.50:3000/" autocomplete="off">
                   <button id="join-save" type="button" class="btn">Speichern</button>
                 </div>
                 <div id="join-hint" class="hint"></div>
@@ -995,7 +996,7 @@ try {
   <form id="add-form" class="dialog">
     <p class="eyebrow">Konten</p>
     <h2 class="t-h3 dialog-title">Neues <span class="t-serif t-accent">Konto</span></h2>
-    <label class="fld"><span class="lbl">Name</span><input id="add-name" class="field" type="text" maxlength="24" placeholder="Name" autocomplete="off" required></label>
+    <label class="fld"><span class="lbl">Name</span><input id="add-name" class="field" type="text" maxlength="24" placeholder="Name" autocomplete="off" autocapitalize="words" required></label>
     <label class="fld"><span class="lbl">PIN (optional)</span><input id="add-pin" class="field" type="password" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="4 Ziffern" autocomplete="off"></label>
     <div id="add-error" class="error-banner" hidden></div>
     <div class="dialog-btns">
