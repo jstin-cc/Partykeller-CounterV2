@@ -37,6 +37,12 @@ Hall of Fame, CSV-Export und Story-Bild.
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
 
+Seit 2026-11-05: **PIN-Tastenfeld springt nicht mehr** — beim Anlegen
+verschwand „Ohne PIN“ im Schritt „PIN wiederholen“, das unten hängende Blatt
+wurde niedriger und das Tastenfeld rutschte mitten in der Eingabe nach unten.
+Der Knopf bleibt jetzt unsichtbar stehen (nicht antippbar), das Tastenfeld
+bleibt an seinem Platz, auch nach „PINs stimmen nicht überein“.
+
 Seit 2026-11-05: **Schriftskala, Abstandsraster, Trefferflächen** (D-131) —
 statt rund 45 Schriftgrößen gibt es 14 Stufen als Token (`--fs-11` …
 `--fs-80`), alle festen Größen in `theme.css` und den Handy-Seiten laufen

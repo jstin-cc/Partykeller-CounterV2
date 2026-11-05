@@ -300,6 +300,9 @@ try {
   .pin-step:not([hidden]) + .pin-dots { padding-top: 16px; }
   .pin-skip { margin-top: 8px; }
   .pin-skip[hidden], .pin-step[hidden] { display: none; }
+  /* Beim Wiederholen bleibt der Platz von „Ohne PIN“ stehen, sonst rutscht
+     das Tastenfeld mitten in der Eingabe nach unten */
+  .pin-skip.is-held { visibility: hidden; }
   .pin-msg { min-height: 18px; margin: 0 0 12px; text-align: center; color: var(--danger); font-size: var(--fs-13); font-weight: 600; }
   .keypad {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
@@ -660,7 +663,8 @@ function setStep(mode) {
   sheet.mode = mode;
   $('pin-step').hidden = !STEP[mode];
   $('pin-step').textContent = STEP[mode] ?? '';
-  $('pin-skip').hidden = mode !== 'set';
+  $('pin-skip').hidden = mode !== 'set' && mode !== 'confirm';
+  $('pin-skip').classList.toggle('is-held', mode === 'confirm');
 }
 
 function openSheet(name, state) {
