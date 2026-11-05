@@ -237,7 +237,9 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
   Jahreszahl als Umriss am Rand, Getränkebalken, randlose Abendkurve mit
   Spitzenpunkt, Stempelkarte auf Creme, 24-Stunden-Zifferblatt,
   Kräftemessen-Balken, gekreuzte Laufbänder zum Abschluss; dazu Kringel und
-  feines Filmkorn. (D-095, D-103, D-105, D-108, D-128)
+  feines Filmkorn. Entwurf zum Vergleich: mit `?ruhig` an der Dashboard-URL
+  bleiben alle Seiten dunkel (noch nicht entschieden). (D-095, D-103, D-105,
+  D-108, D-128)
 - **Fuß:** nur „Abmelden“ (beendet die Sitzung, gleitet in die Anmeldeliste);
   alles andere steht im Menü. (D-090, D-092)
 - **Onboarding** nach dem Anlegen eines Kontos (nicht beim Anmelden): drei

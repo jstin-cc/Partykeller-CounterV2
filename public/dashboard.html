@@ -426,8 +426,8 @@ try {
   .rv-when { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
   .rv-when .t-serif { font-size: clamp(34px, 10vw, 46px); line-height: 0.9; color: var(--accent-text); }
   .rv-when .num { font-size: 15px; color: var(--ink-muted); }
-  .rv-curve { position: relative; margin: 6px -20px 0; }
-  .rv-curve svg { width: 100%; height: clamp(96px, 17vh, 150px); display: block; overflow: visible; }
+  .rv-curve { position: relative; margin-top: 18px; }
+  .rv-curve svg { width: 100%; height: clamp(110px, 22vh, 190px); display: block; overflow: visible; }
   .rv-curve .area { fill: url(#rv-grad); }
   .rv-curve .line { fill: none; stroke: var(--accent); stroke-width: 3; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
   .rv-curve .peak-x { stroke: var(--line-strong); stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
@@ -444,7 +444,6 @@ try {
   }
   .rv-slide:not([hidden]) .rv-peak { animation: rv-pop 0.5s var(--ease-spring) 1.6s both; }
   @keyframes rv-pop { from { opacity: 0; transform: scale(0.2); } }
-  .rv-curve .eyebrow { padding: 8px 20px 0; }
 
   /* Getränke als Balken, das Lieblingsgetränk voll */
   .rv-bars { display: flex; flex-direction: column; gap: 12px; padding-top: 6px; }
@@ -502,7 +501,8 @@ try {
     position: absolute; left: -15%; right: -15%; top: 50%; overflow: hidden;
     padding: 10px 0; background: var(--accent-ink); color: var(--lando-white);
   }
-  .rv-band:first-child { transform: translateY(-50%) rotate(-11deg); }
+  .rv-band:first-child { transform: translateY(-50%) rotate(-11deg); background: var(--accent); color: var(--accent-ink); }
+  [data-tone="accent"] .rv-band:first-child { background: var(--accent-ink); color: var(--lando-white); }
   .rv-band:last-child { transform: translateY(-50%) rotate(7deg); background: var(--lando-white); color: var(--accent-ink); }
   .rv-band .marquee-track { animation-duration: 22s; }
   .rv-band:last-child .marquee-track { animation-direction: reverse; }
@@ -530,6 +530,7 @@ try {
   .rv-slide:not([hidden]) .rv-stamp.on { animation: rv-stamp 0.55s var(--ease-spring) both; animation-delay: calc(var(--i) * var(--step) + 350ms); }
   @keyframes rv-stamp { from { opacity: 0; transform: rotate(var(--r)) scale(1.8); } }
   .rv-actions { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+  [data-tone="accent"] .rv-actions .btn:not(.btn--ghost) { --btn-bg: var(--ink); --btn-ink: var(--bg); --btn-line: var(--ink); }
   .rv-actions .btn { width: 100%; justify-content: center; min-height: 52px; }
   .rv-actions .i-arrow { transform: rotate(135deg); }
   @media (prefers-reduced-motion: reduce) {
@@ -1327,6 +1328,8 @@ if (!token || !playerId) {
   }
 
   const RV_MS = 7000;
+  // Entwurf (D-128): mit ?ruhig bleiben alle Seiten dunkel, ohne Farbwechsel
+  const RV_TONED = !new URLSearchParams(location.search).has('ruhig');
   const DRINK_NAME = { beer: 'Bier', shot: 'Shots', mix: 'Mischen' };
   const WEEKDAY = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
   const el = (tag, cls, text) => {
@@ -1360,8 +1363,10 @@ if (!token || !playerId) {
   function rvCurve(tl) {
     if (!(tl?.counts?.length > 1)) return null;
     const NS = 'http://www.w3.org/2000/svg';
-    const W = 100, H = 40;
-    const { max, peak, xAt, yAt, d } = buildCurve(tl.counts, W, H, 6);
+    // Kurve um P eingerückt, damit Spitzenpunkt und Schild am Rand ganz bleiben
+    const W = 100, H = 40, P = 4;
+    const { max, peak, xAt: cx, yAt, d } = buildCurve(tl.counts, W - 2 * P, H, 6);
+    const xAt = (i) => P + cx(i);
     const svg = document.createElementNS(NS, 'svg');
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.setAttribute('preserveAspectRatio', 'none');
@@ -1369,9 +1374,8 @@ if (!token || !playerId) {
     const px = xAt(peak);
     svg.innerHTML = '<defs><linearGradient id="rv-grad" x1="0" y1="0" x2="0" y2="1">'
       + '<stop offset="0" style="stop-color:var(--accent);stop-opacity:0.38"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient></defs>'
-      + `<path class="area" d="${d} L${W} ${H} L0 ${H} Z"/>`
       + `<line class="peak-x" x1="${px}" y1="${yAt(max)}" x2="${px}" y2="${H}"/>`
-      + `<path class="line" d="${d}"/>`;
+      + `<g transform="translate(${P} 0)"><path class="area" d="${d} L${W - 2 * P} ${H} L0 ${H} Z"/><path class="line" d="${d}"/></g>`;
     const dot = el('span', 'rv-peak');
     dot.style.setProperty('--px', `${(px / W) * 100}%`);
     dot.style.setProperty('--py', `${(yAt(max) / H) * 100}%`);
@@ -1476,7 +1480,7 @@ if (!token || !playerId) {
       row.append(el('span', 'eyebrow', DRINK_NAME[k]), track, el('span', 'num', String(r.drinks[k])));
       bars.append(row);
     });
-    add(scribbleWord(rvTitle('Dein', 'Getränk:', `|${DRINK_NAME[fav]}.|`), 'underline'),
+    add(rvTitle('Dein', 'Getränk:', `|${DRINK_NAME[fav]}.|`),
       bigNum(Math.round((r.drinks[fav] / r.total) * 100), '%'), bars).dataset.tone = TONE_OF[fav];
 
     if (r.best) {
@@ -1539,7 +1543,7 @@ if (!token || !playerId) {
       cells.append(c);
     }
     const actions = el('div', 'rv-actions');
-    const save = el('button', 'btn btn--dark', 'Story speichern ');
+    const save = el('button', 'btn', 'Story speichern ');
     save.type = 'button';
     save.append(el('span', 'i-arrow i-arrow--down'));
     save.addEventListener('click', async () => {
@@ -1561,6 +1565,7 @@ if (!token || !playerId) {
     again.addEventListener('click', () => showSlide(0));
     actions.append(save, again);
     add(scribbleWord(rvTitle('Prost auf', `|${r.year + 1}.|`), 'loop'), cells, rvBands(r.year + 1), actions).dataset.tone = 'accent';
+    if (!RV_TONED) slides.forEach((sl) => { sl.dataset.tone = 'dark'; });
     return slides;
   }
 
