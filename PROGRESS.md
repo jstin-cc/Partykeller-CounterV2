@@ -31,13 +31,15 @@ Hall of Fame, CSV-Export und Story-Bild.
     übrige Ideen H1–H5 in
     [docs/inspiration/anmeldung-kopf-2.html](docs/inspiration/anmeldung-kopf-2.html)
     (O4 umgesetzt; O1–O3, O5 in anmeldung-details.html weiter offen)
-  - Jahresrückblick: Farbwechsel je Seite behalten oder ruhige Fassung
-    (`dashboard.html?ruhig`, alle Seiten dunkel)?
 
 ## Verlauf
 
 Neueste oben. Wird der Verlauf lang, wandern ältere Einträge wortgleich ins
 Archiv.
+
+Seit 2026-11-05: **Rückblick bleibt dunkel** (D-129) — die ruhige Fassung
+ist jetzt die einzige: kein Farbwechsel zwischen den Seiten, keine
+Wisch-Fläche, der Schalter `?ruhig` ist entfernt.
 
 Seit 2026-11-05: **Rückblick: ruhige Fassung als Entwurf** — mit `?ruhig`
 an der Dashboard-URL bleiben alle Story-Seiten dunkel (kein Farbwechsel), die

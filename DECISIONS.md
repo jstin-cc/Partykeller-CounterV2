@@ -231,15 +231,12 @@ stehen lassen. Unten im Abschnitt „Verlauf“ kommt je Nummer eine Zeile dazu
   Stempelkarte der Abende ab zwei Abenden, stärkste Stunde, Rivale, Abschluss);
   Tippen blättert, Halten pausiert, die letzte Seite speichert ein Bild. Die
   Karte wächst ins Vollbild, gleiche Titelwörter und die große Zahl gleiten
-  von Seite zu Seite. Jede Seite hat eine Farbstimmung (dunkel, Orange,
-  Creme, Navy; die Getränkeseite in der Farbe des Lieblingsgetränks), die
-  beim Blättern als Kreis vom Tippunkt aufgeht, und eine eigene Grafik:
-  Jahreszahl als Umriss am Rand, Getränkebalken, randlose Abendkurve mit
-  Spitzenpunkt, Stempelkarte auf Creme, 24-Stunden-Zifferblatt,
-  Kräftemessen-Balken, gekreuzte Laufbänder zum Abschluss; dazu Kringel und
-  feines Filmkorn. Entwurf zum Vergleich: mit `?ruhig` an der Dashboard-URL
-  bleiben alle Seiten dunkel (noch nicht entschieden). (D-095, D-103, D-105,
-  D-108, D-128)
+  von Seite zu Seite. Alle Seiten bleiben im dunklen Grund (kein
+  Farbwechsel), jede hat eine eigene Grafik: Jahreszahl als Umriss am Rand,
+  Getränkebalken, eingerückte Abendkurve mit Spitzenpunkt, Stempelkarte,
+  24-Stunden-Zifferblatt, Kräftemessen-Balken, gekreuzte Laufbänder (Orange
+  und Creme) zum Abschluss; dazu ein Kringel unter „2027.“ und feines
+  Filmkorn. (D-095, D-103, D-105, D-108, D-128, D-129)
 - **Fuß:** nur „Abmelden“ (beendet die Sitzung, gleitet in die Anmeldeliste);
   alles andere steht im Menü. (D-090, D-092)
 - **Onboarding** nach dem Anlegen eines Kontos (nicht beim Anmelden): drei
@@ -542,3 +539,4 @@ Je Nummer eine Zeile; der volle Wortlaut steht im Archiv.
 | D-126 | 2026-11-04 | Anmeldeseite: schlichter Kopf „Anmeldung“ |
 | D-127 | 2026-11-04 | „Heute da“-Punkt in der Anmeldeliste |
 | D-128 | 2026-11-05 | Jahresrückblick mit Farbstimmung und Grafik je Seite |
+| D-129 | 2026-11-05 | Jahresrückblick ohne Farbwechsel (ruhige Fassung) |
